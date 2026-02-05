@@ -15,15 +15,25 @@
 
   const normalize = (value) => (value || '').trim().toLowerCase();
 
+  function setHeroes(data) {
+    heroList = Array.isArray(data?.heroes) ? data.heroes : [];
+    heroesByName = new Map(heroList.map((hero) => [normalize(hero.name), hero]));
+  }
+
   async function loadHeroes() {
+    const embeddedData = globalThis.OW2_HEROES_DATA;
+    if (Array.isArray(embeddedData?.heroes) && embeddedData.heroes.length) {
+      setHeroes(embeddedData);
+      return;
+    }
+
     try {
       const response = await fetch(HEROES_PATH, { cache: 'no-store' });
       if (!response.ok) {
         throw new Error(`Failed to load heroes.json (${response.status})`);
       }
       const data = await response.json();
-      heroList = Array.isArray(data.heroes) ? data.heroes : [];
-      heroesByName = new Map(heroList.map((hero) => [normalize(hero.name), hero]));
+      setHeroes(data);
     } catch (error) {
       console.warn('Heroes data unavailable, using fallback behavior.', error);
       heroList = [];
@@ -64,7 +74,8 @@
   function resolveHeroImage(hero) {
     if (!hero?.image) return '';
     const normalizedPath = hero.image.replace(/^\.\.\//, '');
-    return `${HERO_IMAGE_BASE}${normalizedPath}`;
+    const safePath = normalizedPath.replace(/%/g, '%25');
+    return `${HERO_IMAGE_BASE}${safePath}`;
   }
 
   function getQueryHero() {
