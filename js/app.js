@@ -1,7 +1,7 @@
 (() => {
   const STATE_KEY = 'ow2_bans_state';
   const HEROES_PATH = './data/heroes.json';
-  const HERO_IMAGE_BASE = './assets/heroes/';
+  const HERO_IMAGE_BASE = './assets/';
   const OVERLAY_POLL_MS = 500;
 
   let heroList = [];
@@ -15,15 +15,25 @@
 
   const normalize = (value) => (value || '').trim().toLowerCase();
 
+  function setHeroes(data) {
+    heroList = Array.isArray(data?.heroes) ? data.heroes : [];
+    heroesByName = new Map(heroList.map((hero) => [normalize(hero.name), hero]));
+  }
+
   async function loadHeroes() {
+    const embeddedData = globalThis.OW2_HEROES_DATA;
+    if (Array.isArray(embeddedData?.heroes) && embeddedData.heroes.length) {
+      setHeroes(embeddedData);
+      return;
+    }
+
     try {
       const response = await fetch(HEROES_PATH, { cache: 'no-store' });
       if (!response.ok) {
         throw new Error(`Failed to load heroes.json (${response.status})`);
       }
       const data = await response.json();
-      heroList = Array.isArray(data.heroes) ? data.heroes : [];
-      heroesByName = new Map(heroList.map((hero) => [normalize(hero.name), hero]));
+      setHeroes(data);
     } catch (error) {
       console.warn('Heroes data unavailable, using fallback behavior.', error);
       heroList = [];
@@ -61,6 +71,13 @@
     return heroesByName.get(normalize(name)) || null;
   }
 
+  function resolveHeroImage(hero) {
+    if (!hero?.image) return '';
+    const normalizedPath = hero.image.replace(/^\.\.\//, '');
+    const safePath = normalizedPath.replace(/%/g, '%25');
+    return `${HERO_IMAGE_BASE}${safePath}`;
+  }
+
   function getQueryHero() {
     const params = new URLSearchParams(window.location.search);
     return params.get('hero') || '';
@@ -75,8 +92,8 @@
 
     nameNode.textContent = heroName || 'None';
 
-    if (hero && hero.image) {
-      thumbNode.style.backgroundImage = `url('${HERO_IMAGE_BASE}${hero.image}')`;
+    if (hero?.image) {
+      thumbNode.style.backgroundImage = `url('${resolveHeroImage(hero)}')`;
     } else {
       thumbNode.style.backgroundImage = 'none';
     }
@@ -132,8 +149,19 @@
 
       filtered.forEach((hero, index) => {
         const item = document.createElement('li');
-        item.textContent = hero.name;
         item.setAttribute('role', 'option');
+
+        const icon = document.createElement('img');
+        icon.className = 'result-icon';
+        icon.alt = '';
+        icon.loading = 'lazy';
+        icon.src = resolveHeroImage(hero);
+
+        const label = document.createElement('span');
+        label.className = 'result-name';
+        label.textContent = hero.name;
+
+        item.append(icon, label);
         item.addEventListener('mousedown', (event) => {
           event.preventDefault();
           commitHero(hero.name);
@@ -165,7 +193,7 @@
       } else if (event.key === 'Enter') {
         event.preventDefault();
         if (activeIndex >= 0) {
-          commitHero(visibleItems[activeIndex].textContent);
+          commitHero(visibleItems[activeIndex].querySelector('.result-name')?.textContent || '');
           return;
         }
       } else if (event.key === 'Escape') {
@@ -218,7 +246,7 @@
       name.textContent = selectedName || 'NO BAN';
 
       if (hero?.image) {
-        image.src = `${HERO_IMAGE_BASE}${hero.image}`;
+        image.src = resolveHeroImage(hero);
         image.style.display = 'block';
         placeholder.style.display = 'none';
       } else {

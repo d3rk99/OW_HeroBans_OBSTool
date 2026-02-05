@@ -103,9 +103,26 @@ input[type="text"] {
 }
 
 .results li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   padding: 0.5rem;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.result-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #0f1625;
+  flex: 0 0 auto;
+}
+
+.result-name {
+  display: block;
 }
 
 .results li:hover,
