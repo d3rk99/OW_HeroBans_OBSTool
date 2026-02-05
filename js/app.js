@@ -3,6 +3,7 @@
   const HEROES_PATH = './data/heroes.json';
   const HERO_IMAGE_BASE = './assets/';
   const OVERLAY_POLL_MS = 500;
+  const FADE_TRANSITION_MS = 260;
 
   let heroList = [];
   let heroesByName = new Map();
@@ -116,7 +117,8 @@
     return [...starts, ...includes].slice(0, 20);
   }
 
-  function installSearchForTeam(teamId) {
+  function installSearchForTeam(teamId, options) {
+    const { pendingState, syncInputs } = options;
     const input = document.getElementById(`${teamId}-search`);
     const list = document.getElementById(`${teamId}-results`);
     const preview = document.getElementById(`${teamId}-preview`);
@@ -129,12 +131,9 @@
       activeIndex = -1;
     };
 
-    const commitHero = (heroName) => {
-      const state = readState();
-      state[teamId].ban = heroName || '';
-      const next = writeState(state);
-      input.value = next[teamId].ban;
-      setPreviewCard(preview, next[teamId].ban);
+    const setPendingHero = (heroName) => {
+      pendingState[teamId].ban = heroName || '';
+      syncInputs();
       closeList();
     };
 
@@ -164,7 +163,7 @@
         item.append(icon, label);
         item.addEventListener('mousedown', (event) => {
           event.preventDefault();
-          commitHero(hero.name);
+          setPendingHero(hero.name);
         });
 
         if (index === activeIndex) item.classList.add('active');
@@ -193,7 +192,7 @@
       } else if (event.key === 'Enter') {
         event.preventDefault();
         if (activeIndex >= 0) {
-          commitHero(visibleItems[activeIndex].querySelector('.result-name')?.textContent || '');
+          setPendingHero(visibleItems[activeIndex].querySelector('.result-name')?.textContent || '');
           return;
         }
       } else if (event.key === 'Escape') {
@@ -212,16 +211,14 @@
       }
     });
 
-    const state = readState();
-    input.value = state[teamId].ban || '';
-    setPreviewCard(preview, state[teamId].ban || '');
-
     const clearButton = document.getElementById(`${teamId}-clear`);
     if (clearButton) {
       clearButton.addEventListener('click', () => {
-        commitHero('');
+        setPendingHero('');
       });
     }
+
+    syncInputs();
   }
 
   function renderOverlay(teamId) {
@@ -233,15 +230,9 @@
     const name = stage.querySelector('[data-hero-name]');
 
     let lastSignature = '';
+    let fadeTimer = null;
 
-    const applyState = () => {
-      const queryHero = getQueryHero();
-      const state = readState();
-      const selectedName = (queryHero || state?.[teamId]?.ban || '').trim();
-      const signature = `${selectedName}:${state.updatedAt}`;
-      if (signature === lastSignature) return;
-      lastSignature = signature;
-
+    const paintOverlay = (selectedName) => {
       const hero = findHeroByName(selectedName);
       name.textContent = selectedName || 'NO BAN';
 
@@ -265,7 +256,28 @@
       };
     };
 
+    const applyState = () => {
+      const queryHero = getQueryHero();
+      const state = readState();
+      const selectedName = (queryHero || state?.[teamId]?.ban || '').trim();
+      const signature = `${selectedName}:${state.updatedAt}`;
+      if (signature === lastSignature) return;
+      lastSignature = signature;
+
+      if (fadeTimer) {
+        clearTimeout(fadeTimer);
+        fadeTimer = null;
+      }
+
+      stage.classList.add('is-fading');
+      fadeTimer = setTimeout(() => {
+        paintOverlay(selectedName);
+        stage.classList.remove('is-fading');
+      }, FADE_TRANSITION_MS);
+    };
+
     applyState();
+
     window.addEventListener('storage', (event) => {
       if (event.key === STATE_KEY) applyState();
     });
@@ -273,21 +285,45 @@
   }
 
   async function initControlPage() {
-    installSearchForTeam('team1');
-    installSearchForTeam('team2');
+    const pendingState = readState();
+
+    const syncInputs = () => {
+      ['team1', 'team2'].forEach((teamId) => {
+        const input = document.getElementById(`${teamId}-search`);
+        const preview = document.getElementById(`${teamId}-preview`);
+        if (input) input.value = pendingState[teamId].ban || '';
+        if (preview) setPreviewCard(preview, pendingState[teamId].ban || '');
+      });
+    };
+
+    installSearchForTeam('team1', { pendingState, syncInputs });
+    installSearchForTeam('team2', { pendingState, syncInputs });
+
+    const updateButton = document.getElementById('apply-update');
+    if (updateButton) {
+      updateButton.addEventListener('click', () => {
+        writeState(pendingState);
+      });
+    }
 
     const reset = document.getElementById('reset-all');
     if (reset) {
       reset.addEventListener('click', () => {
-        writeState(defaultState());
-        ['team1', 'team2'].forEach((teamId) => {
-          const input = document.getElementById(`${teamId}-search`);
-          const preview = document.getElementById(`${teamId}-preview`);
-          if (input) input.value = '';
-          if (preview) setPreviewCard(preview, '');
-        });
+        const empty = defaultState();
+        pendingState.team1.ban = empty.team1.ban;
+        pendingState.team2.ban = empty.team2.ban;
+        syncInputs();
+        writeState(pendingState);
       });
     }
+
+    window.addEventListener('storage', (event) => {
+      if (event.key !== STATE_KEY) return;
+      const next = readState();
+      pendingState.team1.ban = next.team1.ban;
+      pendingState.team2.ban = next.team2.ban;
+      syncInputs();
+    });
   }
 
   async function init() {

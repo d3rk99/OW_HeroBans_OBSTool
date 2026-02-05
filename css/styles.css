@@ -30,6 +30,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+  align-items: start;
 }
 
 .panel-header {
@@ -177,6 +178,22 @@ button {
   background: var(--accent-2);
 }
 
+.primary-btn {
+  background: var(--accent);
+}
+
+.sync-row {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+}
+
+.sync-row .primary-btn {
+  min-width: 180px;
+  font-size: 1.15rem;
+  padding: 0.85rem 1.4rem;
+}
+
 .danger-btn {
   background: #ff6464;
 }
@@ -255,6 +272,18 @@ button {
   font-size: clamp(1.2rem, 3.5vw, 2rem);
   text-transform: uppercase;
   text-shadow: 0 0 10px rgba(248, 157, 42, 0.5);
+}
+
+.hero-image,
+.hero-placeholder,
+.hero-name {
+  transition: opacity 260ms ease;
+}
+
+.overlay-stage.is-fading .hero-image,
+.overlay-stage.is-fading .hero-placeholder,
+.overlay-stage.is-fading .hero-name {
+  opacity: 0;
 }
 
 .overlay-stage[data-overlay-team="team1"] .ban-card,

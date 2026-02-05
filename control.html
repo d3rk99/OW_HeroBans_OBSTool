@@ -10,7 +10,7 @@
   <main class="control-layout">
     <header class="panel-header">
       <h1>Overwatch 2 Hero Bans</h1>
-      <p>Select one banned hero for each team. Overlays update automatically in OBS browser sources.</p>
+      <p>Select one banned hero for each team, then press Update to publish both overlays in sync.</p>
     </header>
 
     <section class="team-column" aria-labelledby="team1-heading">
@@ -46,6 +46,10 @@
       </div>
       <button id="team2-clear" class="secondary-btn" type="button">Clear Team 2 Ban</button>
     </section>
+
+    <div class="sync-row" aria-label="Overlay update controls">
+      <button id="apply-update" class="primary-btn" type="button">Update</button>
+    </div>
   </main>
 
   <footer class="control-footer">
