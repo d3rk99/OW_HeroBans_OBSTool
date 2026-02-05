@@ -257,6 +257,22 @@ button {
   text-shadow: 0 0 10px rgba(248, 157, 42, 0.5);
 }
 
+.overlay-stage[data-overlay-team="team1"] .ban-card,
+.overlay-stage[data-overlay-team="team2"] .ban-card {
+  border-radius: 10px;
+}
+
+.overlay-stage[data-overlay-team="team1"] .hero-frame,
+.overlay-stage[data-overlay-team="team2"] .hero-frame {
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+}
+
+.overlay-stage[data-overlay-team="team1"] .hero-name,
+.overlay-stage[data-overlay-team="team2"] .hero-name {
+  font-size: clamp(1.8rem, 5vw, 3rem);
+}
+
 @media (max-width: 900px) {
   .control-layout {
     grid-template-columns: 1fr;
