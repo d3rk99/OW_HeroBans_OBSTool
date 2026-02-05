@@ -1,0 +1,209 @@
+{
+  "heroes": [
+    {
+      "id": "ana",
+      "name": "Ana",
+      "image": "../hero/ana.png"
+    },
+    {
+      "id": "ashe",
+      "name": "Ashe",
+      "image": "../hero/ashe.png"
+    },
+    {
+      "id": "baptiste",
+      "name": "Baptiste",
+      "image": "../hero/baptiste.png"
+    },
+    {
+      "id": "bastion",
+      "name": "Bastion",
+      "image": "../hero/bastion.png"
+    },
+    {
+      "id": "brigitte",
+      "name": "Brigitte",
+      "image": "../hero/brigitte.png"
+    },
+    {
+      "id": "cassidy",
+      "name": "Cassidy",
+      "image": "../hero/cassidy.png"
+    },
+    {
+      "id": "dva",
+      "name": "D.Va",
+      "image": "../hero/dva.png"
+    },
+    {
+      "id": "doomfist",
+      "name": "Doomfist",
+      "image": "../hero/doomfist.png"
+    },
+    {
+      "id": "echo",
+      "name": "Echo",
+      "image": "../hero/echo.png"
+    },
+    {
+      "id": "genji",
+      "name": "Genji",
+      "image": "../hero/genji.png"
+    },
+    {
+      "id": "hanzo",
+      "name": "Hanzo",
+      "image": "../hero/hanzo.png"
+    },
+    {
+      "id": "illari",
+      "name": "Illari",
+      "image": "../hero/illari.png"
+    },
+    {
+      "id": "junker_queen",
+      "name": "Junker Queen",
+      "image": "../hero/junker_queen.png"
+    },
+    {
+      "id": "junkrat",
+      "name": "Junkrat",
+      "image": "../hero/junkrat.png"
+    },
+    {
+      "id": "juno",
+      "name": "Juno",
+      "image": "../hero/juno.png"
+    },
+    {
+      "id": "kiriko",
+      "name": "Kiriko",
+      "image": "../hero/kiriko.png"
+    },
+    {
+      "id": "lifeweaver",
+      "name": "Lifeweaver",
+      "image": "../hero/lifeweaver.png"
+    },
+    {
+      "id": "lucio",
+      "name": "Lucio",
+      "image": "../hero/lucio.png"
+    },
+    {
+      "id": "mauga",
+      "name": "Mauga",
+      "image": "../hero/mauga.png"
+    },
+    {
+      "id": "mei",
+      "name": "Mei",
+      "image": "../hero/mei.png"
+    },
+    {
+      "id": "mercy",
+      "name": "Mercy",
+      "image": "../hero/mercy.png"
+    },
+    {
+      "id": "moira",
+      "name": "Moira",
+      "image": "../hero/moira.png"
+    },
+    {
+      "id": "orisa",
+      "name": "Orisa",
+      "image": "../hero/orisa.png"
+    },
+    {
+      "id": "pharah",
+      "name": "Pharah",
+      "image": "../hero/pharah.png"
+    },
+    {
+      "id": "ramattra",
+      "name": "Ramattra",
+      "image": "../hero/ramattra.png"
+    },
+    {
+      "id": "reaper",
+      "name": "Reaper",
+      "image": "../hero/reaper.png"
+    },
+    {
+      "id": "reinhardt",
+      "name": "Reinhardt",
+      "image": "../hero/reinhardt.png"
+    },
+    {
+      "id": "roadhog",
+      "name": "Roadhog",
+      "image": "../hero/roadhog.png"
+    },
+    {
+      "id": "sigma",
+      "name": "Sigma",
+      "image": "../hero/sigma.png"
+    },
+    {
+      "id": "sojourn",
+      "name": "Sojourn",
+      "image": "../hero/sojourn.png"
+    },
+    {
+      "id": "soldier_76",
+      "name": "Soldier: 76",
+      "image": "../hero/soldier_76.png"
+    },
+    {
+      "id": "sombra",
+      "name": "Sombra",
+      "image": "../hero/sombra.png"
+    },
+    {
+      "id": "symmetra",
+      "name": "Symmetra",
+      "image": "../hero/symmetra.png"
+    },
+    {
+      "id": "torbjorn",
+      "name": "Torbjorn",
+      "image": "../hero/torbjorn.png"
+    },
+    {
+      "id": "tracer",
+      "name": "Tracer",
+      "image": "../hero/tracer.png"
+    },
+    {
+      "id": "venture",
+      "name": "Venture",
+      "image": "../hero/venture.png"
+    },
+    {
+      "id": "widowmaker",
+      "name": "Widowmaker",
+      "image": "../hero/widowmaker.png"
+    },
+    {
+      "id": "winston",
+      "name": "Winston",
+      "image": "../hero/winston.png"
+    },
+    {
+      "id": "wrecking_ball",
+      "name": "Wrecking Ball",
+      "image": "../hero/wrecking_ball.png"
+    },
+    {
+      "id": "zarya",
+      "name": "Zarya",
+      "image": "../hero/zarya.png"
+    },
+    {
+      "id": "zenyatta",
+      "name": "Zenyatta",
+      "image": "../hero/zenyatta.png"
+    }
+  ]
+}
