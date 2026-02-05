@@ -269,7 +269,7 @@ button {
 .hero-name {
   margin: 0.9rem 0 0;
   text-align: center;
-  font-size: clamp(1.2rem, 3.5vw, 2rem);
+  font-size: clamp(1.8rem, 5.25vw, 3rem);
   text-transform: uppercase;
   text-shadow: 0 0 10px rgba(248, 157, 42, 0.5);
 }
@@ -299,7 +299,7 @@ button {
 
 .overlay-stage[data-overlay-team="team1"] .hero-name,
 .overlay-stage[data-overlay-team="team2"] .hero-name {
-  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-size: clamp(2.7rem, 7.5vw, 4.5rem);
 }
 
 @media (max-width: 900px) {
