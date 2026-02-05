@@ -49,8 +49,8 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 
 ## Adding hero images
 
-1. Add image files into `assets/hero/` matching names in `data/heroes.json`.
-   - Example: `assets/hero/ana.png`.
+1. Add image files into `assets/hero/` matching `.webp` names in `data/heroes.json`.
+   - Example: `assets/hero/Icon-Ana.webp`.
 2. If you prefer different filenames, update the matching hero entry in `data/heroes.json`.
 3. If an image is missing, overlays automatically show a placeholder state while still showing the selected hero name.
 

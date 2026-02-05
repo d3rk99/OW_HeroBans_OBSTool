@@ -3,207 +3,207 @@
     {
       "id": "ana",
       "name": "Ana",
-      "image": "../hero/ana.png"
+      "image": "../hero/Icon-Ana.webp"
     },
     {
       "id": "ashe",
       "name": "Ashe",
-      "image": "../hero/ashe.png"
+      "image": "../hero/Icon-Ashe.webp"
     },
     {
       "id": "baptiste",
       "name": "Baptiste",
-      "image": "../hero/baptiste.png"
+      "image": "../hero/Icon-Baptiste.webp"
     },
     {
       "id": "bastion",
       "name": "Bastion",
-      "image": "../hero/bastion.png"
+      "image": "../hero/Icon-Bastion.webp"
     },
     {
       "id": "brigitte",
       "name": "Brigitte",
-      "image": "../hero/brigitte.png"
+      "image": "../hero/Icon-Brigitte.webp"
     },
     {
       "id": "cassidy",
       "name": "Cassidy",
-      "image": "../hero/cassidy.png"
+      "image": "../hero/Icon-Cassidy.webp"
     },
     {
       "id": "dva",
       "name": "D.Va",
-      "image": "../hero/dva.png"
+      "image": "../hero/Icon-D.Va.webp"
     },
     {
       "id": "doomfist",
       "name": "Doomfist",
-      "image": "../hero/doomfist.png"
+      "image": "../hero/Icon-Doomfist.webp"
     },
     {
       "id": "echo",
       "name": "Echo",
-      "image": "../hero/echo.png"
+      "image": "../hero/Icon-Echo.webp"
     },
     {
       "id": "genji",
       "name": "Genji",
-      "image": "../hero/genji.png"
+      "image": "../hero/Icon-Genji.webp"
     },
     {
       "id": "hanzo",
       "name": "Hanzo",
-      "image": "../hero/hanzo.png"
+      "image": "../hero/Icon-Hanzo.webp"
     },
     {
       "id": "illari",
       "name": "Illari",
-      "image": "../hero/illari.png"
+      "image": "../hero/Icon-Illari.webp"
     },
     {
       "id": "junker_queen",
       "name": "Junker Queen",
-      "image": "../hero/junker_queen.png"
+      "image": "../hero/Icon-Junker_Queen.webp"
     },
     {
       "id": "junkrat",
       "name": "Junkrat",
-      "image": "../hero/junkrat.png"
+      "image": "../hero/Icon-Junkrat.webp"
     },
     {
       "id": "juno",
       "name": "Juno",
-      "image": "../hero/juno.png"
+      "image": "../hero/Icon-Juno.webp"
     },
     {
       "id": "kiriko",
       "name": "Kiriko",
-      "image": "../hero/kiriko.png"
+      "image": "../hero/Icon-kiriko.webp"
     },
     {
       "id": "lifeweaver",
       "name": "Lifeweaver",
-      "image": "../hero/lifeweaver.png"
+      "image": "../hero/Icon-Lifeweaver.webp"
     },
     {
       "id": "lucio",
       "name": "Lucio",
-      "image": "../hero/lucio.png"
+      "image": "../hero/Icon-L%3Fcio.webp"
     },
     {
       "id": "mauga",
       "name": "Mauga",
-      "image": "../hero/mauga.png"
+      "image": "../hero/Icon-Mauga.webp"
     },
     {
       "id": "mei",
       "name": "Mei",
-      "image": "../hero/mei.png"
+      "image": "../hero/Icon-Mei.webp"
     },
     {
       "id": "mercy",
       "name": "Mercy",
-      "image": "../hero/mercy.png"
+      "image": "../hero/Icon-Mercy.webp"
     },
     {
       "id": "moira",
       "name": "Moira",
-      "image": "../hero/moira.png"
+      "image": "../hero/Icon-Moira.webp"
     },
     {
       "id": "orisa",
       "name": "Orisa",
-      "image": "../hero/orisa.png"
+      "image": "../hero/Icon-Orisa.webp"
     },
     {
       "id": "pharah",
       "name": "Pharah",
-      "image": "../hero/pharah.png"
+      "image": "../hero/Icon-Pharah.webp"
     },
     {
       "id": "ramattra",
       "name": "Ramattra",
-      "image": "../hero/ramattra.png"
+      "image": "../hero/Icon-Ramattra.webp"
     },
     {
       "id": "reaper",
       "name": "Reaper",
-      "image": "../hero/reaper.png"
+      "image": "../hero/Icon-Reaper.webp"
     },
     {
       "id": "reinhardt",
       "name": "Reinhardt",
-      "image": "../hero/reinhardt.png"
+      "image": "../hero/Icon-Reinhardt.webp"
     },
     {
       "id": "roadhog",
       "name": "Roadhog",
-      "image": "../hero/roadhog.png"
+      "image": "../hero/Icon-Roadhog.webp"
     },
     {
       "id": "sigma",
       "name": "Sigma",
-      "image": "../hero/sigma.png"
+      "image": "../hero/Icon-Sigma.webp"
     },
     {
       "id": "sojourn",
       "name": "Sojourn",
-      "image": "../hero/sojourn.png"
+      "image": "../hero/Icon-Sojourn.webp"
     },
     {
       "id": "soldier_76",
       "name": "Soldier: 76",
-      "image": "../hero/soldier_76.png"
+      "image": "../hero/Icon-Soldier_76.webp"
     },
     {
       "id": "sombra",
       "name": "Sombra",
-      "image": "../hero/sombra.png"
+      "image": "../hero/Icon-Sombra.webp"
     },
     {
       "id": "symmetra",
       "name": "Symmetra",
-      "image": "../hero/symmetra.png"
+      "image": "../hero/Icon-Symmetra.webp"
     },
     {
       "id": "torbjorn",
       "name": "Torbjorn",
-      "image": "../hero/torbjorn.png"
+      "image": "../hero/Icon-Torbj%3Frn.webp"
     },
     {
       "id": "tracer",
       "name": "Tracer",
-      "image": "../hero/tracer.png"
+      "image": "../hero/Icon-Tracer.webp"
     },
     {
       "id": "venture",
       "name": "Venture",
-      "image": "../hero/venture.png"
+      "image": "../hero/Icon-Venture.webp"
     },
     {
       "id": "widowmaker",
       "name": "Widowmaker",
-      "image": "../hero/widowmaker.png"
+      "image": "../hero/Icon-Widowmaker.webp"
     },
     {
       "id": "winston",
       "name": "Winston",
-      "image": "../hero/winston.png"
+      "image": "../hero/Icon-Winston.webp"
     },
     {
       "id": "wrecking_ball",
       "name": "Wrecking Ball",
-      "image": "../hero/wrecking_ball.png"
+      "image": "../hero/Icon-Wrecking_Ball.webp"
     },
     {
       "id": "zarya",
       "name": "Zarya",
-      "image": "../hero/zarya.png"
+      "image": "../hero/Icon-Zarya.webp"
     },
     {
       "id": "zenyatta",
       "name": "Zenyatta",
-      "image": "../hero/zenyatta.png"
+      "image": "../hero/Icon-Zenyatta.webp"
     }
   ]
 }
