@@ -31,8 +31,8 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 
 1. Put this folder somewhere stable on disk.
 2. Start the local server so all pages share state:
-   - Run `python server/ban_server.py` from the repo root.
-   - Or load the OBS script `obs_plugin/hero_bans_server.py` (Tools → Scripts) to run it automatically.
+   - Run `lua server/ban_server.lua` from the repo root (requires LuaSocket).
+   - Or load the OBS script `obs_plugin/hero_bans_server.lua` (Tools → Scripts) to run it automatically.
 3. Add Browser Source for Team 1 overlay:
    - Check `Local file`.
    - File: `team1.html`.
@@ -65,6 +65,10 @@ For best sync between the dock/control and overlay sources, load the pages from 
 - Team 2 overlay: `http://127.0.0.1:8787/team2.html`
 
 When the pages are served over HTTP, they share the same origin and the app stores state on the local server instead of per-source localStorage.
+
+### LuaSocket requirement
+
+The Lua server and OBS script rely on LuaSocket. Install it via your Lua package manager (for example, `luarocks install luasocket`) or use the Lua runtime bundled with OBS if it includes LuaSocket.
 
 ## Adding hero images
 
