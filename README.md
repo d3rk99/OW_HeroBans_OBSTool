@@ -12,7 +12,8 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 
 ## How it works
 
-- Shared state is stored in localStorage under key `ow2_bans_state`.
+- Shared state is stored in localStorage under key `ow2_bans_state` when opened as local files.
+- When served over HTTP (recommended), state is stored on the local server at `/state`.
 - State shape:
 
 ```json
@@ -29,27 +30,41 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 ## OBS setup
 
 1. Put this folder somewhere stable on disk.
-2. Add Browser Source for Team 1 overlay:
+2. Start the local server so all pages share state:
+   - Run `python server/ban_server.py` from the repo root.
+   - Or load the OBS script `obs_plugin/hero_bans_server.py` (Tools → Scripts) to run it automatically.
+3. Add Browser Source for Team 1 overlay:
    - Check `Local file`.
    - File: `team1.html`.
    - Width: `600`.
    - Height: `300`.
-3. Add Browser Source for Team 2 overlay:
+4. Add Browser Source for Team 2 overlay:
    - Check `Local file`.
    - File: `team2.html`.
    - Width: `600`.
    - Height: `300`.
-4. Add Browser Source or local browser window for producer panel:
+5. Add Browser Source or local browser window for producer panel:
    - File: `control.html`.
    - Use a larger size such as `1280x720`.
-5. (Optional) Add a custom browser dock in OBS:
+6. (Optional) Add a custom browser dock in OBS:
    - Go to `View` → `Docks` → `Custom Browser Docks`.
    - Add a new dock pointing to the local file `dock.html`.
    - Dock it near your scene/source list so controls stay visible while you work.
-6. Recommended source options:
+7. Recommended source options:
    - Keep `Refresh browser when scene becomes active` disabled unless you need hard resets.
    - Keep `Shutdown source when not visible` disabled if you want instant resume state.
    - Enable hardware acceleration if your OBS setup benefits from it.
+
+### Server-based workflow (recommended)
+
+For best sync between the dock/control and overlay sources, load the pages from the local server instead of file URLs:
+
+- Control panel: `http://127.0.0.1:8787/control.html`
+- Dock panel: `http://127.0.0.1:8787/dock.html`
+- Team 1 overlay: `http://127.0.0.1:8787/team1.html`
+- Team 2 overlay: `http://127.0.0.1:8787/team2.html`
+
+When the pages are served over HTTP, they share the same origin and the app stores state on the local server instead of per-source localStorage.
 
 ## Adding hero images
 

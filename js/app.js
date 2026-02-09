@@ -1,5 +1,6 @@
 (() => {
   const STATE_KEY = 'ow2_bans_state';
+  const STATE_ENDPOINT = './state';
   const HEROES_PATH = './data/heroes.json';
   const HERO_IMAGE_BASE = './assets/';
   const OVERLAY_POLL_MS = 500;
@@ -42,30 +43,78 @@
     }
   }
 
-  function readState() {
+  const storageMode = (() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('server') === '1') return 'server';
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      return 'server';
+    }
+    return 'local';
+  })();
+
+  function normalizeState(parsed) {
+    return {
+      team1: { ban: parsed?.team1?.ban || '' },
+      team2: { ban: parsed?.team2?.ban || '' },
+      updatedAt: Number(parsed?.updatedAt) || Date.now()
+    };
+  }
+
+  function readLocalState() {
     const raw = localStorage.getItem(STATE_KEY);
     if (!raw) return defaultState();
 
     try {
-      const parsed = JSON.parse(raw);
-      return {
-        team1: { ban: parsed?.team1?.ban || '' },
-        team2: { ban: parsed?.team2?.ban || '' },
-        updatedAt: Number(parsed?.updatedAt) || Date.now()
-      };
+      return normalizeState(JSON.parse(raw));
     } catch {
       return defaultState();
     }
   }
 
-  function writeState(nextState) {
-    const payload = {
-      team1: { ban: nextState?.team1?.ban || '' },
-      team2: { ban: nextState?.team2?.ban || '' },
-      updatedAt: Date.now()
-    };
+  function writeLocalState(nextState) {
+    const payload = normalizeState({ ...nextState, updatedAt: Date.now() });
     localStorage.setItem(STATE_KEY, JSON.stringify(payload));
     return payload;
+  }
+
+  async function readServerState() {
+    try {
+      const response = await fetch(STATE_ENDPOINT, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Failed to load state (${response.status})`);
+      }
+      const data = await response.json();
+      return normalizeState(data);
+    } catch (error) {
+      console.warn('Server state unavailable, falling back to local.', error);
+      return readLocalState();
+    }
+  }
+
+  async function writeServerState(nextState) {
+    const payload = normalizeState({ ...nextState, updatedAt: Date.now() });
+    try {
+      const response = await fetch(STATE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to save state (${response.status})`);
+      }
+      return payload;
+    } catch (error) {
+      console.warn('Server state save failed, writing local.', error);
+      return writeLocalState(payload);
+    }
+  }
+
+  function readState() {
+    return storageMode === 'server' ? readServerState() : Promise.resolve(readLocalState());
+  }
+
+  function writeState(nextState) {
+    return storageMode === 'server' ? writeServerState(nextState) : Promise.resolve(writeLocalState(nextState));
   }
 
   function findHeroByName(name) {
@@ -256,9 +305,9 @@
       };
     };
 
-    const applyState = () => {
+    const applyState = async () => {
       const queryHero = getQueryHero();
-      const state = readState();
+      const state = await readState();
       const selectedName = (queryHero || state?.[teamId]?.ban || '').trim();
       const signature = `${selectedName}:${state.updatedAt}`;
       if (signature === lastSignature) return;
@@ -278,14 +327,16 @@
 
     applyState();
 
-    window.addEventListener('storage', (event) => {
-      if (event.key === STATE_KEY) applyState();
-    });
+    if (storageMode === 'local') {
+      window.addEventListener('storage', (event) => {
+        if (event.key === STATE_KEY) applyState();
+      });
+    }
     setInterval(applyState, OVERLAY_POLL_MS);
   }
 
   async function initControlPage() {
-    const pendingState = readState();
+    const pendingState = await readState();
 
     const syncInputs = () => {
       ['team1', 'team2'].forEach((teamId) => {
@@ -317,13 +368,29 @@
       });
     }
 
-    window.addEventListener('storage', (event) => {
-      if (event.key !== STATE_KEY) return;
-      const next = readState();
-      pendingState.team1.ban = next.team1.ban;
-      pendingState.team2.ban = next.team2.ban;
-      syncInputs();
-    });
+    if (storageMode === 'local') {
+      window.addEventListener('storage', async (event) => {
+        if (event.key !== STATE_KEY) return;
+        const next = await readState();
+        pendingState.team1.ban = next.team1.ban;
+        pendingState.team2.ban = next.team2.ban;
+        syncInputs();
+      });
+    }
+
+    if (storageMode === 'server') {
+      setInterval(async () => {
+        const next = await readState();
+        if (
+          next.team1.ban !== pendingState.team1.ban ||
+          next.team2.ban !== pendingState.team2.ban
+        ) {
+          pendingState.team1.ban = next.team1.ban;
+          pendingState.team2.ban = next.team2.ban;
+          syncInputs();
+        }
+      }, OVERLAY_POLL_MS);
+    }
   }
 
   async function init() {
