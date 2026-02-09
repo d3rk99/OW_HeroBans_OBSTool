@@ -27,6 +27,11 @@ body {
   font-size: 1.12rem;
 }
 
+.dock-page {
+  font-size: 1rem;
+  padding: 0.8rem 0.75rem 0.6rem;
+}
+
 .control-layout {
   width: min(1500px, 100%);
   margin: 0 auto;
@@ -55,6 +60,20 @@ body {
   color: var(--muted);
 }
 
+.dock-page .control-layout {
+  width: 100%;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.dock-page .panel-header h1 {
+  font-size: 1.6rem;
+}
+
+.dock-page .panel-header p {
+  font-size: 0.95rem;
+}
+
 .team-column {
   background: rgba(17, 24, 40, 0.85);
   border: 1px solid rgba(248, 157, 42, 0.35);
@@ -68,6 +87,14 @@ body {
 .team-column h2 {
   margin: 0;
   font-size: 2rem;
+}
+
+.dock-page .team-column {
+  padding: 0.85rem;
+}
+
+.dock-page .team-column h2 {
+  font-size: 1.35rem;
 }
 
 .search-wrap {
@@ -88,6 +115,11 @@ input[type="text"] {
   color: var(--text);
   padding: 0.7rem 0.85rem;
   font-size: 1.25rem;
+}
+
+.dock-page input[type="text"] {
+  font-size: 1.05rem;
+  padding: 0.6rem 0.75rem;
 }
 
 .results {
@@ -154,6 +186,17 @@ input[type="text"] {
   font-size: 1.05rem;
 }
 
+.dock-page .team-actions-row {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.dock-page .team-actions-row .secondary-btn {
+  width: 100%;
+  font-size: 0.98rem;
+  padding: 0.65rem 0.9rem;
+}
+
 .mini-preview {
   display: flex;
   gap: 0.55rem;
@@ -174,6 +217,11 @@ input[type="text"] {
   background-position: center;
 }
 
+.dock-page .mini-thumb {
+  width: 56px;
+  height: 56px;
+}
+
 .mini-meta p {
   margin: 0;
 }
@@ -186,6 +234,10 @@ input[type="text"] {
 .mini-meta .value {
   font-size: 1.35rem;
   font-weight: 700;
+}
+
+.dock-page .mini-meta .value {
+  font-size: 1.15rem;
 }
 
 button {
@@ -217,6 +269,13 @@ button {
   padding: 0.85rem 1.45rem;
 }
 
+.dock-page .sync-row .primary-btn {
+  min-width: 0;
+  width: 100%;
+  font-size: 1.1rem;
+  padding: 0.7rem 1rem;
+}
+
 .danger-btn {
   background: #ff6464;
 }
@@ -233,6 +292,17 @@ button {
   border: 1px solid rgba(67, 199, 255, 0.25);
   border-radius: 12px;
   background: rgba(9, 15, 28, 0.72);
+}
+
+.dock-page .control-footer {
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+
+.dock-page .control-footer p {
+  font-size: 0.9rem;
 }
 
 .control-footer code {

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OW2 Hero Bans Dock</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body class="control-page dock-page">
+  <main class="control-layout">
+    <header class="panel-header">
+      <h1>Hero Bans Dock</h1>
+      <p>Compact control layout for OBS custom browser docks.</p>
+    </header>
+
+    <section class="team-column" aria-labelledby="team1-heading">
+      <h2 id="team1-heading">Team 1 Ban</h2>
+      <div class="search-wrap">
+        <label for="team1-search">Hero</label>
+        <input id="team1-search" type="text" autocomplete="off" placeholder="Search heroes..." />
+        <ul id="team1-results" class="results" role="listbox" aria-label="Team 1 hero options"></ul>
+      </div>
+      <div class="team-actions-row">
+        <div id="team1-preview" class="mini-preview">
+          <div class="mini-thumb" data-thumb></div>
+          <div class="mini-meta">
+            <p class="label">Current Ban</p>
+            <p class="value" data-name>None</p>
+          </div>
+        </div>
+        <button id="team1-clear" class="secondary-btn" type="button">Clear Team 1 Ban</button>
+      </div>
+    </section>
+
+    <section class="team-column" aria-labelledby="team2-heading">
+      <h2 id="team2-heading">Team 2 Ban</h2>
+      <div class="search-wrap">
+        <label for="team2-search">Hero</label>
+        <input id="team2-search" type="text" autocomplete="off" placeholder="Search heroes..." />
+        <ul id="team2-results" class="results" role="listbox" aria-label="Team 2 hero options"></ul>
+      </div>
+      <div class="team-actions-row">
+        <div id="team2-preview" class="mini-preview">
+          <div class="mini-thumb" data-thumb></div>
+          <div class="mini-meta">
+            <p class="label">Current Ban</p>
+            <p class="value" data-name>None</p>
+          </div>
+        </div>
+        <button id="team2-clear" class="secondary-btn" type="button">Clear Team 2 Ban</button>
+      </div>
+    </section>
+
+    <div class="sync-row" aria-label="Overlay update controls">
+      <button id="apply-update" class="primary-btn" type="button">Update Overlays</button>
+    </div>
+  </main>
+
+  <footer class="control-footer">
+    <button id="reset-all" class="danger-btn" type="button">Reset All</button>
+    <p>Use this page as an OBS custom browser dock so controls stay attached to the editor.</p>
+  </footer>
+
+  <script src="./js/heroes-data.js" defer></script>
+  <script src="./js/app.js" defer></script>
+</body>
+</html>

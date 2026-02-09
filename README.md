@@ -42,7 +42,11 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 4. Add Browser Source or local browser window for producer panel:
    - File: `control.html`.
    - Use a larger size such as `1280x720`.
-5. Recommended source options:
+5. (Optional) Add a custom browser dock in OBS:
+   - Go to `View` → `Docks` → `Custom Browser Docks`.
+   - Add a new dock pointing to the local file `dock.html`.
+   - Dock it near your scene/source list so controls stay visible while you work.
+6. Recommended source options:
    - Keep `Refresh browser when scene becomes active` disabled unless you need hard resets.
    - Keep `Shutdown source when not visible` disabled if you want instant resume state.
    - Enable hardware acceleration if your OBS setup benefits from it.
