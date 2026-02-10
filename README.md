@@ -10,7 +10,7 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 - `gui_tool.py`: Desktop GUI controller + local bridge server (`http://127.0.0.1:8765`).
 - `setup_windows_env.bat`: Windows setup helper that installs Python (via `winget` if needed), creates `.venv`, and installs dependencies.
 - `build_exe.bat`: Windows helper script to build `OW2HeroBansGUI.exe` with PyInstaller.
-- `requirements.txt`: Python dependencies used by the GUI/EXE build workflow.
+- `requirements.txt`: Python dependencies used by the GUI/EXE build workflow (PyInstaller + Pillow for hero icons in suggestions).
 - `data/heroes.json`: Hero metadata mapping hero names to expected image filenames.
 - `assets/hero/`: Place hero icon images here (current expected path).
 
