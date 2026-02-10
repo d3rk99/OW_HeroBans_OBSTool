@@ -55,6 +55,8 @@ The GUI window replaces `control.html` as your producer control surface while st
 
 This gives you the same producer panel inside OBS instead of a separate window/browser tab.
 
+If OBS script logs report missing Qt WebEngine modules, install one supported binding (PyQt6, PySide6, PyQt5, or PySide2) into the Python runtime used by OBS scripting, then reload the script.
+
 ## OBS setup (browser file mode)
 
 1. Put this folder somewhere stable on disk.

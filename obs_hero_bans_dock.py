@@ -23,45 +23,68 @@ _dock_widget = None
 _qt_widgets = None
 _qt_core = None
 _qt_web = None
+_qt_backend_name = None
+_qt_import_error_logged = False
+_last_applied_signature = None
 
 
-def _log_info(message: str) -> None:
+def _log_info(message):
     obs.script_log(obs.LOG_INFO, message)
 
 
-def _log_debug(message: str) -> None:
+def _log_debug(message):
     if SCRIPT_SETTINGS["debug_logs"]:
-        obs.script_log(obs.LOG_INFO, f"[debug] {message}")
+        obs.script_log(obs.LOG_INFO, "[debug] {0}".format(message))
 
 
-def _log_error(message: str) -> None:
+def _log_error(message):
     obs.script_log(obs.LOG_ERROR, message)
 
 
-def _import_qt_modules() -> bool:
-    global _qt_widgets, _qt_core, _qt_web
+def _import_qt_modules():
+    """Load any available Qt binding with WebEngine support.
+
+    OBS Python environments vary a lot between versions/installations.
+    We try common bindings in order and cache the first success.
+    """
+
+    global _qt_widgets, _qt_core, _qt_web, _qt_backend_name, _qt_import_error_logged
 
     if _qt_widgets and _qt_core and _qt_web:
         return True
 
-    try:
-        # OBS ships with Qt. WebEngine availability depends on OBS build.
-        from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
+    candidates = [
+        ("PyQt6", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
+        ("PySide6", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
+        ("PyQt5", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
+        ("PySide2", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
+    ]
 
-        _qt_core = QtCore
-        _qt_widgets = QtWidgets
-        _qt_web = QtWebEngineWidgets
-        return True
-    except Exception:
+    for binding_name, core_mod, widgets_mod, web_mod in candidates:
+        try:
+            pkg = __import__(binding_name, fromlist=[core_mod, widgets_mod, web_mod])
+            _qt_core = getattr(pkg, core_mod)
+            _qt_widgets = getattr(pkg, widgets_mod)
+            _qt_web = getattr(pkg, web_mod)
+            _qt_backend_name = binding_name
+            _log_info("Using Qt backend: {0}".format(binding_name))
+            _qt_import_error_logged = False
+            return True
+        except Exception:
+            _log_debug("Qt backend import failed: {0}".format(binding_name))
+            _log_debug(traceback.format_exc())
+
+    if not _qt_import_error_logged:
         _log_error(
-            "Unable to import PyQt5 QtWebEngine modules. "
-            "Install the OBS Python dependencies for PyQt5/QtWebEngine and reload script."
+            "Unable to import a Qt WebEngine backend (tried PyQt6, PySide6, PyQt5, PySide2). "
+            "Install one of these in the OBS Python environment and reload script."
         )
-        _log_debug(traceback.format_exc())
-        return False
+        _qt_import_error_logged = True
+
+    return False
 
 
-def _remove_existing_dock() -> None:
+def _remove_existing_dock():
     global _dock_widget
 
     if _dock_widget is None:
@@ -77,7 +100,7 @@ def _remove_existing_dock() -> None:
         _dock_widget = None
 
 
-def _build_dock() -> bool:
+def _build_dock():
     global _dock_widget
 
     if not _import_qt_modules():
@@ -95,7 +118,11 @@ def _build_dock() -> bool:
 
         obs.obs_frontend_add_dock(dock)
         _dock_widget = dock
-        _log_info(f"Added dock '{SCRIPT_SETTINGS['dock_title']}' -> {SCRIPT_SETTINGS['dock_url']}")
+        _log_info(
+            "Added dock '{0}' -> {1}".format(
+                SCRIPT_SETTINGS["dock_title"], SCRIPT_SETTINGS["dock_url"]
+            )
+        )
         return True
     except Exception:
         _log_error("Failed to create OW2 Hero Bans dock")
@@ -103,7 +130,28 @@ def _build_dock() -> bool:
         return False
 
 
-def script_description() -> str:
+def _apply_settings(settings):
+    SCRIPT_SETTINGS["dock_title"] = (
+        obs.obs_data_get_string(settings, "dock_title") or "OW2 Hero Bans"
+    )
+    SCRIPT_SETTINGS["dock_id"] = (
+        obs.obs_data_get_string(settings, "dock_id") or "ow2_hero_bans_dock"
+    )
+    SCRIPT_SETTINGS["dock_url"] = (
+        obs.obs_data_get_string(settings, "dock_url") or "http://127.0.0.1:8765/control.html"
+    )
+    SCRIPT_SETTINGS["debug_logs"] = obs.obs_data_get_bool(settings, "debug_logs")
+
+
+def _current_signature():
+    return (
+        SCRIPT_SETTINGS["dock_title"],
+        SCRIPT_SETTINGS["dock_id"],
+        SCRIPT_SETTINGS["dock_url"],
+    )
+
+
+def script_description():
     return (
         "Adds the OW2 Hero Bans control page as an OBS dock.\\n\\n"
         "Run gui_tool.py (or OW2HeroBansGUI.exe) first, then set the dock URL "
@@ -128,18 +176,22 @@ def script_defaults(settings):
 
 
 def script_update(settings):
-    SCRIPT_SETTINGS["dock_title"] = obs.obs_data_get_string(settings, "dock_title") or "OW2 Hero Bans"
-    SCRIPT_SETTINGS["dock_id"] = obs.obs_data_get_string(settings, "dock_id") or "ow2_hero_bans_dock"
-    SCRIPT_SETTINGS["dock_url"] = (
-        obs.obs_data_get_string(settings, "dock_url") or "http://127.0.0.1:8765/control.html"
-    )
-    SCRIPT_SETTINGS["debug_logs"] = obs.obs_data_get_bool(settings, "debug_logs")
+    global _last_applied_signature
+
+    _apply_settings(settings)
+    signature = _current_signature()
+
+    if signature == _last_applied_signature and _dock_widget is not None:
+        _log_debug("Settings unchanged; skipping dock rebuild")
+        return
 
     _build_dock()
+    _last_applied_signature = signature
 
 
 def script_load(_settings):
-    _build_dock()
+    # script_update is called by OBS with persisted/default settings.
+    pass
 
 
 def script_unload():
