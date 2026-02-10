@@ -46,9 +46,19 @@
       "image": "../hero/Icon-Echo.webp"
     },
     {
+      "id": "freja",
+      "name": "Freja",
+      "image": "../hero/Icon-Freja.webp"
+    },
+    {
       "id": "genji",
       "name": "Genji",
       "image": "../hero/Icon-Genji.webp"
+    },
+    {
+      "id": "hazard",
+      "name": "Hazard",
+      "image": "../hero/Icon-Hazard.webp"
     },
     {
       "id": "hanzo",
@@ -176,6 +186,11 @@
       "image": "../hero/Icon-Tracer.webp"
     },
     {
+      "id": "vendetta",
+      "name": "Vendetta",
+      "image": "../hero/Icon-Vendetta.webp"
+    },
+    {
       "id": "venture",
       "name": "Venture",
       "image": "../hero/Icon-Venture.webp"
@@ -189,6 +204,11 @@
       "id": "winston",
       "name": "Winston",
       "image": "../hero/Icon-Winston.webp"
+    },
+    {
+      "id": "wuyang",
+      "name": "Wuyang",
+      "image": "../hero/Icon-Wuyang.webp"
     },
     {
       "id": "wrecking_ball",
