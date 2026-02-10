@@ -96,6 +96,16 @@ class BridgeHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, directory=str(ROOT_DIR), **kwargs)
 
+    def log_message(self, _format: str, *args: Any) -> None:
+        """Suppress stdlib HTTP stderr logging for windowed EXE builds.
+
+        In PyInstaller/OBS tool workflows without a console, ``sys.stderr`` can be
+        ``None`` and the default ``SimpleHTTPRequestHandler.log_message`` may raise,
+        causing requests to terminate with an empty response.
+        """
+
+        return
+
     def _write_json(self, status: int, payload: dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)

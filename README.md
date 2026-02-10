@@ -8,6 +8,7 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 - `team1.html`: Team 1 overlay card.
 - `team2.html`: Team 2 overlay card.
 - `gui_tool.py`: Desktop GUI controller + local bridge server (`http://127.0.0.1:8765`).
+- `obs_hero_bans_dock.py`: OBS Python script that embeds `control.html` as a native OBS dock panel (written for broad OBS Python compatibility).
 - `setup_windows_env.bat`: Windows setup helper that installs Python (via `winget` if needed), creates `.venv`, and installs dependencies.
 - `build_exe.bat`: Windows helper script to build `OW2HeroBansGUI.exe` with PyInstaller.
 - `requirements.txt`: Python dependencies used by the GUI/EXE build workflow (PyInstaller + Pillow for hero icons in suggestions).
@@ -41,6 +42,25 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
    - `http://127.0.0.1:8765/team2.html`
 
 The GUI window replaces `control.html` as your producer control surface while still using the same `team1.html` and `team2.html` overlays.
+
+## OBS dock setup (script mode)
+
+1. In OBS, open `Tools -> Scripts`.
+2. Click `+` and add `obs_hero_bans_dock.py` from this repo.
+3. Leave `Auto-start local headless server` enabled (default).
+4. Open `View -> Docks` and enable `OW2 Hero Bans` if it is not already visible.
+
+When enabled, the script automatically starts a local headless server at `http://127.0.0.1:8765` for `control.html`, `team1.html`, `team2.html`, and `/api/state`. When OBS unloads the script (or exits), that script-owned server is shut down automatically.
+
+If OBS script logs report missing Qt WebEngine modules, install a supported binding into the Python runtime used by OBS scripting, then reload the script.
+
+- Python 3.6 (common in older OBS installs): use `PyQt5` or `PySide2` and their QtWebEngine package.
+- Python 3.7+: `PyQt6`, `PySide6`, `PyQt5`, or `PySide2` can work.
+
+If you cannot install Qt packages into the OBS scripting Python, use OBS-native fallback (no script required):
+1. `View -> Docks -> Custom Browser Docks...`
+2. Name: `OW2 Hero Bans`
+3. URL: `http://127.0.0.1:8765/control.html`
 
 ## OBS setup (browser file mode)
 

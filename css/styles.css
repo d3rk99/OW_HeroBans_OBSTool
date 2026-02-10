@@ -361,3 +361,130 @@ button {
     align-items: flex-start;
   }
 }
+
+
+@media (max-width: 420px), (max-height: 520px) {
+  .control-page {
+    padding: 0.35rem;
+    font-size: 0.86rem;
+  }
+
+  .control-layout {
+    gap: 0.4rem;
+  }
+
+  .panel-header {
+    padding: 0.45rem 0.55rem;
+    border-radius: 8px;
+  }
+
+  .panel-header h1 {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.1;
+  }
+
+  .panel-header p {
+    display: none;
+  }
+
+  .team-column {
+    padding: 0.45rem;
+    border-radius: 8px;
+    gap: 0.35rem;
+  }
+
+  .team-column h2 {
+    font-size: 1rem;
+  }
+
+  label {
+    margin-bottom: 0.2rem;
+    font-size: 0.78rem;
+  }
+
+  input[type="text"] {
+    border-radius: 6px;
+    padding: 0.42rem 0.55rem;
+    font-size: 0.9rem;
+  }
+
+  .results {
+    margin-top: 0.2rem;
+    max-height: 120px;
+  }
+
+  .results li {
+    gap: 0.4rem;
+    padding: 0.3rem;
+  }
+
+  .result-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+  }
+
+  .team-actions-row {
+    gap: 0.35rem;
+  }
+
+  .team-actions-row .secondary-btn {
+    padding: 0.45rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .mini-preview {
+    gap: 0.35rem;
+    border-radius: 7px;
+    padding: 0.35rem 0.45rem;
+  }
+
+  .mini-thumb {
+    width: 34px;
+    height: 34px;
+    border-radius: 5px;
+  }
+
+  .mini-meta .label {
+    font-size: 0.7rem;
+  }
+
+  .mini-meta .value {
+    font-size: 0.92rem;
+    line-height: 1;
+  }
+
+  button {
+    border-radius: 6px;
+    padding: 0.48rem 0.55rem;
+    font-size: 0.85rem;
+  }
+
+  .sync-row {
+    gap: 0.35rem;
+  }
+
+  .sync-row .primary-btn,
+  .sync-row .secondary-btn {
+    min-width: 0;
+    flex: 1;
+    font-size: 0.9rem;
+    padding: 0.55rem 0.45rem;
+  }
+
+  .control-footer {
+    margin-top: 0.35rem;
+    padding: 0.4rem;
+    border-radius: 8px;
+    gap: 0.35rem;
+  }
+
+  .control-footer p {
+    display: none;
+  }
+
+  .control-footer .danger-btn {
+    width: 100%;
+  }
+}
