@@ -183,7 +183,13 @@ class RoundedPanel(tk.Canvas):
         self.radius = radius
         self.padding = padding
         self.inner = tk.Frame(self, bg=bg_color)
-        self._shape_id = self.create_polygon([], smooth=True, fill=bg_color, outline=border_color, width=1)
+        self._shape_id = self.create_polygon(
+            1, 1, 2, 1, 2, 2, 1, 2,
+            smooth=True,
+            fill=bg_color,
+            outline=border_color,
+            width=1,
+        )
         self._win_id = self.create_window((padding, padding), window=self.inner, anchor="nw")
         self.bind("<Configure>", self._on_resize)
 
