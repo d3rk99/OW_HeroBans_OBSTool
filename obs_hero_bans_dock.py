@@ -6,7 +6,7 @@ Usage:
 3) Enable/reload the script. A dock named "OW2 Hero Bans" appears in View -> Docks.
 """
 
-from __future__ import annotations
+# Keep this script compatible with older OBS-bundled Python versions.
 
 import traceback
 

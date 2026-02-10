@@ -8,7 +8,7 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 - `team1.html`: Team 1 overlay card.
 - `team2.html`: Team 2 overlay card.
 - `gui_tool.py`: Desktop GUI controller + local bridge server (`http://127.0.0.1:8765`).
-- `obs_hero_bans_dock.py`: OBS Python script that embeds `control.html` as a native OBS dock panel.
+- `obs_hero_bans_dock.py`: OBS Python script that embeds `control.html` as a native OBS dock panel (written for broad OBS Python compatibility).
 - `setup_windows_env.bat`: Windows setup helper that installs Python (via `winget` if needed), creates `.venv`, and installs dependencies.
 - `build_exe.bat`: Windows helper script to build `OW2HeroBansGUI.exe` with PyInstaller.
 - `requirements.txt`: Python dependencies used by the GUI/EXE build workflow (PyInstaller + Pillow for hero icons in suggestions).
