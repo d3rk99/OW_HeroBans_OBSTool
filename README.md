@@ -7,12 +7,17 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 - `control.html`: Producer control panel with searchable hero selection for both teams.
 - `team1.html`: Team 1 overlay card.
 - `team2.html`: Team 2 overlay card.
+- `gui_tool.py`: Desktop GUI controller + local bridge server (`http://127.0.0.1:8765`).
+- `setup_windows_env.bat`: Windows setup helper that installs Python (via `winget` if needed), creates `.venv`, and installs dependencies.
+- `build_exe.bat`: Windows helper script to build `OW2HeroBansGUI.exe` with PyInstaller.
+- `requirements.txt`: Python dependencies used by the GUI/EXE build workflow.
 - `data/heroes.json`: Hero metadata mapping hero names to expected image filenames.
 - `assets/hero/`: Place hero icon images here (current expected path).
 
 ## How it works
 
 - Shared state is stored in localStorage under key `ow2_bans_state`.
+- If the desktop GUI bridge is running, pages also sync via `http://127.0.0.1:8765/api/state`.
 - State shape:
 
 ```json
@@ -26,7 +31,18 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 - `control.html` writes state updates.
 - `team1.html` and `team2.html` listen for storage events and also poll state every 500ms for robust updates in OBS/browser contexts.
 
-## OBS setup
+## Desktop GUI mode (EXE)
+
+1. Run `setup_windows_env.bat` (installs Python automatically if missing: tries `winget` first, then falls back to the official python.org installer; then creates `.venv` and installs dependencies).
+2. Run `build_exe.bat`.
+3. Launch `dist/OW2HeroBansGUI.exe`.
+4. In OBS, add Browser Sources with URLs:
+   - `http://127.0.0.1:8765/team1.html`
+   - `http://127.0.0.1:8765/team2.html`
+
+The GUI window replaces `control.html` as your producer control surface while still using the same `team1.html` and `team2.html` overlays.
+
+## OBS setup (browser file mode)
 
 1. Put this folder somewhere stable on disk.
 2. Add Browser Source for Team 1 overlay:
