@@ -61,7 +61,11 @@ def _qt_candidates_for_runtime():
 
 
 def _import_qt_modules():
-    """Load any available Qt binding with WebEngine support."""
+    """Load any available Qt binding with WebEngine support.
+
+    If unavailable, we log actionable guidance including an OBS-native fallback
+    (Custom Browser Docks) that does not require Python Qt packages.
+    """
 
     global _qt_widgets, _qt_core, _qt_web, _qt_backend_name, _qt_import_error_logged
 
@@ -89,12 +93,19 @@ def _import_qt_modules():
             "Unable to import a Qt WebEngine backend (tried {0}). "
             "Install one of these in the OBS Python environment and reload script.".format(backend_names)
         )
+        _log_error(
+            "OBS Python runtime: {0}.{1} at {2}".format(
+                sys.version_info[0], sys.version_info[1], sys.executable
+            )
+        )
         if sys.version_info < (3, 7):
             _log_error(
-                "Detected Python {0}.{1}. Use PyQt5/PySide2 + QtWebEngine packages (Qt6 is unsupported on Python 3.6).".format(
-                    sys.version_info[0], sys.version_info[1]
-                )
+                "Detected Python 3.6. Use PyQt5/PySide2 + QtWebEngine packages (Qt6 is unsupported on Python 3.6)."
             )
+        _log_error(
+            "No Python Qt available? Use OBS fallback: View -> Docks -> Custom Browser Docks and add URL "
+            "http://127.0.0.1:8765/control.html"
+        )
         _qt_import_error_logged = True
 
     return False

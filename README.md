@@ -60,6 +60,11 @@ If OBS script logs report missing Qt WebEngine modules, install a supported bind
 - Python 3.6 (common in older OBS installs): use `PyQt5` or `PySide2` and their QtWebEngine package.
 - Python 3.7+: `PyQt6`, `PySide6`, `PyQt5`, or `PySide2` can work.
 
+If you cannot install Qt packages into the OBS scripting Python, use OBS-native fallback (no script required):
+1. `View -> Docks -> Custom Browser Docks...`
+2. Name: `OW2 Hero Bans`
+3. URL: `http://127.0.0.1:8765/control.html`
+
 ## OBS setup (browser file mode)
 
 1. Put this folder somewhere stable on disk.
