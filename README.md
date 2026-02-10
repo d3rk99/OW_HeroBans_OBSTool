@@ -8,6 +8,7 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 - `team1.html`: Team 1 overlay card.
 - `team2.html`: Team 2 overlay card.
 - `gui_tool.py`: Desktop GUI controller + local bridge server (`http://127.0.0.1:8765`).
+- `obs_hero_bans_dock.py`: OBS Python script that embeds `control.html` as a native OBS dock panel.
 - `setup_windows_env.bat`: Windows setup helper that installs Python (via `winget` if needed), creates `.venv`, and installs dependencies.
 - `build_exe.bat`: Windows helper script to build `OW2HeroBansGUI.exe` with PyInstaller.
 - `requirements.txt`: Python dependencies used by the GUI/EXE build workflow (PyInstaller + Pillow for hero icons in suggestions).
@@ -41,6 +42,18 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
    - `http://127.0.0.1:8765/team2.html`
 
 The GUI window replaces `control.html` as your producer control surface while still using the same `team1.html` and `team2.html` overlays.
+
+## OBS dock setup (script mode)
+
+1. Start `gui_tool.py` (or `OW2HeroBansGUI.exe`) so the control page is served at `http://127.0.0.1:8765/control.html`.
+2. In OBS, open `Tools -> Scripts`.
+3. Click `+` and add `obs_hero_bans_dock.py` from this repo.
+4. Confirm the script settings:
+   - `Dock Title`: `OW2 Hero Bans`
+   - `Dock URL`: `http://127.0.0.1:8765/control.html`
+5. Open `View -> Docks` and enable `OW2 Hero Bans` if it is not already visible.
+
+This gives you the same producer panel inside OBS instead of a separate window/browser tab.
 
 ## OBS setup (browser file mode)
 
