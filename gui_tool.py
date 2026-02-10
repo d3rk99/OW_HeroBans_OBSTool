@@ -295,8 +295,7 @@ class ControlGui:
             fg=TXT_MUTED,
             font=("Segoe UI", 15),
             padx=20,
-            pady=(0, 16),
-        ).pack(anchor="w")
+        ).pack(anchor="w", pady=(0, 16))
 
         team_row = tk.Frame(shell, bg=BG_MAIN)
         team_row.pack(fill="x", pady=(0, 14))
