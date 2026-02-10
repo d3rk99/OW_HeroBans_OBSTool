@@ -45,15 +45,12 @@ The GUI window replaces `control.html` as your producer control surface while st
 
 ## OBS dock setup (script mode)
 
-1. Start `gui_tool.py` (or `OW2HeroBansGUI.exe`) so the control page is served at `http://127.0.0.1:8765/control.html`.
-2. In OBS, open `Tools -> Scripts`.
-3. Click `+` and add `obs_hero_bans_dock.py` from this repo.
-4. Confirm the script settings:
-   - `Dock Title`: `OW2 Hero Bans`
-   - `Dock URL`: `http://127.0.0.1:8765/control.html`
-5. Open `View -> Docks` and enable `OW2 Hero Bans` if it is not already visible.
+1. In OBS, open `Tools -> Scripts`.
+2. Click `+` and add `obs_hero_bans_dock.py` from this repo.
+3. Leave `Auto-start local headless server` enabled (default).
+4. Open `View -> Docks` and enable `OW2 Hero Bans` if it is not already visible.
 
-This gives you the same producer panel inside OBS instead of a separate window/browser tab.
+When enabled, the script automatically starts a local headless server at `http://127.0.0.1:8765` for `control.html`, `team1.html`, `team2.html`, and `/api/state`. When OBS unloads the script (or exits), that script-owned server is shut down automatically.
 
 If OBS script logs report missing Qt WebEngine modules, install a supported binding into the Python runtime used by OBS scripting, then reload the script.
 
