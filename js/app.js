@@ -299,6 +299,17 @@
     installSearchForTeam('team1', { pendingState, syncInputs });
     installSearchForTeam('team2', { pendingState, syncInputs });
 
+    const swapTeams = document.getElementById('swap-teams');
+    if (swapTeams) {
+      swapTeams.addEventListener('click', () => {
+        const team1Ban = pendingState.team1.ban;
+        pendingState.team1.ban = pendingState.team2.ban;
+        pendingState.team2.ban = team1Ban;
+        syncInputs();
+        writeState(pendingState);
+      });
+    }
+
     const updateButton = document.getElementById('apply-update');
     if (updateButton) {
       updateButton.addEventListener('click', () => {
