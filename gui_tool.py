@@ -19,13 +19,16 @@ from PIL import Image, ImageTk
 
 APP_HOST = "127.0.0.1"
 APP_PORT = 8765
-MAX_SUGGESTIONS = 20
+MAX_SUGGESTIONS = 12
+
+WINDOW_WIDTH = 300
+WINDOW_HEIGHT = 450
 
 BG_MAIN = "#050d23"
-BG_CARD = "#0d1737"
+BG_CARD = "#101a37"
 BG_FIELD = "#08142f"
-BORDER_ACCENT = "#1d6ea8"
-BORDER_WARN = "#805121"
+BORDER_ACCENT = "#2c80c4"
+BORDER_WARN = "#7f4e1e"
 TXT_PRIMARY = "#e6edf8"
 TXT_MUTED = "#98a7c6"
 BTN_PRIMARY = "#f5a12a"
@@ -143,24 +146,79 @@ def normalize(value: str) -> str:
     return value.strip().lower()
 
 
+def rounded_polygon_points(x1: int, y1: int, x2: int, y2: int, r: int) -> list[int]:
+    return [
+        x1 + r,
+        y1,
+        x2 - r,
+        y1,
+        x2,
+        y1,
+        x2,
+        y1 + r,
+        x2,
+        y2 - r,
+        x2,
+        y2,
+        x2 - r,
+        y2,
+        x1 + r,
+        y2,
+        x1,
+        y2,
+        x1,
+        y2 - r,
+        x1,
+        y1 + r,
+        x1,
+        y1,
+    ]
+
+
+class RoundedPanel(tk.Canvas):
+    def __init__(self, master: tk.Misc, bg_color: str, border_color: str, radius: int = 12, padding: int = 8, **kwargs: Any) -> None:
+        super().__init__(master, bg=BG_MAIN, highlightthickness=0, bd=0, **kwargs)
+        self.bg_color = bg_color
+        self.border_color = border_color
+        self.radius = radius
+        self.padding = padding
+        self.inner = tk.Frame(self, bg=bg_color)
+        self._shape_id = self.create_polygon([], smooth=True, fill=bg_color, outline=border_color, width=1)
+        self._win_id = self.create_window((padding, padding), window=self.inner, anchor="nw")
+        self.bind("<Configure>", self._on_resize)
+
+    def _on_resize(self, _event: tk.Event[tk.Canvas]) -> None:
+        w = max(2, self.winfo_width())
+        h = max(2, self.winfo_height())
+        r = min(self.radius, w // 2, h // 2)
+        points = rounded_polygon_points(1, 1, w - 1, h - 1, r)
+        self.coords(self._shape_id, *points)
+        self.coords(self._win_id, self.padding, self.padding)
+        self.itemconfigure(self._win_id, width=max(1, w - self.padding * 2), height=max(1, h - self.padding * 2))
+
+
 class HeroSuggest(tk.Frame):
     def __init__(
         self,
         parent: tk.Misc,
         heroes: list[Hero],
         icon_map: dict[str, ImageTk.PhotoImage],
-        on_change: Callable[[str], None],
+        on_select: Callable[[str], None],
     ) -> None:
         super().__init__(parent, bg=BG_CARD)
         self.heroes = heroes
+        self.hero_names = {h.name for h in heroes}
         self.icon_map = icon_map
-        self.on_change = on_change
-        self.var = tk.StringVar()
+        self.on_select = on_select
+
+        self.query_var = tk.StringVar()
+        self.selected_name = ""
         self.popup: tk.Toplevel | None = None
+        self.tree: ttk.Treeview | None = None
 
         self.entry = tk.Entry(
             self,
-            textvariable=self.var,
+            textvariable=self.query_var,
             bg=BG_FIELD,
             fg=TXT_PRIMARY,
             insertbackground=TXT_PRIMARY,
@@ -168,23 +226,34 @@ class HeroSuggest(tk.Frame):
             highlightthickness=1,
             highlightbackground="#2f4c7d",
             highlightcolor=BORDER_ACCENT,
-            font=("Segoe UI", 12, "bold"),
+            font=("Segoe UI", 10, "bold"),
         )
-        self.entry.pack(fill="x", ipady=8)
+        self.entry.pack(fill="x", ipady=6)
 
         self.entry.bind("<KeyRelease>", self._on_key_release)
         self.entry.bind("<Down>", self._focus_list)
+        self.entry.bind("<Return>", self._on_enter)
         self.entry.bind("<FocusIn>", lambda _e: self.show_popup())
+        self.entry.bind("<FocusOut>", lambda _e: self.after(130, self._enforce_valid_text))
         self.entry.bind("<Escape>", lambda _e: self.hide_popup())
 
-    def get(self) -> str:
-        return self.var.get().strip()
+    def get_selected(self) -> str:
+        return self.selected_name
 
-    def set(self, value: str) -> None:
-        self.var.set(value)
+    def set_selected(self, value: str) -> None:
+        value = value.strip()
+        if value in self.hero_names:
+            self.selected_name = value
+            self.query_var.set(value)
+            self.on_select(value)
+            return
+
+        self.selected_name = ""
+        self.query_var.set("")
+        self.on_select("")
 
     def _filtered(self) -> list[Hero]:
-        term = normalize(self.get())
+        term = normalize(self.query_var.get())
         if not term:
             return self.heroes[:MAX_SUGGESTIONS]
 
@@ -196,12 +265,10 @@ class HeroSuggest(tk.Frame):
         if event.keysym in {"Up", "Down", "Return", "Escape"}:
             return
         self.show_popup()
-        self.on_change(self.get())
 
     def _focus_list(self, _event: tk.Event[tk.Entry]) -> str:
-        if not self.popup:
-            self.show_popup()
-        if self.popup and hasattr(self, "tree"):
+        self.show_popup()
+        if self.tree:
             children = self.tree.get_children()
             if children:
                 self.tree.focus(children[0])
@@ -209,21 +276,38 @@ class HeroSuggest(tk.Frame):
                 self.tree.focus_set()
         return "break"
 
-    def _select_current(self) -> None:
-        if not self.popup:
+    def _on_enter(self, _event: tk.Event[tk.Entry]) -> str:
+        text = self.query_var.get().strip()
+        if text in self.hero_names:
+            self._apply_selection(text)
+        else:
+            self.query_var.set(self.selected_name)
+            self.hide_popup()
+        return "break"
+
+    def _apply_selection(self, hero_name: str) -> None:
+        if hero_name not in self.hero_names:
+            return
+        self.selected_name = hero_name
+        self.query_var.set(hero_name)
+        self.on_select(hero_name)
+        self.hide_popup()
+        self.entry.icursor("end")
+
+    def _select_current_tree_item(self) -> None:
+        if not self.tree:
             return
         selection = self.tree.selection()
         if not selection:
             return
         hero_name = self.tree.item(selection[0], "text")
-        self.var.set(hero_name)
-        self.on_change(hero_name)
-        self.hide_popup()
+        self._apply_selection(hero_name)
 
     def hide_popup(self) -> None:
         if self.popup:
             self.popup.destroy()
             self.popup = None
+            self.tree = None
 
     def show_popup(self) -> None:
         items = self._filtered()
@@ -237,16 +321,26 @@ class HeroSuggest(tk.Frame):
             self.popup.configure(bg="#27436b")
 
             style = ttk.Style(self.popup)
-            style.configure("Suggest.Treeview", background=BG_FIELD, foreground=TXT_PRIMARY, rowheight=42, fieldbackground=BG_FIELD)
+            style.configure(
+                "Suggest.Treeview",
+                background=BG_FIELD,
+                foreground=TXT_PRIMARY,
+                rowheight=30,
+                fieldbackground=BG_FIELD,
+                borderwidth=0,
+                font=("Segoe UI", 9),
+            )
             style.map("Suggest.Treeview", background=[("selected", "#204e83")])
 
-            self.tree = ttk.Treeview(self.popup, show="tree", style="Suggest.Treeview", selectmode="browse", height=8)
+            self.tree = ttk.Treeview(self.popup, show="tree", style="Suggest.Treeview", selectmode="browse", height=6)
             self.tree.pack(fill="both", expand=True)
-
-            self.tree.bind("<ButtonRelease-1>", lambda _e: self._select_current())
-            self.tree.bind("<Return>", lambda _e: self._select_current())
+            self.tree.bind("<ButtonRelease-1>", lambda _e: self._select_current_tree_item())
+            self.tree.bind("<Return>", lambda _e: self._select_current_tree_item())
             self.tree.bind("<Escape>", lambda _e: self.hide_popup())
             self.tree.bind("<FocusOut>", lambda _e: self.after(120, self._safe_hide))
+
+        if not self.tree:
+            return
 
         for item in self.tree.get_children():
             self.tree.delete(item)
@@ -255,9 +349,9 @@ class HeroSuggest(tk.Frame):
             self.tree.insert("", "end", text=hero.name, image=self.icon_map.get(hero.name, ""))
 
         x = self.winfo_rootx()
-        y = self.winfo_rooty() + self.winfo_height() + 2
-        width = self.winfo_width()
-        height = min(8, len(items)) * 42 + 4
+        y = self.winfo_rooty() + self.winfo_height() + 1
+        width = max(120, self.winfo_width())
+        height = min(6, len(items)) * 30 + 4
         self.popup.geometry(f"{width}x{height}+{x}+{y}")
         self.popup.deiconify()
 
@@ -269,87 +363,123 @@ class HeroSuggest(tk.Frame):
             return
         self.hide_popup()
 
+    def _enforce_valid_text(self) -> None:
+        focused = self.focus_get()
+        if focused in {self.entry, self.tree}:
+            return
+
+        entered = self.query_var.get().strip()
+        if entered in self.hero_names:
+            self._apply_selection(entered)
+            return
+
+        self.query_var.set(self.selected_name)
+        self.hide_popup()
+
 
 class ControlGui:
     def __init__(self, root: tk.Tk, heroes: list[Hero], icon_map: dict[str, ImageTk.PhotoImage]) -> None:
         self.root = root
         self.heroes = heroes
+        self.hero_names = {h.name for h in heroes}
         self.icon_map = icon_map
-        self.state = SHARED_STATE.get()
+        state = SHARED_STATE.get()
 
         root.title("OW2 Hero Bans GUI")
-        root.geometry("1300x740")
-        root.minsize(1100, 640)
+        root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+        root.minsize(WINDOW_WIDTH, WINDOW_HEIGHT)
+        root.maxsize(WINDOW_WIDTH, WINDOW_HEIGHT)
         root.configure(bg=BG_MAIN)
 
-        shell = tk.Frame(root, bg=BG_MAIN, padx=16, pady=16)
+        shell = tk.Frame(root, bg=BG_MAIN, padx=8, pady=8)
         shell.pack(fill="both", expand=True)
 
-        header = tk.Frame(shell, bg=BG_CARD, highlightbackground=BORDER_ACCENT, highlightthickness=1, bd=0)
-        header.pack(fill="x", pady=(0, 14))
-        tk.Label(header, text="Overwatch 2 Hero Bans", bg=BG_CARD, fg=TXT_PRIMARY, font=("Segoe UI", 30, "bold"), padx=20, pady=16).pack(anchor="w")
-        tk.Label(
-            header,
-            text="Select one banned hero for each team, then press Update to publish both overlays in sync.",
-            bg=BG_CARD,
-            fg=TXT_MUTED,
-            font=("Segoe UI", 15),
-            padx=20,
-        ).pack(anchor="w", pady=(0, 16))
+        header = RoundedPanel(shell, bg_color=BG_CARD, border_color=BORDER_ACCENT, radius=12, padding=8, height=58)
+        header.pack(fill="x", pady=(0, 6))
+        tk.Label(header.inner, text="OW2 Hero Bans", bg=BG_CARD, fg=TXT_PRIMARY, font=("Segoe UI", 14, "bold")).pack(anchor="w")
+        tk.Label(header.inner, text="GUI control for team bans", bg=BG_CARD, fg=TXT_MUTED, font=("Segoe UI", 8)).pack(anchor="w")
 
-        team_row = tk.Frame(shell, bg=BG_MAIN)
-        team_row.pack(fill="x", pady=(0, 14))
-        team_row.columnconfigure(0, weight=1)
-        team_row.columnconfigure(1, weight=1)
+        self.team1_var = tk.StringVar()
+        self.team2_var = tk.StringVar()
 
-        self.team1_var = tk.StringVar(value=self.state["team1"]["ban"])
-        self.team2_var = tk.StringVar(value=self.state["team2"]["ban"])
-
-        self.team1_card, self.team1_preview_icon, self.team1_preview_name, self.team1_input = self._build_team_card(
-            team_row,
-            "Team 1 Ban",
-            0,
-            self.team1_var,
-            "Clear Team 1 Ban",
-            self._clear_team1,
+        self.team1_icon, self.team1_name, self.team1_input = self._build_team_panel(
+            shell, "Team 1", self.team1_var, self._clear_team1
         )
-        self.team2_card, self.team2_preview_icon, self.team2_preview_name, self.team2_input = self._build_team_card(
-            team_row,
-            "Team 2 Ban",
-            1,
-            self.team2_var,
-            "Clear Team 2 Ban",
-            self._clear_team2,
+        self.team2_icon, self.team2_name, self.team2_input = self._build_team_panel(
+            shell, "Team 2", self.team2_var, self._clear_team2
         )
 
-        action_row = tk.Frame(shell, bg=BG_MAIN)
-        action_row.pack(fill="x", pady=(0, 16))
-        action_row.columnconfigure(0, weight=1)
-        action_row.columnconfigure(1, weight=1)
-        action_row.columnconfigure(2, weight=1)
+        actions = RoundedPanel(shell, bg_color=BG_CARD, border_color=BORDER_ACCENT, radius=12, padding=6, height=44)
+        actions.pack(fill="x", pady=(6, 6))
+        for i in range(3):
+            actions.inner.columnconfigure(i, weight=1)
 
-        self._make_button(action_row, "Swap Teams", BTN_SECONDARY, self.swap).grid(row=0, column=0, padx=(0, 8), sticky="ew")
-        self._make_button(action_row, "Update", BTN_PRIMARY, self.apply_update).grid(row=0, column=1, padx=(8, 8), sticky="ew")
-        self._make_button(action_row, "Reset All", BTN_DANGER, self.reset_all).grid(row=0, column=2, padx=(8, 0), sticky="ew")
+        self._make_button(actions.inner, "Swap", BTN_SECONDARY, self.swap).grid(row=0, column=0, padx=3, sticky="ew")
+        self._make_button(actions.inner, "Update", BTN_PRIMARY, self.apply_update).grid(row=0, column=1, padx=3, sticky="ew")
+        self._make_button(actions.inner, "Reset", BTN_DANGER, self.reset_all).grid(row=0, column=2, padx=3, sticky="ew")
 
-        footer = tk.Frame(shell, bg=BG_FIELD, highlightbackground=BORDER_ACCENT, highlightthickness=1, bd=0, padx=20, pady=20)
+        footer = RoundedPanel(shell, bg_color=BG_FIELD, border_color=BORDER_ACCENT, radius=12, padding=8, height=62)
         footer.pack(fill="x", side="bottom")
-
         self.status_var = tk.StringVar()
         tk.Label(
-            footer,
+            footer.inner,
             textvariable=self.status_var,
             bg=BG_FIELD,
             fg=TXT_MUTED,
-            font=("Segoe UI", 14, "bold"),
-            wraplength=1160,
+            font=("Segoe UI", 7, "bold"),
+            wraplength=260,
             justify="left",
         ).pack(anchor="w")
 
         self.team1_var.trace_add("write", lambda *_args: self._sync_preview("team1"))
         self.team2_var.trace_add("write", lambda *_args: self._sync_preview("team2"))
+
+        self.team1_input.set_selected(state.get("team1", {}).get("ban", ""))
+        self.team2_input.set_selected(state.get("team2", {}).get("ban", ""))
         self._sync_preview("team1")
         self._sync_preview("team2")
+
+    def _build_team_panel(
+        self,
+        parent: tk.Misc,
+        title: str,
+        target_var: tk.StringVar,
+        clear_cmd: Callable[[], None],
+    ) -> tuple[tk.Label, tk.Label, HeroSuggest]:
+        panel = RoundedPanel(parent, bg_color=BG_CARD, border_color=BORDER_WARN, radius=12, padding=8, height=126)
+        panel.pack(fill="x", pady=(0, 6))
+
+        tk.Label(panel.inner, text=f"{title} Ban", bg=BG_CARD, fg=TXT_PRIMARY, font=("Segoe UI", 10, "bold")).pack(anchor="w")
+        selector = HeroSuggest(panel.inner, self.heroes, self.icon_map, lambda value, v=target_var: v.set(value))
+        selector.pack(fill="x", pady=(3, 5))
+
+        row = tk.Frame(panel.inner, bg=BG_CARD)
+        row.pack(fill="x")
+
+        preview = tk.Frame(row, bg="#101f44", highlightbackground="#2b4f87", highlightthickness=1)
+        preview.pack(side="left", fill="x", expand=True)
+
+        icon = tk.Label(preview, bg="#101f44", width=24, height=24)
+        icon.pack(side="left", padx=(4, 4), pady=4)
+
+        name = tk.Label(preview, text="None", bg="#101f44", fg=TXT_PRIMARY, font=("Segoe UI", 11, "bold"))
+        name.pack(side="left", pady=4)
+
+        tk.Button(
+            row,
+            text="Clear",
+            command=clear_cmd,
+            bg=BTN_SECONDARY,
+            fg="#08213f",
+            activebackground=BTN_SECONDARY,
+            activeforeground="#08213f",
+            relief="flat",
+            font=("Segoe UI", 9, "bold"),
+            padx=8,
+            cursor="hand2",
+        ).pack(side="left", padx=(5, 0), fill="y")
+
+        return icon, name, selector
 
     def _make_button(self, parent: tk.Misc, text: str, color: str, command: Callable[[], None]) -> tk.Button:
         return tk.Button(
@@ -361,110 +491,58 @@ class ControlGui:
             activebackground=color,
             activeforeground="#0b1a35",
             relief="flat",
-            font=("Segoe UI", 22, "bold"),
-            padx=8,
-            pady=10,
+            font=("Segoe UI", 9, "bold"),
+            pady=5,
             cursor="hand2",
         )
 
-    def _build_team_card(
-        self,
-        parent: tk.Misc,
-        title: str,
-        column: int,
-        var: tk.StringVar,
-        clear_label: str,
-        clear_command: Callable[[], None],
-    ) -> tuple[tk.Frame, tk.Label, tk.Label, HeroSuggest]:
-        card = tk.Frame(parent, bg=BG_CARD, highlightbackground=BORDER_WARN, highlightthickness=1, bd=0, padx=16, pady=16)
-        card.grid(row=0, column=column, padx=(0, 8) if column == 0 else (8, 0), sticky="nsew")
-
-        tk.Label(card, text=title, bg=BG_CARD, fg=TXT_PRIMARY, font=("Segoe UI", 32, "bold")).pack(anchor="w", pady=(0, 10))
-        tk.Label(card, text="Hero", bg=BG_CARD, fg=TXT_PRIMARY, font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=(0, 6))
-
-        suggest = HeroSuggest(card, self.heroes, self.icon_map, lambda value, target=var: target.set(value))
-        suggest.pack(fill="x", pady=(0, 12))
-        suggest.set(var.get())
-
-        preview_row = tk.Frame(card, bg=BG_CARD)
-        preview_row.pack(fill="x")
-        preview_box = tk.Frame(preview_row, bg="#101f44", highlightbackground="#2b4f87", highlightthickness=1, bd=0, padx=10, pady=10)
-        preview_box.pack(side="left", fill="x", expand=True)
-
-        icon_label = tk.Label(preview_box, bg="#101f44", width=44, height=44)
-        icon_label.pack(side="left")
-
-        meta = tk.Frame(preview_box, bg="#101f44")
-        meta.pack(side="left", padx=10)
-        tk.Label(meta, text="Current Ban", bg="#101f44", fg=TXT_MUTED, font=("Segoe UI", 12)).pack(anchor="w")
-        name_label = tk.Label(meta, text="None", bg="#101f44", fg=TXT_PRIMARY, font=("Segoe UI", 20, "bold"))
-        name_label.pack(anchor="w")
-
-        tk.Button(
-            preview_row,
-            text=clear_label,
-            command=clear_command,
-            bg=BTN_SECONDARY,
-            fg="#08213f",
-            activebackground=BTN_SECONDARY,
-            activeforeground="#08213f",
-            relief="flat",
-            font=("Segoe UI", 16, "bold"),
-            padx=16,
-            pady=16,
-            cursor="hand2",
-        ).pack(side="left", padx=(12, 0))
-
-        return card, icon_label, name_label, suggest
-
     def _clear_team1(self) -> None:
-        self.team1_var.set("")
-        self.team1_input.set("")
+        self.team1_input.set_selected("")
 
     def _clear_team2(self) -> None:
-        self.team2_var.set("")
-        self.team2_input.set("")
+        self.team2_input.set_selected("")
 
     def _sync_preview(self, team: str) -> None:
         if team == "team1":
             value = self.team1_var.get().strip()
+            if value not in self.hero_names:
+                value = ""
             icon = self.icon_map.get(value)
-            self.team1_preview_name.configure(text=value or "None")
-            self.team1_preview_icon.configure(image=icon)
-            self.team1_preview_icon.image = icon
-            if self.team1_input.get() != value:
-                self.team1_input.set(value)
+            self.team1_name.configure(text=value or "None")
+            self.team1_icon.configure(image=icon)
+            self.team1_icon.image = icon
             return
 
         value = self.team2_var.get().strip()
+        if value not in self.hero_names:
+            value = ""
         icon = self.icon_map.get(value)
-        self.team2_preview_name.configure(text=value or "None")
-        self.team2_preview_icon.configure(image=icon)
-        self.team2_preview_icon.image = icon
-        if self.team2_input.get() != value:
-            self.team2_input.set(value)
+        self.team2_name.configure(text=value or "None")
+        self.team2_icon.configure(image=icon)
+        self.team2_icon.image = icon
 
     def _current_payload(self) -> dict[str, Any]:
+        team1 = self.team1_input.get_selected()
+        team2 = self.team2_input.get_selected()
         return {
-            "team1": {"ban": self.team1_var.get().strip()},
-            "team2": {"ban": self.team2_var.get().strip()},
+            "team1": {"ban": team1 if team1 in self.hero_names else ""},
+            "team2": {"ban": team2 if team2 in self.hero_names else ""},
         }
 
     def apply_update(self) -> None:
         SHARED_STATE.set(self._current_payload())
-        self.status_var.set(
-            f"Updated at {time.strftime('%H:%M:%S')} | http://{APP_HOST}:{APP_PORT}/team1.html and /team2.html"
-        )
+        self.status_var.set(f"Updated {time.strftime('%H:%M:%S')} | {APP_HOST}:{APP_PORT}/team1.html + /team2.html")
 
     def swap(self) -> None:
-        t1 = self.team1_var.get()
-        self.team1_var.set(self.team2_var.get())
-        self.team2_var.set(t1)
+        team1 = self.team1_input.get_selected()
+        team2 = self.team2_input.get_selected()
+        self.team1_input.set_selected(team2)
+        self.team2_input.set_selected(team1)
         self.apply_update()
 
     def reset_all(self) -> None:
-        self.team1_var.set("")
-        self.team2_var.set("")
+        self.team1_input.set_selected("")
+        self.team2_input.set_selected("")
         self.apply_update()
 
 
@@ -492,12 +570,9 @@ def load_icon_map(heroes: list[Hero]) -> dict[str, ImageTk.PhotoImage]:
     for hero in heroes:
         if not hero.image_path:
             continue
-        try:
-            image = Image.open(hero.image_path).convert("RGBA")
-            image.thumbnail((56, 56), Image.Resampling.LANCZOS)
-            icon_map[hero.name] = ImageTk.PhotoImage(image)
-        except Exception:
-            continue
+        image = Image.open(hero.image_path).convert("RGBA")
+        image.thumbnail((24, 24), Image.Resampling.LANCZOS)
+        icon_map[hero.name] = ImageTk.PhotoImage(image)
     return icon_map
 
 
