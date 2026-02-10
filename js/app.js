@@ -4,6 +4,7 @@
   const HERO_IMAGE_BASE = './assets/';
   const OVERLAY_POLL_MS = 500;
   const FADE_TRANSITION_MS = 260;
+  const BRIDGE_STATE_URL = 'http://127.0.0.1:8765/api/state';
 
   let heroList = [];
   let heroesByName = new Map();
@@ -15,6 +16,14 @@
   });
 
   const normalize = (value) => (value || '').trim().toLowerCase();
+
+  function sanitizeState(payload) {
+    return {
+      team1: { ban: payload?.team1?.ban || '' },
+      team2: { ban: payload?.team2?.ban || '' },
+      updatedAt: Number(payload?.updatedAt) || Date.now()
+    };
+  }
 
   function setHeroes(data) {
     heroList = Array.isArray(data?.heroes) ? data.heroes : [];
@@ -42,19 +51,25 @@
     }
   }
 
-  function readState() {
+  function readLocalState() {
     const raw = localStorage.getItem(STATE_KEY);
     if (!raw) return defaultState();
 
     try {
-      const parsed = JSON.parse(raw);
-      return {
-        team1: { ban: parsed?.team1?.ban || '' },
-        team2: { ban: parsed?.team2?.ban || '' },
-        updatedAt: Number(parsed?.updatedAt) || Date.now()
-      };
+      return sanitizeState(JSON.parse(raw));
     } catch {
       return defaultState();
+    }
+  }
+
+  async function readBridgeState() {
+    try {
+      const response = await fetch(BRIDGE_STATE_URL, { cache: 'no-store' });
+      if (!response.ok) return null;
+      const payload = await response.json();
+      return sanitizeState(payload);
+    } catch {
+      return null;
     }
   }
 
@@ -64,7 +79,17 @@
       team2: { ban: nextState?.team2?.ban || '' },
       updatedAt: Date.now()
     };
+
     localStorage.setItem(STATE_KEY, JSON.stringify(payload));
+
+    fetch(BRIDGE_STATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(() => {
+      // GUI bridge is optional; keep localStorage as the baseline transport.
+    });
+
     return payload;
   }
 
@@ -256,9 +281,10 @@
       };
     };
 
-    const applyState = () => {
+    const applyState = async () => {
       const queryHero = getQueryHero();
-      const state = readState();
+      const bridgeState = await readBridgeState();
+      const state = bridgeState || readLocalState();
       const selectedName = (queryHero || state?.[teamId]?.ban || '').trim();
       const signature = `${selectedName}:${state.updatedAt}`;
       if (signature === lastSignature) return;
@@ -285,7 +311,7 @@
   }
 
   async function initControlPage() {
-    const pendingState = readState();
+    const pendingState = readLocalState();
 
     const syncInputs = () => {
       ['team1', 'team2'].forEach((teamId) => {
@@ -330,7 +356,7 @@
 
     window.addEventListener('storage', (event) => {
       if (event.key !== STATE_KEY) return;
-      const next = readState();
+      const next = readLocalState();
       pendingState.team1.ban = next.team1.ban;
       pendingState.team2.ban = next.team2.ban;
       syncInputs();
