@@ -8,6 +8,7 @@ Usage:
 
 # Keep this script compatible with older OBS-bundled Python versions.
 
+import sys
 import traceback
 
 import obspython as obs
@@ -41,24 +42,33 @@ def _log_error(message):
     obs.script_log(obs.LOG_ERROR, message)
 
 
-def _import_qt_modules():
-    """Load any available Qt binding with WebEngine support.
+def _qt_candidates_for_runtime():
+    """Return Qt bindings to probe in priority order for this Python runtime."""
 
-    OBS Python environments vary a lot between versions/installations.
-    We try common bindings in order and cache the first success.
-    """
+    # Python 3.6 is common in older OBS scripting setups and cannot use Qt6 wheels.
+    if sys.version_info < (3, 7):
+        return [
+            ("PyQt5", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
+            ("PySide2", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
+        ]
+
+    return [
+        ("PyQt6", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
+        ("PySide6", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
+        ("PyQt5", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
+        ("PySide2", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
+    ]
+
+
+def _import_qt_modules():
+    """Load any available Qt binding with WebEngine support."""
 
     global _qt_widgets, _qt_core, _qt_web, _qt_backend_name, _qt_import_error_logged
 
     if _qt_widgets and _qt_core and _qt_web:
         return True
 
-    candidates = [
-        ("PyQt6", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
-        ("PySide6", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
-        ("PyQt5", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
-        ("PySide2", "QtCore", "QtWidgets", "QtWebEngineWidgets"),
-    ]
+    candidates = _qt_candidates_for_runtime()
 
     for binding_name, core_mod, widgets_mod, web_mod in candidates:
         try:
@@ -70,15 +80,21 @@ def _import_qt_modules():
             _log_info("Using Qt backend: {0}".format(binding_name))
             _qt_import_error_logged = False
             return True
-        except Exception:
-            _log_debug("Qt backend import failed: {0}".format(binding_name))
-            _log_debug(traceback.format_exc())
+        except Exception as exc:
+            _log_debug("Qt backend import failed: {0} ({1})".format(binding_name, exc))
 
     if not _qt_import_error_logged:
+        backend_names = ", ".join([name for name, _, _, _ in candidates])
         _log_error(
-            "Unable to import a Qt WebEngine backend (tried PyQt6, PySide6, PyQt5, PySide2). "
-            "Install one of these in the OBS Python environment and reload script."
+            "Unable to import a Qt WebEngine backend (tried {0}). "
+            "Install one of these in the OBS Python environment and reload script.".format(backend_names)
         )
+        if sys.version_info < (3, 7):
+            _log_error(
+                "Detected Python {0}.{1}. Use PyQt5/PySide2 + QtWebEngine packages (Qt6 is unsupported on Python 3.6).".format(
+                    sys.version_info[0], sys.version_info[1]
+                )
+            )
         _qt_import_error_logged = True
 
     return False
