@@ -14,7 +14,8 @@ import sys
 import threading
 import time
 import traceback
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from urllib.parse import urlparse
 
 import obspython as obs
@@ -162,8 +163,9 @@ class _BridgeHandler(SimpleHTTPRequestHandler):
         self._write_json(200, _BRIDGE_STATE.set(payload))
 
 
-class _ReusableThreadingHTTPServer(ThreadingHTTPServer):
+class _ReusableThreadingHTTPServer(ThreadingMixIn, HTTPServer):
     allow_reuse_address = True
+    daemon_threads = True
 
 
 def _extract_host_port(url_text):
