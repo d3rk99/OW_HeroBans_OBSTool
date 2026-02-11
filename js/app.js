@@ -494,19 +494,32 @@
       if (role !== 'name' && role !== 'score') return;
 
       const stageRect = stage.getBoundingClientRect();
-      const maxWidth = stageRect.width * 0.95;
-      const maxHeight = stageRect.height * 0.9;
+      const widthFill = role === 'score' ? 0.985 : 0.98;
+      const heightFill = role === 'score' ? 0.985 : 0.955;
+      const maxWidth = stageRect.width * widthFill;
+      const maxHeight = stageRect.height * heightFill;
       if (!maxWidth || !maxHeight) return;
 
-      valueNode.style.fontSize = `${Math.floor(Math.min(stageRect.width, stageRect.height) * 0.8)}px`;
+      const minSize = 12;
+      const maxSize = Math.floor(Math.max(stageRect.width, stageRect.height) * 2.1);
+      let low = minSize;
+      let high = Math.max(minSize, maxSize);
+      let best = minSize;
 
-      let guard = 0;
-      while ((valueNode.scrollWidth > maxWidth || valueNode.scrollHeight > maxHeight) && guard < 220) {
-        const size = Number.parseFloat(getComputedStyle(valueNode).fontSize);
-        if (!Number.isFinite(size) || size <= 12) break;
-        valueNode.style.fontSize = `${size - 2}px`;
-        guard += 1;
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        valueNode.style.fontSize = `${mid}px`;
+
+        const fits = valueNode.scrollWidth <= maxWidth && valueNode.scrollHeight <= maxHeight;
+        if (fits) {
+          best = mid;
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
       }
+
+      valueNode.style.fontSize = `${best}px`;
     };
 
     const paint = async (scoreboardTeam) => {
