@@ -30,6 +30,7 @@ SCRIPT_SETTINGS = {
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 FONTS_DIR = os.path.join(SCRIPT_DIR, "assets", "Fonts")
+STATE_CACHE_PATH = os.path.join(SCRIPT_DIR, "data", "controller_state_cache.json")
 FONT_EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
 
 
@@ -83,6 +84,7 @@ class _BridgeState(object):
     def __init__(self):
         self._lock = threading.Lock()
         self._state = self.default_state()
+        self._load_cache()
 
     @staticmethod
     def default_state():
@@ -128,6 +130,29 @@ class _BridgeState(object):
             "updatedAt": int(time.time() * 1000),
         }
 
+
+    def _load_cache(self):
+        try:
+            if not os.path.isfile(STATE_CACHE_PATH):
+                return
+            with open(STATE_CACHE_PATH, "r") as cache_file:
+                payload = json.load(cache_file)
+            self._state = self.sanitize(payload)
+        except Exception:
+            # Best-effort cache load; fall back to defaults on any error.
+            self._state = self.default_state()
+
+    def _save_cache(self):
+        try:
+            cache_dir = os.path.dirname(STATE_CACHE_PATH)
+            if cache_dir and not os.path.isdir(cache_dir):
+                os.makedirs(cache_dir)
+            with open(STATE_CACHE_PATH, "w") as cache_file:
+                json.dump(self._state, cache_file, indent=2)
+        except Exception:
+            # Cache persistence is optional; never block controller updates.
+            return
+
     def get(self):
         with self._lock:
             return {
@@ -157,6 +182,7 @@ class _BridgeState(object):
     def set(self, payload):
         with self._lock:
             self._state = self.sanitize(payload)
+            self._save_cache()
             return {
                 "team1": {"ban": self._state["team1"]["ban"]},
                 "team2": {"ban": self._state["team2"]["ban"]},

@@ -565,7 +565,6 @@
       team1: {
         name: document.getElementById('score-team1-name'),
         logo: document.getElementById('score-team1-logo'),
-        score: document.getElementById('score-team1-score'),
         nameColor: document.getElementById('score-team1-name-color'),
         bevelColor: document.getElementById('score-team1-bevel-color'),
         nameFont: document.getElementById('score-team1-font')
@@ -573,7 +572,6 @@
       team2: {
         name: document.getElementById('score-team2-name'),
         logo: document.getElementById('score-team2-logo'),
-        score: document.getElementById('score-team2-score'),
         nameColor: document.getElementById('score-team2-name-color'),
         bevelColor: document.getElementById('score-team2-bevel-color'),
         nameFont: document.getElementById('score-team2-font')
@@ -591,9 +589,7 @@
     );
 
     const handleInput = (teamId, key, value) => {
-      if (key === 'score') {
-        pendingState.scoreboard[teamId][key] = sanitizeScore(value);
-      } else if (key === 'nameColor') {
+      if (key === 'nameColor') {
         pendingState.scoreboard[teamId][key] = sanitizeNameColor(value);
       } else if (key === 'bevelColor') {
         pendingState.scoreboard[teamId][key] = sanitizeBevelColor(value);
@@ -610,9 +606,6 @@
       });
       fieldMap[teamId].logo.addEventListener('input', (event) => {
         handleInput(teamId, 'logo', event.target.value);
-      });
-      fieldMap[teamId].score.addEventListener('input', (event) => {
-        handleInput(teamId, 'score', event.target.value);
       });
       fieldMap[teamId].nameColor.addEventListener('input', (event) => {
         handleInput(teamId, 'nameColor', event.target.value);
@@ -638,6 +631,41 @@
     });
   }
 
+  function initScoreTickerControl(pendingState, syncInputs) {
+    const controls = {
+      team1: {
+        score: document.getElementById('ticker-team1-score'),
+        minus: document.getElementById('ticker-team1-minus'),
+        plus: document.getElementById('ticker-team1-plus')
+      },
+      team2: {
+        score: document.getElementById('ticker-team2-score'),
+        minus: document.getElementById('ticker-team2-minus'),
+        plus: document.getElementById('ticker-team2-plus')
+      }
+    };
+
+    if (!controls.team1.score || !controls.team2.score || !controls.team1.minus || !controls.team1.plus || !controls.team2.minus || !controls.team2.plus) return;
+
+    const persistScore = (teamId, nextScore) => {
+      pendingState.scoreboard[teamId].score = sanitizeScore(nextScore);
+      syncInputs();
+      writeState(pendingState);
+    };
+
+    ['team1', 'team2'].forEach((teamId) => {
+      controls[teamId].score.addEventListener('input', (event) => {
+        persistScore(teamId, event.target.value);
+      });
+      controls[teamId].minus.addEventListener('click', () => {
+        persistScore(teamId, sanitizeScore(pendingState.scoreboard[teamId].score) - 1);
+      });
+      controls[teamId].plus.addEventListener('click', () => {
+        persistScore(teamId, sanitizeScore(pendingState.scoreboard[teamId].score) + 1);
+      });
+    });
+  }
+
   async function initControlPage() {
     const pendingState = await readSharedState();
 
@@ -651,7 +679,7 @@
         const teamPrefix = teamId === 'team1' ? 'score-team1' : 'score-team2';
         const nameInput = document.getElementById(`${teamPrefix}-name`);
         const logoInput = document.getElementById(`${teamPrefix}-logo`);
-        const scoreInput = document.getElementById(`${teamPrefix}-score`);
+        const scoreInput = document.getElementById(`ticker-${teamId}-score`);
         const colorInput = document.getElementById(`${teamPrefix}-name-color`);
         const bevelColorInput = document.getElementById(`${teamPrefix}-bevel-color`);
         const fontInput = document.getElementById(`${teamPrefix}-font`);
@@ -668,6 +696,7 @@
     installSearchForTeam('team1', { pendingState, syncInputs });
     installSearchForTeam('team2', { pendingState, syncInputs });
     await initScoreboardControl(pendingState, syncInputs);
+    initScoreTickerControl(pendingState, syncInputs);
 
     const swapTeams = document.getElementById('swap-teams');
     if (swapTeams) {

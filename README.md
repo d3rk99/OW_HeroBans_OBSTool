@@ -37,8 +37,10 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 ```
 
 - `control.html` writes both hero-ban and scoreboard state updates.
+- Bridge state is cached to `data/controller_state_cache.json` so controller values are restored after restarting OBS/GUI.
 - `team1.html` and `team2.html` read hero-ban state.
 - Scoreboard overlay HTML files read scoreboard state (team names, logos, scores, and team-name style settings).
+- The controller has a dedicated **Score** tab with large +/- controls that automatically publish score updates (no manual update click needed).
 - Overlay pages listen for storage events and also poll state every 500ms for robust updates in OBS/browser contexts.
 
 ## Desktop GUI mode (EXE)
