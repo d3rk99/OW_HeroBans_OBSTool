@@ -29,6 +29,33 @@ SCRIPT_SETTINGS = {
 }
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+FONTS_DIR = os.path.join(SCRIPT_DIR, "assets", "Fonts")
+FONT_EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
+
+
+def _humanize_font_name(file_name):
+    stem = os.path.splitext(os.path.basename(file_name))[0]
+    return (stem.replace("_", " ").replace("-", " ").strip() or "Custom Font")
+
+
+def _list_font_entries():
+    if not os.path.isdir(FONTS_DIR):
+        return []
+
+    entries = []
+    for root, _dirs, files in os.walk(FONTS_DIR):
+        for file_name in sorted(files):
+            _, ext = os.path.splitext(file_name)
+            if ext.lower() not in FONT_EXTENSIONS:
+                continue
+            full_path = os.path.join(root, file_name)
+            rel_path = os.path.relpath(full_path, SCRIPT_DIR).replace("\\", "/")
+            entries.append({
+                "id": "file:{0}".format(rel_path),
+                "path": rel_path,
+                "label": _humanize_font_name(file_name),
+            })
+    return entries
 
 _dock_widget = None
 _qt_widgets = None
@@ -211,6 +238,9 @@ class _BridgeHandler(SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path == "/api/state":
             self._write_json(200, _BRIDGE_STATE.get())
+            return
+        if parsed.path == "/api/fonts":
+            self._write_json(200, {"fonts": _list_font_entries()})
             return
         SimpleHTTPRequestHandler.do_GET(self)
 

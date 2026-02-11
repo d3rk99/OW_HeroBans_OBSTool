@@ -1,0 +1,4 @@
+# Ignore extracted font assets; keep downloadable archives.
+assets/Fonts/**
+!assets/Fonts/
+!assets/Fonts/*.zip

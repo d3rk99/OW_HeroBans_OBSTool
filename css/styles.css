@@ -585,12 +585,17 @@ input[type="number"] {
   letter-spacing: 0.08em;
 }
 
+
 .scoreboard-name.is-font-block {
   font-family: "Impact", "Arial Black", "Segoe UI", sans-serif;
 }
 
 .scoreboard-name.is-font-classic {
   font-family: "Segoe UI", "Tahoma", "Verdana", sans-serif;
+}
+
+.scoreboard-name.is-font-custom {
+  font-family: var(--scoreboard-custom-font-family, "Impact", "Arial Black", "Segoe UI", sans-serif);
 }
 
 .scoreboard-score {

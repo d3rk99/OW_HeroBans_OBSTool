@@ -59,7 +59,7 @@ The GUI window replaces `control.html` as your producer control surface while st
 3. Leave `Auto-start local headless server` enabled (default).
 4. Open `View -> Docks` and enable `OW2 Hero Bans` if it is not already visible.
 
-When enabled, the script automatically starts a local headless server at `http://127.0.0.1:8765` for `control.html`, `team1.html`, `team2.html`, and `/api/state`. When OBS unloads the script (or exits), that script-owned server is shut down automatically.
+When enabled, the script automatically starts a local headless server at `http://127.0.0.1:8765` for `control.html`, `team1.html`, `team2.html`, `/api/state`, and `/api/fonts`. When OBS unloads the script (or exits), that script-owned server is shut down automatically.
 
 If OBS script logs report missing Qt WebEngine modules, install a supported binding into the Python runtime used by OBS scripting, then reload the script.
 
@@ -107,3 +107,9 @@ If you cannot install Qt packages into the OBS scripting Python, use OBS-native 
 - Use `Reset All` to clear both teams.
 - In the Scoreboard tab, choose a team-name font style (including jersey-like option) and name color for each team.
 - Testing override: open `team1.html?hero=Ana` or `team2.html?hero=Reinhardt` to preview card styling without localStorage state.
+
+
+## Custom scoreboard fonts
+- Drop `.ttf`, `.otf`, `.woff`, or `.woff2` files under `assets/Fonts/`.
+- The controller automatically loads available files (via `/api/fonts`) into the Team Name font selectors.
+- Selected custom font files are stored in state as `file:<relative-path>` and loaded dynamically by the scoreboard name overlays.

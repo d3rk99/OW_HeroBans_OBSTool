@@ -41,6 +41,29 @@ else:
     ROOT_DIR = Path(__file__).resolve().parent
 
 HEROES_JSON = ROOT_DIR / "data" / "heroes.json"
+FONTS_DIR = ROOT_DIR / "assets" / "Fonts"
+FONT_EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
+
+
+def _humanize_font_name(path: Path) -> str:
+    return path.stem.replace("_", " ").replace("-", " ").strip() or "Custom Font"
+
+
+def _list_font_entries() -> list[dict[str, str]]:
+    if not FONTS_DIR.exists():
+        return []
+
+    entries: list[dict[str, str]] = []
+    for file_path in sorted(FONTS_DIR.rglob("*")):
+        if not file_path.is_file() or file_path.suffix.lower() not in FONT_EXTENSIONS:
+            continue
+        rel_path = file_path.relative_to(ROOT_DIR).as_posix()
+        entries.append({
+            "id": f"file:{rel_path}",
+            "path": rel_path,
+            "label": _humanize_font_name(file_path),
+        })
+    return entries
 
 
 def _sanitize_score(value: Any) -> int:
@@ -159,6 +182,9 @@ class BridgeHandler(SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path == "/api/state":
             self._write_json(200, SHARED_STATE.get())
+            return
+        if parsed.path == "/api/fonts":
+            self._write_json(200, {"fonts": _list_font_entries()})
             return
         super().do_GET()
 

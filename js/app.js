@@ -5,6 +5,13 @@
   const OVERLAY_POLL_MS = 500;
   const FADE_TRANSITION_MS = 260;
   const BRIDGE_STATE_URL = 'http://127.0.0.1:8765/api/state';
+  const BRIDGE_FONTS_URL = 'http://127.0.0.1:8765/api/fonts';
+  const BUILTIN_NAME_FONTS = [
+    { value: 'varsity', label: 'Varsity / Jersey' },
+    { value: 'block', label: 'Block Bold' },
+    { value: 'classic', label: 'Classic Sans' }
+  ];
+  const BUILTIN_FONT_VALUES = new Set(BUILTIN_NAME_FONTS.map((font) => font.value));
 
   let heroList = [];
   let heroesByName = new Map();
@@ -34,9 +41,106 @@
   };
 
   const sanitizeNameFont = (value) => {
-    const allowed = new Set(['varsity', 'block', 'classic']);
-    return allowed.has(value) ? value : 'varsity';
+    const raw = String(value || '').trim();
+    if (BUILTIN_FONT_VALUES.has(raw)) return raw;
+    if (/^file:[a-zA-Z0-9_./ %\\-]+\.(ttf|otf|woff2?)$/i.test(raw)) return raw;
+    return 'varsity';
   };
+
+  const slugifyFontToken = (value) => sanitizeNameFont(value)
+    .replace(/^file:/, '')
+    .replace(/\.[^.]+$/, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase() || 'custom-font';
+
+  const customFontCache = new Map();
+
+  const humanizeFontName = (path) => {
+    const fileName = String(path || '').split('/').pop() || '';
+    const stem = fileName.replace(/\.[^.]+$/, '');
+    return stem.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Custom Font';
+  };
+
+  async function readBridgeFonts() {
+    try {
+      const response = await fetch(BRIDGE_FONTS_URL, { cache: 'no-store' });
+      if (!response.ok) return [];
+      const payload = await response.json();
+      const fonts = Array.isArray(payload?.fonts) ? payload.fonts : [];
+      return fonts
+        .map((font) => {
+          const token = sanitizeNameFont(font?.id || `file:${font?.path || ''}`);
+          if (!token.startsWith('file:')) return null;
+          const path = String(font?.path || token.replace(/^file:/, '')).replace(/^\/+/, '');
+          return {
+            value: token,
+            path,
+            label: String(font?.label || humanizeFontName(path))
+          };
+        })
+        .filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  async function ensureCustomFontLoaded(token) {
+    const cleanToken = sanitizeNameFont(token);
+    if (!cleanToken.startsWith('file:')) return '';
+    if (customFontCache.has(cleanToken)) return customFontCache.get(cleanToken);
+
+    const path = cleanToken.replace(/^file:/, '').replace(/^\/+/, '');
+    const family = `OW2Custom-${slugifyFontToken(cleanToken)}`;
+    const source = path.startsWith('.') ? path : `./${path}`;
+
+    if (typeof FontFace !== 'function') {
+      customFontCache.set(cleanToken, `"${humanizeFontName(path)}"`);
+      return customFontCache.get(cleanToken);
+    }
+
+    try {
+      const face = new FontFace(family, `url(${JSON.stringify(source)})`);
+      await face.load();
+      document.fonts.add(face);
+      const quoted = `"${family}"`;
+      customFontCache.set(cleanToken, quoted);
+      return quoted;
+    } catch {
+      const fallback = `"${humanizeFontName(path)}"`;
+      customFontCache.set(cleanToken, fallback);
+      return fallback;
+    }
+  }
+
+  async function hydrateFontSelectors(selectNodes, selectedTokens = []) {
+    const discovered = await readBridgeFonts();
+    const customOptions = discovered.map((font) => ({ value: font.value, label: font.label }));
+
+    const merged = [...BUILTIN_NAME_FONTS, ...customOptions];
+    const ensureOption = (collection, token) => {
+      const cleanToken = sanitizeNameFont(token);
+      if (collection.some((item) => item.value === cleanToken)) return;
+      if (!cleanToken.startsWith('file:')) return;
+      collection.push({ value: cleanToken, label: humanizeFontName(cleanToken.replace(/^file:/, '')) });
+    };
+
+    selectedTokens.forEach((token) => ensureOption(merged, token));
+
+    selectNodes.forEach((selectNode, index) => {
+      if (!selectNode) return;
+      const current = sanitizeNameFont(selectedTokens[index] || selectNode.value);
+      ensureOption(merged, current);
+      selectNode.innerHTML = '';
+      merged.forEach((font) => {
+        const option = document.createElement('option');
+        option.value = font.value;
+        option.textContent = font.label;
+        selectNode.appendChild(option);
+      });
+      selectNode.value = merged.some((font) => font.value === current) ? current : 'varsity';
+    });
+  }
 
   function sanitizeState(payload) {
     return {
@@ -378,12 +482,28 @@
 
     let lastSignature = '';
 
-    const paint = (scoreboardTeam) => {
+    const paint = async (scoreboardTeam) => {
       if (role === 'name') {
         valueNode.textContent = scoreboardTeam.name || 'TEAM';
         valueNode.style.setProperty('--scoreboard-name-color', sanitizeNameColor(scoreboardTeam.nameColor));
-        valueNode.classList.remove('is-font-varsity', 'is-font-block', 'is-font-classic');
-        valueNode.classList.add(`is-font-${sanitizeNameFont(scoreboardTeam.nameFont)}`);
+
+        const fontToken = sanitizeNameFont(scoreboardTeam.nameFont);
+        valueNode.classList.remove('is-font-varsity', 'is-font-block', 'is-font-classic', 'is-font-custom');
+        valueNode.style.removeProperty('--scoreboard-custom-font-family');
+
+        if (BUILTIN_FONT_VALUES.has(fontToken)) {
+          valueNode.classList.add(`is-font-${fontToken}`);
+        } else if (fontToken.startsWith('file:')) {
+          const family = await ensureCustomFontLoaded(fontToken);
+          if (family) {
+            valueNode.classList.add('is-font-custom');
+            valueNode.style.setProperty('--scoreboard-custom-font-family', `${family}, "Impact", "Arial Black", sans-serif`);
+          } else {
+            valueNode.classList.add('is-font-varsity');
+          }
+        } else {
+          valueNode.classList.add('is-font-varsity');
+        }
       } else if (role === 'logo') {
         if (scoreboardTeam.logo) {
           valueNode.src = scoreboardTeam.logo;
@@ -403,7 +523,7 @@
       const signature = `${scoreboardTeam.name}|${scoreboardTeam.logo}|${scoreboardTeam.score}|${scoreboardTeam.nameColor}|${scoreboardTeam.nameFont}|${state.updatedAt}`;
       if (signature === lastSignature) return;
       lastSignature = signature;
-      paint(scoreboardTeam);
+      await paint(scoreboardTeam);
     };
 
     applyState();
@@ -431,7 +551,7 @@
     });
   }
 
-  function initScoreboardControl(pendingState, syncInputs) {
+  async function initScoreboardControl(pendingState, syncInputs) {
     const fieldMap = {
       team1: {
         name: document.getElementById('score-team1-name'),
@@ -453,6 +573,11 @@
     const swapButton = document.getElementById('scoreboard-swap');
 
     if (!fieldMap.team1.name || !fieldMap.team2.name || !updateButton || !swapButton || !fieldMap.team1.nameColor || !fieldMap.team2.nameColor || !fieldMap.team1.nameFont || !fieldMap.team2.nameFont) return;
+
+    await hydrateFontSelectors(
+      [fieldMap.team1.nameFont, fieldMap.team2.nameFont],
+      [pendingState.scoreboard.team1.nameFont, pendingState.scoreboard.team2.nameFont]
+    );
 
     const handleInput = (teamId, key, value) => {
       if (key === 'score') {
@@ -524,7 +649,7 @@
     initTabs();
     installSearchForTeam('team1', { pendingState, syncInputs });
     installSearchForTeam('team2', { pendingState, syncInputs });
-    initScoreboardControl(pendingState, syncInputs);
+    await initScoreboardControl(pendingState, syncInputs);
 
     const swapTeams = document.getElementById('swap-teams');
     if (swapTeams) {
