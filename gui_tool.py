@@ -90,8 +90,8 @@ class SharedState:
             "team1": {"ban": ""},
             "team2": {"ban": ""},
             "scoreboard": {
-                "team1": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "nameFont": "varsity"},
-                "team2": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "nameFont": "varsity"},
+                "team1": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
+                "team2": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
             },
             "updatedAt": int(time.time() * 1000),
         }
@@ -111,6 +111,7 @@ class SharedState:
                     "logo": str(team1_style.get("logo", "") or ""),
                     "score": _sanitize_score(team1_style.get("score", 0)),
                     "nameColor": str(team1_style.get("nameColor", "#e9eefc") or "#e9eefc"),
+                    "bevelColor": str(team1_style.get("bevelColor", "#7dd3fc") or "#7dd3fc"),
                     "nameFont": str(team1_style.get("nameFont", "varsity") or "varsity"),
                 },
                 "team2": {
@@ -118,6 +119,7 @@ class SharedState:
                     "logo": str(team2_style.get("logo", "") or ""),
                     "score": _sanitize_score(team2_style.get("score", 0)),
                     "nameColor": str(team2_style.get("nameColor", "#e9eefc") or "#e9eefc"),
+                    "bevelColor": str(team2_style.get("bevelColor", "#7dd3fc") or "#7dd3fc"),
                     "nameFont": str(team2_style.get("nameFont", "varsity") or "varsity"),
                 },
             },

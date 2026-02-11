@@ -90,8 +90,8 @@ class _BridgeState(object):
             "team1": {"ban": ""},
             "team2": {"ban": ""},
             "scoreboard": {
-                "team1": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "nameFont": "varsity"},
-                "team2": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "nameFont": "varsity"},
+                "team1": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
+                "team2": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
             },
             "updatedAt": int(time.time() * 1000),
         }
@@ -113,6 +113,7 @@ class _BridgeState(object):
                     "logo": str(sb_team1.get("logo", "") or ""),
                     "score": _sanitize_score(sb_team1.get("score", 0)),
                     "nameColor": str(sb_team1.get("nameColor", "#e9eefc") or "#e9eefc"),
+                    "bevelColor": str(sb_team1.get("bevelColor", "#7dd3fc") or "#7dd3fc"),
                     "nameFont": str(sb_team1.get("nameFont", "varsity") or "varsity"),
                 },
                 "team2": {
@@ -120,6 +121,7 @@ class _BridgeState(object):
                     "logo": str(sb_team2.get("logo", "") or ""),
                     "score": _sanitize_score(sb_team2.get("score", 0)),
                     "nameColor": str(sb_team2.get("nameColor", "#e9eefc") or "#e9eefc"),
+                    "bevelColor": str(sb_team2.get("bevelColor", "#7dd3fc") or "#7dd3fc"),
                     "nameFont": str(sb_team2.get("nameFont", "varsity") or "varsity"),
                 },
             },
@@ -137,6 +139,7 @@ class _BridgeState(object):
                         "logo": self._state["scoreboard"]["team1"]["logo"],
                         "score": self._state["scoreboard"]["team1"]["score"],
                         "nameColor": self._state["scoreboard"]["team1"]["nameColor"],
+                        "bevelColor": self._state["scoreboard"]["team1"]["bevelColor"],
                         "nameFont": self._state["scoreboard"]["team1"]["nameFont"],
                     },
                     "team2": {
@@ -144,6 +147,7 @@ class _BridgeState(object):
                         "logo": self._state["scoreboard"]["team2"]["logo"],
                         "score": self._state["scoreboard"]["team2"]["score"],
                         "nameColor": self._state["scoreboard"]["team2"]["nameColor"],
+                        "bevelColor": self._state["scoreboard"]["team2"]["bevelColor"],
                         "nameFont": self._state["scoreboard"]["team2"]["nameFont"],
                     },
                 },
@@ -162,6 +166,7 @@ class _BridgeState(object):
                         "logo": self._state["scoreboard"]["team1"]["logo"],
                         "score": self._state["scoreboard"]["team1"]["score"],
                         "nameColor": self._state["scoreboard"]["team1"]["nameColor"],
+                        "bevelColor": self._state["scoreboard"]["team1"]["bevelColor"],
                         "nameFont": self._state["scoreboard"]["team1"]["nameFont"],
                     },
                     "team2": {
@@ -169,6 +174,7 @@ class _BridgeState(object):
                         "logo": self._state["scoreboard"]["team2"]["logo"],
                         "score": self._state["scoreboard"]["team2"]["score"],
                         "nameColor": self._state["scoreboard"]["team2"]["nameColor"],
+                        "bevelColor": self._state["scoreboard"]["team2"]["bevelColor"],
                         "nameFont": self._state["scoreboard"]["team2"]["nameFont"],
                     },
                 },

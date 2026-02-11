@@ -29,8 +29,8 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
   "team1": { "ban": "Ana" },
   "team2": { "ban": "Reinhardt" },
   "scoreboard": {
-    "team1": { "name": "Team Alpha", "logo": "./assets/team-alpha.png", "score": 1, "nameColor": "#e9eefc", "nameFont": "varsity" },
-    "team2": { "name": "Team Bravo", "logo": "./assets/team-bravo.png", "score": 2, "nameColor": "#e9eefc", "nameFont": "varsity" }
+    "team1": { "name": "Team Alpha", "logo": "./assets/team-alpha.png", "score": 1, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity" },
+    "team2": { "name": "Team Bravo", "logo": "./assets/team-bravo.png", "score": 2, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity" }
   },
   "updatedAt": 1234567890
 }
