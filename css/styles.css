@@ -258,6 +258,15 @@ button {
   width: var(--card-width);
 }
 
+.overlay-stage[data-scoreboard-role] {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
 .ban-card {
   border-radius: 18px;
   border: 2px solid transparent;
@@ -452,7 +461,7 @@ button {
 
   .mini-meta .value {
     font-size: 0.92rem;
-    line-height: 1;
+    line-height: 0.9;
   }
 
   button {
@@ -492,6 +501,7 @@ button {
 .tab-row {
   grid-column: 1 / -1;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.6rem;
 }
 
@@ -529,6 +539,43 @@ button {
 }
 
 
+.score-ticker-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.ticker-score-input {
+  width: 100%;
+  text-align: center;
+  font-size: clamp(2.6rem, 8vw, 4.8rem);
+  font-weight: 800;
+  padding: 1rem 0.9rem;
+}
+
+.ticker-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+.ticker-btn {
+  min-height: 96px;
+  font-size: 2rem;
+  font-weight: 800;
+  border-radius: 12px;
+}
+
+.ticker-btn.plus {
+  background: #35d26f;
+  color: #0e1525;
+}
+
+.ticker-btn.minus {
+  background: #ff7b7b;
+  color: #0e1525;
+}
+
 select,
 input[type="color"] {
   width: 100%;
@@ -547,12 +594,13 @@ input[type="color"] {
 
 .style-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 0.7rem;
   align-items: end;
 }
 
-.style-row > div:last-child {
+.style-row > div:nth-child(2),
+.style-row > div:nth-child(3) {
   width: 86px;
 }
 input[type="number"] {
@@ -570,14 +618,21 @@ input[type="number"] {
   margin: 0;
   text-transform: uppercase;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
+  text-align: center;
 }
 
 .scoreboard-name {
-  font-size: clamp(2rem, 6vw, 4.2rem);
+  width: 100%;
+  max-width: 100%;
+  font-size: clamp(120px, 48vmin, 760px);
   font-family: var(--scoreboard-font, "Impact", "Arial Black", "Segoe UI", sans-serif);
   color: var(--scoreboard-name-color, #e9eefc);
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.65);
+  line-height: 1;
+  text-shadow:
+    -2px -2px 0 var(--scoreboard-name-bevel-color, #7dd3fc),
+    2px 2px 0 rgba(0, 0, 0, 0.45),
+    0 0 10px rgba(0, 0, 0, 0.65);
 }
 
 .scoreboard-name.is-font-varsity {
@@ -599,18 +654,23 @@ input[type="number"] {
 }
 
 .scoreboard-score {
-  font-size: clamp(2.8rem, 7.5vw, 5.2rem);
+  width: 100%;
+  max-width: 100%;
+  font-size: clamp(180px, 72vmin, 980px);
+  line-height: 1;
+  text-shadow: 0 0 14px rgba(0, 0, 0, 0.65);
 }
 
 .scoreboard-logo {
-  width: min(320px, 90vw);
-  height: min(320px, 90vw);
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
 @media (max-width: 900px) {
   .tab-grid,
-  .scoreboard-grid {
+  .scoreboard-grid,
+  .score-ticker-grid {
     grid-template-columns: 1fr;
   }
 }

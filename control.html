@@ -10,12 +10,13 @@
   <main class="control-layout">
     <header class="panel-header">
       <h1>Overwatch 2 OBS Controller</h1>
-      <p>Use tabs to switch between Hero Bans and the new Scoreboard controller.</p>
+      <p>Use tabs to switch between Hero Bans, Team Info, and Score Ticker controls.</p>
     </header>
 
     <nav class="tab-row" aria-label="Controller tabs">
       <button class="tab-btn is-active" type="button" data-tab-target="hero-bans-tab">Overwatch Bans</button>
-      <button class="tab-btn" type="button" data-tab-target="scoreboard-tab">Scoreboard Tool</button>
+      <button class="tab-btn" type="button" data-tab-target="scoreboard-tab">Scoreboard Teams</button>
+      <button class="tab-btn" type="button" data-tab-target="score-tab">Score</button>
     </nav>
 
     <section id="hero-bans-tab" class="tab-panel is-active" aria-label="Overwatch Bans Controller">
@@ -65,10 +66,10 @@
       </div>
     </section>
 
-    <section id="scoreboard-tab" class="tab-panel" aria-label="Scoreboard Controller">
+    <section id="scoreboard-tab" class="tab-panel" aria-label="Scoreboard Team Info Controller">
       <div class="scoreboard-grid">
         <section class="team-column" aria-labelledby="scoreboard-team1-heading">
-          <h2 id="scoreboard-team1-heading">Team 1 Scoreboard</h2>
+          <h2 id="scoreboard-team1-heading">Team 1 Info</h2>
           <label for="score-team1-name">Team Name</label>
           <input id="score-team1-name" type="text" placeholder="Enter Team 1 name" />
 
@@ -85,17 +86,18 @@
               <label for="score-team1-name-color">Name Color</label>
               <input id="score-team1-name-color" type="color" value="#e9eefc" />
             </div>
+            <div>
+              <label for="score-team1-bevel-color">Bevel Color</label>
+              <input id="score-team1-bevel-color" type="color" value="#7dd3fc" />
+            </div>
           </div>
 
           <label for="score-team1-logo">Team Logo URL / Path</label>
           <input id="score-team1-logo" type="text" placeholder="https://... or ./assets/logo.png" />
-
-          <label for="score-team1-score">Team Score</label>
-          <input id="score-team1-score" type="number" min="0" step="1" placeholder="0" />
         </section>
 
         <section class="team-column" aria-labelledby="scoreboard-team2-heading">
-          <h2 id="scoreboard-team2-heading">Team 2 Scoreboard</h2>
+          <h2 id="scoreboard-team2-heading">Team 2 Info</h2>
           <label for="score-team2-name">Team Name</label>
           <input id="score-team2-name" type="text" placeholder="Enter Team 2 name" />
 
@@ -112,19 +114,42 @@
               <label for="score-team2-name-color">Name Color</label>
               <input id="score-team2-name-color" type="color" value="#e9eefc" />
             </div>
+            <div>
+              <label for="score-team2-bevel-color">Bevel Color</label>
+              <input id="score-team2-bevel-color" type="color" value="#7dd3fc" />
+            </div>
           </div>
 
           <label for="score-team2-logo">Team Logo URL / Path</label>
           <input id="score-team2-logo" type="text" placeholder="https://... or ./assets/logo.png" />
-
-          <label for="score-team2-score">Team Score</label>
-          <input id="score-team2-score" type="number" min="0" step="1" placeholder="0" />
         </section>
 
-        <div class="sync-row" aria-label="Scoreboard update controls">
+        <div class="sync-row" aria-label="Scoreboard team info update controls">
           <button id="scoreboard-swap" class="secondary-btn" type="button">Swap Teams</button>
-          <button id="scoreboard-update" class="primary-btn" type="button">Update Scoreboard</button>
+          <button id="scoreboard-update" class="primary-btn" type="button">Update Team Info</button>
         </div>
+      </div>
+    </section>
+
+    <section id="score-tab" class="tab-panel" aria-label="Score Ticker Controller">
+      <div class="score-ticker-grid">
+        <section class="team-column" aria-labelledby="ticker-team1-heading">
+          <h2 id="ticker-team1-heading">Team 1 Score</h2>
+          <input id="ticker-team1-score" class="ticker-score-input" type="number" min="0" step="1" value="0" />
+          <div class="ticker-controls" aria-label="Team 1 score controls">
+            <button id="ticker-team1-minus" class="ticker-btn minus" type="button">-1</button>
+            <button id="ticker-team1-plus" class="ticker-btn plus" type="button">+1</button>
+          </div>
+        </section>
+
+        <section class="team-column" aria-labelledby="ticker-team2-heading">
+          <h2 id="ticker-team2-heading">Team 2 Score</h2>
+          <input id="ticker-team2-score" class="ticker-score-input" type="number" min="0" step="1" value="0" />
+          <div class="ticker-controls" aria-label="Team 2 score controls">
+            <button id="ticker-team2-minus" class="ticker-btn minus" type="button">-1</button>
+            <button id="ticker-team2-plus" class="ticker-btn plus" type="button">+1</button>
+          </div>
+        </section>
       </div>
     </section>
   </main>

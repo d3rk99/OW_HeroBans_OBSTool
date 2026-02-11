@@ -41,6 +41,7 @@ else:
     ROOT_DIR = Path(__file__).resolve().parent
 
 HEROES_JSON = ROOT_DIR / "data" / "heroes.json"
+STATE_CACHE_PATH = ROOT_DIR / "data" / "controller_state_cache.json"
 FONTS_DIR = ROOT_DIR / "assets" / "Fonts"
 FONT_EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
 
@@ -83,6 +84,7 @@ class SharedState:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._state = self.default_state()
+        self._load_cache()
 
     @staticmethod
     def default_state() -> dict[str, Any]:
@@ -90,8 +92,8 @@ class SharedState:
             "team1": {"ban": ""},
             "team2": {"ban": ""},
             "scoreboard": {
-                "team1": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "nameFont": "varsity"},
-                "team2": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "nameFont": "varsity"},
+                "team1": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
+                "team2": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
             },
             "updatedAt": int(time.time() * 1000),
         }
@@ -111,6 +113,7 @@ class SharedState:
                     "logo": str(team1_style.get("logo", "") or ""),
                     "score": _sanitize_score(team1_style.get("score", 0)),
                     "nameColor": str(team1_style.get("nameColor", "#e9eefc") or "#e9eefc"),
+                    "bevelColor": str(team1_style.get("bevelColor", "#7dd3fc") or "#7dd3fc"),
                     "nameFont": str(team1_style.get("nameFont", "varsity") or "varsity"),
                 },
                 "team2": {
@@ -118,11 +121,28 @@ class SharedState:
                     "logo": str(team2_style.get("logo", "") or ""),
                     "score": _sanitize_score(team2_style.get("score", 0)),
                     "nameColor": str(team2_style.get("nameColor", "#e9eefc") or "#e9eefc"),
+                    "bevelColor": str(team2_style.get("bevelColor", "#7dd3fc") or "#7dd3fc"),
                     "nameFont": str(team2_style.get("nameFont", "varsity") or "varsity"),
                 },
             },
             "updatedAt": int(time.time() * 1000),
         }
+
+    def _load_cache(self) -> None:
+        try:
+            if not STATE_CACHE_PATH.exists():
+                return
+            payload = json.loads(STATE_CACHE_PATH.read_text(encoding="utf-8"))
+            self._state = self.sanitize(payload)
+        except Exception:
+            self._state = self.default_state()
+
+    def _save_cache(self) -> None:
+        try:
+            STATE_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            STATE_CACHE_PATH.write_text(json.dumps(self._state, indent=2), encoding="utf-8")
+        except Exception:
+            return
 
     def get(self) -> dict[str, Any]:
         with self._lock:
@@ -136,6 +156,7 @@ class SharedState:
     def set(self, payload: dict[str, Any] | None) -> dict[str, Any]:
         with self._lock:
             self._state = self.sanitize(payload)
+            self._save_cache()
             return {
                 "team1": {"ban": self._state["team1"]["ban"]},
                 "team2": {"ban": self._state["team2"]["ban"]},
