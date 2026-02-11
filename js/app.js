@@ -490,38 +490,6 @@
 
     let lastSignature = '';
 
-    const fitOverlayText = () => {
-      if (role !== 'name' && role !== 'score') return;
-
-      const stageRect = stage.getBoundingClientRect();
-      const widthFill = role === 'score' ? 0.985 : 0.98;
-      const heightFill = role === 'score' ? 0.985 : 0.955;
-      const maxWidth = stageRect.width * widthFill;
-      const maxHeight = stageRect.height * heightFill;
-      if (!maxWidth || !maxHeight) return;
-
-      const minSize = 12;
-      const maxSize = Math.floor(Math.max(stageRect.width, stageRect.height) * 2.1);
-      let low = minSize;
-      let high = Math.max(minSize, maxSize);
-      let best = minSize;
-
-      while (low <= high) {
-        const mid = Math.floor((low + high) / 2);
-        valueNode.style.fontSize = `${mid}px`;
-
-        const fits = valueNode.scrollWidth <= maxWidth && valueNode.scrollHeight <= maxHeight;
-        if (fits) {
-          best = mid;
-          low = mid + 1;
-        } else {
-          high = mid - 1;
-        }
-      }
-
-      valueNode.style.fontSize = `${best}px`;
-    };
-
     const paint = async (scoreboardTeam) => {
       if (role === 'name') {
         valueNode.textContent = scoreboardTeam.name || 'TEAM';
@@ -545,7 +513,6 @@
         } else {
           valueNode.classList.add('is-font-varsity');
         }
-        fitOverlayText();
       } else if (role === 'logo') {
         if (scoreboardTeam.logo) {
           valueNode.src = scoreboardTeam.logo;
@@ -556,7 +523,6 @@
         }
       } else if (role === 'score') {
         valueNode.textContent = String(sanitizeScore(scoreboardTeam.score));
-        fitOverlayText();
       }
     };
 
@@ -573,7 +539,6 @@
     window.addEventListener('storage', (event) => {
       if (event.key === STATE_KEY) applyState();
     });
-    window.addEventListener('resize', fitOverlayText);
     setInterval(applyState, OVERLAY_POLL_MS);
   }
 

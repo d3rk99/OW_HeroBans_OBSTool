@@ -461,7 +461,7 @@ button {
 
   .mini-meta .value {
     font-size: 0.92rem;
-    line-height: 1;
+    line-height: 0.9;
   }
 
   button {
@@ -580,14 +580,14 @@ input[type="number"] {
   margin: 0;
   text-transform: uppercase;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
   text-align: center;
 }
 
 .scoreboard-name {
   width: 100%;
   max-width: 100%;
-  font-size: 320px;
+  font-size: clamp(120px, 48vmin, 760px);
   font-family: var(--scoreboard-font, "Impact", "Arial Black", "Segoe UI", sans-serif);
   color: var(--scoreboard-name-color, #e9eefc);
   line-height: 1;
@@ -618,7 +618,7 @@ input[type="number"] {
 .scoreboard-score {
   width: 100%;
   max-width: 100%;
-  font-size: 420px;
+  font-size: clamp(180px, 72vmin, 980px);
   line-height: 1;
   text-shadow: 0 0 14px rgba(0, 0, 0, 0.65);
 }
