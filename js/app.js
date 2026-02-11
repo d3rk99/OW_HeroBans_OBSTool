@@ -490,6 +490,25 @@
 
     let lastSignature = '';
 
+    const fitOverlayText = () => {
+      if (role !== 'name' && role !== 'score') return;
+
+      const stageRect = stage.getBoundingClientRect();
+      const maxWidth = stageRect.width * 0.95;
+      const maxHeight = stageRect.height * 0.9;
+      if (!maxWidth || !maxHeight) return;
+
+      valueNode.style.fontSize = `${Math.floor(Math.min(stageRect.width, stageRect.height) * 0.8)}px`;
+
+      let guard = 0;
+      while ((valueNode.scrollWidth > maxWidth || valueNode.scrollHeight > maxHeight) && guard < 220) {
+        const size = Number.parseFloat(getComputedStyle(valueNode).fontSize);
+        if (!Number.isFinite(size) || size <= 12) break;
+        valueNode.style.fontSize = `${size - 2}px`;
+        guard += 1;
+      }
+    };
+
     const paint = async (scoreboardTeam) => {
       if (role === 'name') {
         valueNode.textContent = scoreboardTeam.name || 'TEAM';
@@ -513,6 +532,7 @@
         } else {
           valueNode.classList.add('is-font-varsity');
         }
+        fitOverlayText();
       } else if (role === 'logo') {
         if (scoreboardTeam.logo) {
           valueNode.src = scoreboardTeam.logo;
@@ -523,6 +543,7 @@
         }
       } else if (role === 'score') {
         valueNode.textContent = String(sanitizeScore(scoreboardTeam.score));
+        fitOverlayText();
       }
     };
 
@@ -539,6 +560,7 @@
     window.addEventListener('storage', (event) => {
       if (event.key === STATE_KEY) applyState();
     });
+    window.addEventListener('resize', fitOverlayText);
     setInterval(applyState, OVERLAY_POLL_MS);
   }
 

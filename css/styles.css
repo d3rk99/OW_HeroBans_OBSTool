@@ -259,11 +259,12 @@ button {
 }
 
 .overlay-stage[data-scoreboard-role] {
-  width: 500px;
-  height: 500px;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .ban-card {
@@ -586,10 +587,10 @@ input[type="number"] {
 .scoreboard-name {
   width: 100%;
   max-width: 100%;
-  font-size: clamp(2.2rem, 12vw, 5.2rem);
+  font-size: 180px;
   font-family: var(--scoreboard-font, "Impact", "Arial Black", "Segoe UI", sans-serif);
   color: var(--scoreboard-name-color, #e9eefc);
-  line-height: 1.05;
+  line-height: 1;
   text-shadow:
     -2px -2px 0 var(--scoreboard-name-bevel-color, #7dd3fc),
     2px 2px 0 rgba(0, 0, 0, 0.45),
@@ -617,14 +618,14 @@ input[type="number"] {
 .scoreboard-score {
   width: 100%;
   max-width: 100%;
-  font-size: clamp(4.6rem, 18vw, 8.2rem);
+  font-size: 220px;
   line-height: 1;
   text-shadow: 0 0 14px rgba(0, 0, 0, 0.65);
 }
 
 .scoreboard-logo {
-  width: min(320px, 90vw);
-  height: min(320px, 90vw);
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
