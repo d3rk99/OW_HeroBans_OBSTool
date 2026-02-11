@@ -84,15 +84,40 @@
     }
   }
 
+  function bridgeHasScoreboard(payload) {
+    return Boolean(
+      payload?.scoreboard &&
+      (payload.scoreboard.team1 || payload.scoreboard.team2)
+    );
+  }
+
   async function readBridgeState() {
     try {
       const response = await fetch(BRIDGE_STATE_URL, { cache: 'no-store' });
       if (!response.ok) return null;
       const payload = await response.json();
-      return sanitizeState(payload);
+      return {
+        state: sanitizeState(payload),
+        hasScoreboard: bridgeHasScoreboard(payload)
+      };
     } catch {
       return null;
     }
+  }
+
+  async function readSharedState() {
+    const localState = readLocalState();
+    const bridgePayload = await readBridgeState();
+    if (!bridgePayload) return localState;
+
+    const bridgeState = bridgePayload.state;
+
+    return sanitizeState({
+      ...localState,
+      ...bridgeState,
+      scoreboard: bridgePayload.hasScoreboard ? bridgeState.scoreboard : localState.scoreboard,
+      updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
+    });
   }
 
   function writeState(nextState) {
@@ -301,8 +326,7 @@
 
     const applyState = async () => {
       const queryHero = getQueryHero();
-      const bridgeState = await readBridgeState();
-      const state = bridgeState || readLocalState();
+      const state = await readSharedState();
       const selectedName = (queryHero || state?.[teamId]?.ban || '').trim();
       const signature = `${selectedName}:${state.updatedAt}`;
       if (signature === lastSignature) return;
@@ -356,8 +380,7 @@
     };
 
     const applyState = async () => {
-      const bridgeState = await readBridgeState();
-      const state = bridgeState || readLocalState();
+      const state = await readSharedState();
       const scoreboardTeam = state?.scoreboard?.[team] || { name: '', logo: '', score: 0 };
       const signature = `${scoreboardTeam.name}|${scoreboardTeam.logo}|${scoreboardTeam.score}|${state.updatedAt}`;
       if (signature === lastSignature) return;
@@ -443,7 +466,7 @@
   }
 
   async function initControlPage() {
-    const pendingState = readLocalState();
+    const pendingState = await readSharedState();
 
     const syncInputs = () => {
       ['team1', 'team2'].forEach((teamId) => {
