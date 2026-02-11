@@ -4,9 +4,12 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 
 ## Files
 
-- `control.html`: Producer control panel with searchable hero selection for both teams.
+- `control.html`: Producer control panel with tabbed tools for Hero Bans and Scoreboard control.
 - `team1.html`: Team 1 overlay card.
 - `team2.html`: Team 2 overlay card.
+- `scoreboard-team1-name.html` / `scoreboard-team2-name.html`: Team name overlays for scoreboard scenes.
+- `scoreboard-team1-logo.html` / `scoreboard-team2-logo.html`: Team logo overlays for scoreboard scenes.
+- `scoreboard-team1-score.html` / `scoreboard-team2-score.html`: Team score overlays for scoreboard scenes.
 - `gui_tool.py`: Desktop GUI controller + local bridge server (`http://127.0.0.1:8765`).
 - `obs_hero_bans_dock.py`: OBS Python script that embeds `control.html` as a native OBS dock panel (written for broad OBS Python compatibility).
 - `setup_windows_env.bat`: Windows setup helper that installs Python (via `winget` if needed), creates `.venv`, and installs dependencies.
@@ -25,12 +28,18 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 {
   "team1": { "ban": "Ana" },
   "team2": { "ban": "Reinhardt" },
+  "scoreboard": {
+    "team1": { "name": "Team Alpha", "logo": "./assets/team-alpha.png", "score": 1 },
+    "team2": { "name": "Team Bravo", "logo": "./assets/team-bravo.png", "score": 2 }
+  },
   "updatedAt": 1234567890
 }
 ```
 
-- `control.html` writes state updates.
-- `team1.html` and `team2.html` listen for storage events and also poll state every 500ms for robust updates in OBS/browser contexts.
+- `control.html` writes both hero-ban and scoreboard state updates.
+- `team1.html` and `team2.html` read hero-ban state.
+- Scoreboard overlay HTML files read scoreboard state (team names, logos, and scores).
+- Overlay pages listen for storage events and also poll state every 500ms for robust updates in OBS/browser contexts.
 
 ## Desktop GUI mode (EXE)
 

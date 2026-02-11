@@ -9,59 +9,103 @@
 <body class="control-page">
   <main class="control-layout">
     <header class="panel-header">
-      <h1>Overwatch 2 Hero Bans</h1>
-      <p>Select one banned hero for each team, then press Update to publish both overlays in sync.</p>
+      <h1>Overwatch 2 OBS Controller</h1>
+      <p>Use tabs to switch between Hero Bans and the new Scoreboard controller.</p>
     </header>
 
-    <section class="team-column" aria-labelledby="team1-heading">
-      <h2 id="team1-heading">Team 1 Ban</h2>
-      <div class="search-wrap">
-        <label for="team1-search">Hero</label>
-        <input id="team1-search" type="text" autocomplete="off" placeholder="Search heroes..." />
-        <ul id="team1-results" class="results" role="listbox" aria-label="Team 1 hero options"></ul>
-      </div>
-      <div class="team-actions-row">
-        <div id="team1-preview" class="mini-preview">
-          <div class="mini-thumb" data-thumb></div>
-          <div class="mini-meta">
-            <p class="label">Current Ban</p>
-            <p class="value" data-name>None</p>
+    <nav class="tab-row" aria-label="Controller tabs">
+      <button class="tab-btn is-active" type="button" data-tab-target="hero-bans-tab">Overwatch Bans</button>
+      <button class="tab-btn" type="button" data-tab-target="scoreboard-tab">Scoreboard Tool</button>
+    </nav>
+
+    <section id="hero-bans-tab" class="tab-panel is-active" aria-label="Overwatch Bans Controller">
+      <div class="tab-grid">
+        <section class="team-column" aria-labelledby="team1-heading">
+          <h2 id="team1-heading">Team 1 Ban</h2>
+          <div class="search-wrap">
+            <label for="team1-search">Hero</label>
+            <input id="team1-search" type="text" autocomplete="off" placeholder="Search heroes..." />
+            <ul id="team1-results" class="results" role="listbox" aria-label="Team 1 hero options"></ul>
           </div>
+          <div class="team-actions-row">
+            <div id="team1-preview" class="mini-preview">
+              <div class="mini-thumb" data-thumb></div>
+              <div class="mini-meta">
+                <p class="label">Current Ban</p>
+                <p class="value" data-name>None</p>
+              </div>
+            </div>
+            <button id="team1-clear" class="secondary-btn" type="button">Clear Team 1 Ban</button>
+          </div>
+        </section>
+
+        <section class="team-column" aria-labelledby="team2-heading">
+          <h2 id="team2-heading">Team 2 Ban</h2>
+          <div class="search-wrap">
+            <label for="team2-search">Hero</label>
+            <input id="team2-search" type="text" autocomplete="off" placeholder="Search heroes..." />
+            <ul id="team2-results" class="results" role="listbox" aria-label="Team 2 hero options"></ul>
+          </div>
+          <div class="team-actions-row">
+            <div id="team2-preview" class="mini-preview">
+              <div class="mini-thumb" data-thumb></div>
+              <div class="mini-meta">
+                <p class="label">Current Ban</p>
+                <p class="value" data-name>None</p>
+              </div>
+            </div>
+            <button id="team2-clear" class="secondary-btn" type="button">Clear Team 2 Ban</button>
+          </div>
+        </section>
+
+        <div class="sync-row" aria-label="Overlay update controls">
+          <button id="swap-teams" class="secondary-btn" type="button">Swap Teams</button>
+          <button id="apply-update" class="primary-btn" type="button">Update</button>
         </div>
-        <button id="team1-clear" class="secondary-btn" type="button">Clear Team 1 Ban</button>
       </div>
     </section>
 
-    <section class="team-column" aria-labelledby="team2-heading">
-      <h2 id="team2-heading">Team 2 Ban</h2>
-      <div class="search-wrap">
-        <label for="team2-search">Hero</label>
-        <input id="team2-search" type="text" autocomplete="off" placeholder="Search heroes..." />
-        <ul id="team2-results" class="results" role="listbox" aria-label="Team 2 hero options"></ul>
-      </div>
-      <div class="team-actions-row">
-        <div id="team2-preview" class="mini-preview">
-          <div class="mini-thumb" data-thumb></div>
-          <div class="mini-meta">
-            <p class="label">Current Ban</p>
-            <p class="value" data-name>None</p>
-          </div>
+    <section id="scoreboard-tab" class="tab-panel" aria-label="Scoreboard Controller">
+      <div class="scoreboard-grid">
+        <section class="team-column" aria-labelledby="scoreboard-team1-heading">
+          <h2 id="scoreboard-team1-heading">Team 1 Scoreboard</h2>
+          <label for="score-team1-name">Team Name</label>
+          <input id="score-team1-name" type="text" placeholder="Enter Team 1 name" />
+
+          <label for="score-team1-logo">Team Logo URL / Path</label>
+          <input id="score-team1-logo" type="text" placeholder="https://... or ./assets/logo.png" />
+
+          <label for="score-team1-score">Team Score</label>
+          <input id="score-team1-score" type="number" min="0" step="1" placeholder="0" />
+        </section>
+
+        <section class="team-column" aria-labelledby="scoreboard-team2-heading">
+          <h2 id="scoreboard-team2-heading">Team 2 Scoreboard</h2>
+          <label for="score-team2-name">Team Name</label>
+          <input id="score-team2-name" type="text" placeholder="Enter Team 2 name" />
+
+          <label for="score-team2-logo">Team Logo URL / Path</label>
+          <input id="score-team2-logo" type="text" placeholder="https://... or ./assets/logo.png" />
+
+          <label for="score-team2-score">Team Score</label>
+          <input id="score-team2-score" type="number" min="0" step="1" placeholder="0" />
+        </section>
+
+        <div class="sync-row" aria-label="Scoreboard update controls">
+          <button id="scoreboard-swap" class="secondary-btn" type="button">Swap Teams</button>
+          <button id="scoreboard-update" class="primary-btn" type="button">Update Scoreboard</button>
         </div>
-        <button id="team2-clear" class="secondary-btn" type="button">Clear Team 2 Ban</button>
       </div>
     </section>
-
-    <div class="sync-row" aria-label="Overlay update controls">
-      <button id="swap-teams" class="secondary-btn" type="button">Swap Teams</button>
-      <button id="apply-update" class="primary-btn" type="button">Update</button>
-    </div>
   </main>
 
   <footer class="control-footer">
     <button id="reset-all" class="danger-btn" type="button">Reset All</button>
     <p>
-      OBS setup: add <code>team1.html</code> and <code>team2.html</code> as Browser Sources for overlays.
-      Open <code>control.html</code> in a separate source for the producer monitor.
+      OBS setup: hero bans use <code>team1.html</code> and <code>team2.html</code>.
+      Scoreboard overlays use <code>scoreboard-team1-name.html</code>, <code>scoreboard-team2-name.html</code>,
+      <code>scoreboard-team1-logo.html</code>, <code>scoreboard-team2-logo.html</code>,
+      <code>scoreboard-team1-score.html</code>, and <code>scoreboard-team2-score.html</code>.
     </p>
   </footer>
 
