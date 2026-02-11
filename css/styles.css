@@ -258,6 +258,14 @@ button {
   width: var(--card-width);
 }
 
+.overlay-stage[data-scoreboard-role] {
+  width: 500px;
+  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .ban-card {
   border-radius: 18px;
   border: 2px solid transparent;
@@ -547,12 +555,13 @@ input[type="color"] {
 
 .style-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 0.7rem;
   align-items: end;
 }
 
-.style-row > div:last-child {
+.style-row > div:nth-child(2),
+.style-row > div:nth-child(3) {
   width: 86px;
 }
 input[type="number"] {
@@ -571,13 +580,20 @@ input[type="number"] {
   text-transform: uppercase;
   font-weight: 800;
   letter-spacing: 0.05em;
+  text-align: center;
 }
 
 .scoreboard-name {
-  font-size: clamp(2rem, 6vw, 4.2rem);
+  width: 100%;
+  max-width: 100%;
+  font-size: clamp(2.2rem, 12vw, 5.2rem);
   font-family: var(--scoreboard-font, "Impact", "Arial Black", "Segoe UI", sans-serif);
   color: var(--scoreboard-name-color, #e9eefc);
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.65);
+  line-height: 1.05;
+  text-shadow:
+    -2px -2px 0 var(--scoreboard-name-bevel-color, #7dd3fc),
+    2px 2px 0 rgba(0, 0, 0, 0.45),
+    0 0 10px rgba(0, 0, 0, 0.65);
 }
 
 .scoreboard-name.is-font-varsity {
@@ -599,7 +615,11 @@ input[type="number"] {
 }
 
 .scoreboard-score {
-  font-size: clamp(2.8rem, 7.5vw, 5.2rem);
+  width: 100%;
+  max-width: 100%;
+  font-size: clamp(4.6rem, 18vw, 8.2rem);
+  line-height: 1;
+  text-shadow: 0 0 14px rgba(0, 0, 0, 0.65);
 }
 
 .scoreboard-logo {
