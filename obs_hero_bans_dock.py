@@ -44,6 +44,14 @@ _bridge_server_started_by_script = False
 _bridge_bind_target = None
 
 
+def _sanitize_score(value):
+    try:
+        numeric = int(float(value))
+    except Exception:
+        return 0
+    return numeric if numeric >= 0 else 0
+
+
 class _BridgeState(object):
     def __init__(self):
         self._lock = threading.Lock()
@@ -54,6 +62,10 @@ class _BridgeState(object):
         return {
             "team1": {"ban": ""},
             "team2": {"ban": ""},
+            "scoreboard": {
+                "team1": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "nameFont": "varsity"},
+                "team2": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "nameFont": "varsity"},
+            },
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -62,9 +74,28 @@ class _BridgeState(object):
         payload = payload or {}
         team1 = payload.get("team1", {}) or {}
         team2 = payload.get("team2", {}) or {}
+        scoreboard = payload.get("scoreboard", {}) or {}
+        sb_team1 = scoreboard.get("team1", {}) or {}
+        sb_team2 = scoreboard.get("team2", {}) or {}
         return {
             "team1": {"ban": str(team1.get("ban", "") or "")},
             "team2": {"ban": str(team2.get("ban", "") or "")},
+            "scoreboard": {
+                "team1": {
+                    "name": str(sb_team1.get("name", "") or ""),
+                    "logo": str(sb_team1.get("logo", "") or ""),
+                    "score": _sanitize_score(sb_team1.get("score", 0)),
+                    "nameColor": str(sb_team1.get("nameColor", "#e9eefc") or "#e9eefc"),
+                    "nameFont": str(sb_team1.get("nameFont", "varsity") or "varsity"),
+                },
+                "team2": {
+                    "name": str(sb_team2.get("name", "") or ""),
+                    "logo": str(sb_team2.get("logo", "") or ""),
+                    "score": _sanitize_score(sb_team2.get("score", 0)),
+                    "nameColor": str(sb_team2.get("nameColor", "#e9eefc") or "#e9eefc"),
+                    "nameFont": str(sb_team2.get("nameFont", "varsity") or "varsity"),
+                },
+            },
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -73,6 +104,22 @@ class _BridgeState(object):
             return {
                 "team1": {"ban": self._state["team1"]["ban"]},
                 "team2": {"ban": self._state["team2"]["ban"]},
+                "scoreboard": {
+                    "team1": {
+                        "name": self._state["scoreboard"]["team1"]["name"],
+                        "logo": self._state["scoreboard"]["team1"]["logo"],
+                        "score": self._state["scoreboard"]["team1"]["score"],
+                        "nameColor": self._state["scoreboard"]["team1"]["nameColor"],
+                        "nameFont": self._state["scoreboard"]["team1"]["nameFont"],
+                    },
+                    "team2": {
+                        "name": self._state["scoreboard"]["team2"]["name"],
+                        "logo": self._state["scoreboard"]["team2"]["logo"],
+                        "score": self._state["scoreboard"]["team2"]["score"],
+                        "nameColor": self._state["scoreboard"]["team2"]["nameColor"],
+                        "nameFont": self._state["scoreboard"]["team2"]["nameFont"],
+                    },
+                },
                 "updatedAt": self._state["updatedAt"],
             }
 
@@ -82,6 +129,22 @@ class _BridgeState(object):
             return {
                 "team1": {"ban": self._state["team1"]["ban"]},
                 "team2": {"ban": self._state["team2"]["ban"]},
+                "scoreboard": {
+                    "team1": {
+                        "name": self._state["scoreboard"]["team1"]["name"],
+                        "logo": self._state["scoreboard"]["team1"]["logo"],
+                        "score": self._state["scoreboard"]["team1"]["score"],
+                        "nameColor": self._state["scoreboard"]["team1"]["nameColor"],
+                        "nameFont": self._state["scoreboard"]["team1"]["nameFont"],
+                    },
+                    "team2": {
+                        "name": self._state["scoreboard"]["team2"]["name"],
+                        "logo": self._state["scoreboard"]["team2"]["logo"],
+                        "score": self._state["scoreboard"]["team2"]["score"],
+                        "nameColor": self._state["scoreboard"]["team2"]["nameColor"],
+                        "nameFont": self._state["scoreboard"]["team2"]["nameFont"],
+                    },
+                },
                 "updatedAt": self._state["updatedAt"],
             }
 
@@ -120,6 +183,12 @@ class _BridgeHandler(SimpleHTTPRequestHandler):
     def log_message(self, _format, *args):
         # OBS scripting logs should stay in obs.script_log only.
         return
+
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        SimpleHTTPRequestHandler.end_headers(self)
 
     def _write_json(self, status, payload):
         body = json.dumps(payload).encode("utf-8")
@@ -305,6 +374,11 @@ def _import_qt_modules():
     return False
 
 
+def _build_cache_busted_url(raw_url):
+    separator = "&" if "?" in raw_url else "?"
+    return "{0}{1}_obsv={2}".format(raw_url, separator, int(time.time() * 1000))
+
+
 def _remove_existing_dock():
     global _dock_widget
 
@@ -334,7 +408,20 @@ def _build_dock():
         dock.setObjectName(SCRIPT_SETTINGS["dock_id"])
 
         view = _qt_web.QWebEngineView(dock)
-        view.setUrl(_qt_core.QUrl(SCRIPT_SETTINGS["dock_url"]))
+
+        try:
+            page = view.page()
+            profile = page.profile() if page is not None else None
+            cache_enum = getattr(_qt_web, "QWebEngineProfile", None)
+            if profile is not None and cache_enum is not None and hasattr(cache_enum, "NoCache"):
+                profile.setHttpCacheType(cache_enum.NoCache)
+                profile.clearHttpCache()
+        except Exception:
+            _log_debug("Unable to disable QWebEngine cache for dock view")
+            _log_debug(traceback.format_exc())
+
+        dock_url = _build_cache_busted_url(SCRIPT_SETTINGS["dock_url"])
+        view.setUrl(_qt_core.QUrl(dock_url))
         dock.setWidget(view)
 
         obs.obs_frontend_add_dock(dock)

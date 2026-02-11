@@ -43,6 +43,13 @@ else:
 HEROES_JSON = ROOT_DIR / "data" / "heroes.json"
 
 
+def _sanitize_score(value: Any) -> int:
+    try:
+        return max(0, int(float(value or 0)))
+    except Exception:
+        return 0
+
+
 @dataclass(frozen=True)
 class Hero:
     name: str
@@ -59,15 +66,38 @@ class SharedState:
         return {
             "team1": {"ban": ""},
             "team2": {"ban": ""},
+            "scoreboard": {
+                "team1": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "nameFont": "varsity"},
+                "team2": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "nameFont": "varsity"},
+            },
             "updatedAt": int(time.time() * 1000),
         }
 
     @staticmethod
     def sanitize(payload: dict[str, Any] | None) -> dict[str, Any]:
         payload = payload or {}
+        scoreboard = payload.get("scoreboard", {}) or {}
+        team1_style = scoreboard.get("team1", {}) or {}
+        team2_style = scoreboard.get("team2", {}) or {}
         return {
             "team1": {"ban": str(payload.get("team1", {}).get("ban", "") or "")},
             "team2": {"ban": str(payload.get("team2", {}).get("ban", "") or "")},
+            "scoreboard": {
+                "team1": {
+                    "name": str(team1_style.get("name", "") or ""),
+                    "logo": str(team1_style.get("logo", "") or ""),
+                    "score": _sanitize_score(team1_style.get("score", 0)),
+                    "nameColor": str(team1_style.get("nameColor", "#e9eefc") or "#e9eefc"),
+                    "nameFont": str(team1_style.get("nameFont", "varsity") or "varsity"),
+                },
+                "team2": {
+                    "name": str(team2_style.get("name", "") or ""),
+                    "logo": str(team2_style.get("logo", "") or ""),
+                    "score": _sanitize_score(team2_style.get("score", 0)),
+                    "nameColor": str(team2_style.get("nameColor", "#e9eefc") or "#e9eefc"),
+                    "nameFont": str(team2_style.get("nameFont", "varsity") or "varsity"),
+                },
+            },
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -76,6 +106,7 @@ class SharedState:
             return {
                 "team1": {"ban": self._state["team1"]["ban"]},
                 "team2": {"ban": self._state["team2"]["ban"]},
+                "scoreboard": self._state["scoreboard"],
                 "updatedAt": self._state["updatedAt"],
             }
 
@@ -85,6 +116,7 @@ class SharedState:
             return {
                 "team1": {"ban": self._state["team1"]["ban"]},
                 "team2": {"ban": self._state["team2"]["ban"]},
+                "scoreboard": self._state["scoreboard"],
                 "updatedAt": self._state["updatedAt"],
             }
 
