@@ -13,8 +13,8 @@
     team1: { ban: '' },
     team2: { ban: '' },
     scoreboard: {
-      team1: { name: '', logo: '', score: 0 },
-      team2: { name: '', logo: '', score: 0 }
+      team1: { name: '', logo: '', score: 0, nameColor: '#e9eefc', nameFont: 'varsity' },
+      team2: { name: '', logo: '', score: 0, nameColor: '#e9eefc', nameFont: 'varsity' }
     },
     updatedAt: Date.now()
   });
@@ -27,6 +27,17 @@
     return Math.floor(numeric);
   };
 
+  const sanitizeNameColor = (value) => {
+    const raw = String(value || '').trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(raw)) return raw;
+    return '#e9eefc';
+  };
+
+  const sanitizeNameFont = (value) => {
+    const allowed = new Set(['varsity', 'block', 'classic']);
+    return allowed.has(value) ? value : 'varsity';
+  };
+
   function sanitizeState(payload) {
     return {
       team1: { ban: payload?.team1?.ban || '' },
@@ -35,12 +46,16 @@
         team1: {
           name: payload?.scoreboard?.team1?.name || '',
           logo: payload?.scoreboard?.team1?.logo || '',
-          score: sanitizeScore(payload?.scoreboard?.team1?.score)
+          score: sanitizeScore(payload?.scoreboard?.team1?.score),
+          nameColor: sanitizeNameColor(payload?.scoreboard?.team1?.nameColor),
+          nameFont: sanitizeNameFont(payload?.scoreboard?.team1?.nameFont)
         },
         team2: {
           name: payload?.scoreboard?.team2?.name || '',
           logo: payload?.scoreboard?.team2?.logo || '',
-          score: sanitizeScore(payload?.scoreboard?.team2?.score)
+          score: sanitizeScore(payload?.scoreboard?.team2?.score),
+          nameColor: sanitizeNameColor(payload?.scoreboard?.team2?.nameColor),
+          nameFont: sanitizeNameFont(payload?.scoreboard?.team2?.nameFont)
         }
       },
       updatedAt: Number(payload?.updatedAt) || Date.now()
@@ -366,6 +381,9 @@
     const paint = (scoreboardTeam) => {
       if (role === 'name') {
         valueNode.textContent = scoreboardTeam.name || 'TEAM';
+        valueNode.style.setProperty('--scoreboard-name-color', sanitizeNameColor(scoreboardTeam.nameColor));
+        valueNode.classList.remove('is-font-varsity', 'is-font-block', 'is-font-classic');
+        valueNode.classList.add(`is-font-${sanitizeNameFont(scoreboardTeam.nameFont)}`);
       } else if (role === 'logo') {
         if (scoreboardTeam.logo) {
           valueNode.src = scoreboardTeam.logo;
@@ -381,8 +399,8 @@
 
     const applyState = async () => {
       const state = await readSharedState();
-      const scoreboardTeam = state?.scoreboard?.[team] || { name: '', logo: '', score: 0 };
-      const signature = `${scoreboardTeam.name}|${scoreboardTeam.logo}|${scoreboardTeam.score}|${state.updatedAt}`;
+      const scoreboardTeam = state?.scoreboard?.[team] || { name: '', logo: '', score: 0, nameColor: '#e9eefc', nameFont: 'varsity' };
+      const signature = `${scoreboardTeam.name}|${scoreboardTeam.logo}|${scoreboardTeam.score}|${scoreboardTeam.nameColor}|${scoreboardTeam.nameFont}|${state.updatedAt}`;
       if (signature === lastSignature) return;
       lastSignature = signature;
       paint(scoreboardTeam);
@@ -418,23 +436,31 @@
       team1: {
         name: document.getElementById('score-team1-name'),
         logo: document.getElementById('score-team1-logo'),
-        score: document.getElementById('score-team1-score')
+        score: document.getElementById('score-team1-score'),
+        nameColor: document.getElementById('score-team1-name-color'),
+        nameFont: document.getElementById('score-team1-font')
       },
       team2: {
         name: document.getElementById('score-team2-name'),
         logo: document.getElementById('score-team2-logo'),
-        score: document.getElementById('score-team2-score')
+        score: document.getElementById('score-team2-score'),
+        nameColor: document.getElementById('score-team2-name-color'),
+        nameFont: document.getElementById('score-team2-font')
       }
     };
 
     const updateButton = document.getElementById('scoreboard-update');
     const swapButton = document.getElementById('scoreboard-swap');
 
-    if (!fieldMap.team1.name || !fieldMap.team2.name || !updateButton || !swapButton) return;
+    if (!fieldMap.team1.name || !fieldMap.team2.name || !updateButton || !swapButton || !fieldMap.team1.nameColor || !fieldMap.team2.nameColor || !fieldMap.team1.nameFont || !fieldMap.team2.nameFont) return;
 
     const handleInput = (teamId, key, value) => {
       if (key === 'score') {
         pendingState.scoreboard[teamId][key] = sanitizeScore(value);
+      } else if (key === 'nameColor') {
+        pendingState.scoreboard[teamId][key] = sanitizeNameColor(value);
+      } else if (key === 'nameFont') {
+        pendingState.scoreboard[teamId][key] = sanitizeNameFont(value);
       } else {
         pendingState.scoreboard[teamId][key] = value.trim();
       }
@@ -449,6 +475,12 @@
       });
       fieldMap[teamId].score.addEventListener('input', (event) => {
         handleInput(teamId, 'score', event.target.value);
+      });
+      fieldMap[teamId].nameColor.addEventListener('input', (event) => {
+        handleInput(teamId, 'nameColor', event.target.value);
+      });
+      fieldMap[teamId].nameFont.addEventListener('change', (event) => {
+        handleInput(teamId, 'nameFont', event.target.value);
       });
     });
 
@@ -479,9 +511,13 @@
         const nameInput = document.getElementById(`${teamPrefix}-name`);
         const logoInput = document.getElementById(`${teamPrefix}-logo`);
         const scoreInput = document.getElementById(`${teamPrefix}-score`);
+        const colorInput = document.getElementById(`${teamPrefix}-name-color`);
+        const fontInput = document.getElementById(`${teamPrefix}-font`);
         if (nameInput) nameInput.value = pendingState.scoreboard[teamId].name || '';
         if (logoInput) logoInput.value = pendingState.scoreboard[teamId].logo || '';
         if (scoreInput) scoreInput.value = String(sanitizeScore(pendingState.scoreboard[teamId].score));
+        if (colorInput) colorInput.value = sanitizeNameColor(pendingState.scoreboard[teamId].nameColor);
+        if (fontInput) fontInput.value = sanitizeNameFont(pendingState.scoreboard[teamId].nameFont);
       });
     };
 

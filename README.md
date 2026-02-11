@@ -29,8 +29,8 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
   "team1": { "ban": "Ana" },
   "team2": { "ban": "Reinhardt" },
   "scoreboard": {
-    "team1": { "name": "Team Alpha", "logo": "./assets/team-alpha.png", "score": 1 },
-    "team2": { "name": "Team Bravo", "logo": "./assets/team-bravo.png", "score": 2 }
+    "team1": { "name": "Team Alpha", "logo": "./assets/team-alpha.png", "score": 1, "nameColor": "#e9eefc", "nameFont": "varsity" },
+    "team2": { "name": "Team Bravo", "logo": "./assets/team-bravo.png", "score": 2, "nameColor": "#e9eefc", "nameFont": "varsity" }
   },
   "updatedAt": 1234567890
 }
@@ -38,7 +38,7 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 
 - `control.html` writes both hero-ban and scoreboard state updates.
 - `team1.html` and `team2.html` read hero-ban state.
-- Scoreboard overlay HTML files read scoreboard state (team names, logos, and scores).
+- Scoreboard overlay HTML files read scoreboard state (team names, logos, scores, and team-name style settings).
 - Overlay pages listen for storage events and also poll state every 500ms for robust updates in OBS/browser contexts.
 
 ## Desktop GUI mode (EXE)
@@ -105,4 +105,5 @@ If you cannot install Qt packages into the OBS scripting Python, use OBS-native 
 - Press Arrow Up or Arrow Down to navigate results and Enter to commit a selection.
 - Use per-team `Clear` to remove one ban.
 - Use `Reset All` to clear both teams.
+- In the Scoreboard tab, choose a team-name font style (including jersey-like option) and name color for each team.
 - Testing override: open `team1.html?hero=Ana` or `team2.html?hero=Reinhardt` to preview card styling without localStorage state.

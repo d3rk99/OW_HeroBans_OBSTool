@@ -528,6 +528,33 @@ button {
   gap: 1rem;
 }
 
+
+select,
+input[type="color"] {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #425171;
+  background: #0e1525;
+  color: var(--text);
+  padding: 0.7rem 0.85rem;
+  font-size: 1rem;
+}
+
+input[type="color"] {
+  padding: 0.35rem;
+  min-height: 48px;
+}
+
+.style-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.7rem;
+  align-items: end;
+}
+
+.style-row > div:last-child {
+  width: 86px;
+}
 input[type="number"] {
   width: 100%;
   border-radius: 8px;
@@ -548,6 +575,22 @@ input[type="number"] {
 
 .scoreboard-name {
   font-size: clamp(2rem, 6vw, 4.2rem);
+  font-family: var(--scoreboard-font, "Impact", "Arial Black", "Segoe UI", sans-serif);
+  color: var(--scoreboard-name-color, #e9eefc);
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.65);
+}
+
+.scoreboard-name.is-font-varsity {
+  font-family: "Varsity", "College", "Freshman", "Impact", "Arial Black", sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.scoreboard-name.is-font-block {
+  font-family: "Impact", "Arial Black", "Segoe UI", sans-serif;
+}
+
+.scoreboard-name.is-font-classic {
+  font-family: "Segoe UI", "Tahoma", "Verdana", sans-serif;
 }
 
 .scoreboard-score {
