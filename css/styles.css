@@ -599,6 +599,65 @@ input[type="color"] {
   align-items: end;
 }
 
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.mode-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mode-toggle-track {
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.5);
+  background: rgba(24, 38, 66, 0.9);
+  position: relative;
+  transition: background 150ms ease;
+}
+
+.mode-toggle-track::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  top: 2px;
+  left: 2px;
+  background: #d8e6ff;
+  transition: transform 150ms ease;
+}
+
+.mode-toggle input:checked + .mode-toggle-track {
+  background: rgba(67, 199, 255, 0.45);
+}
+
+.mode-toggle input:checked + .mode-toggle-track::after {
+  transform: translateX(14px);
+}
+
+.mode-toggle input:focus-visible + .mode-toggle-track {
+  outline: 2px solid #4db8ff;
+  outline-offset: 2px;
+}
+
 .style-row > div:nth-child(2),
 .style-row > div:nth-child(3) {
   width: 86px;
@@ -656,6 +715,22 @@ input[type="number"] {
     -2px -2px 0 var(--scoreboard-name-bevel-color, #7dd3fc),
     2px 2px 0 rgba(0, 0, 0, 0.45),
     0 0 10px rgba(0, 0, 0, 0.65);
+}
+
+.scoreboard-name.is-image {
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  text-shadow: none;
+}
+
+.scoreboard-name-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  object-fit: contain;
 }
 
 .scoreboard-name.is-font-varsity {

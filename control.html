@@ -70,7 +70,14 @@
       <div class="scoreboard-grid">
         <section class="team-column" aria-labelledby="scoreboard-team1-heading">
           <h2 id="scoreboard-team1-heading">Team 1 Info</h2>
-          <label for="score-team1-name">Team Name</label>
+          <div class="field-label-row">
+            <label for="score-team1-name">Team Name</label>
+            <label class="mode-toggle" for="score-team1-name-use-image">
+              <input id="score-team1-name-use-image" type="checkbox" />
+              <span class="mode-toggle-track" aria-hidden="true"></span>
+              <span class="mode-toggle-text">PNG</span>
+            </label>
+          </div>
           <input id="score-team1-name" type="text" placeholder="Enter Team 1 name" />
 
           <div class="style-row">
@@ -105,7 +112,14 @@
 
         <section class="team-column" aria-labelledby="scoreboard-team2-heading">
           <h2 id="scoreboard-team2-heading">Team 2 Info</h2>
-          <label for="score-team2-name">Team Name</label>
+          <div class="field-label-row">
+            <label for="score-team2-name">Team Name</label>
+            <label class="mode-toggle" for="score-team2-name-use-image">
+              <input id="score-team2-name-use-image" type="checkbox" />
+              <span class="mode-toggle-track" aria-hidden="true"></span>
+              <span class="mode-toggle-text">PNG</span>
+            </label>
+          </div>
           <input id="score-team2-name" type="text" placeholder="Enter Team 2 name" />
 
           <div class="style-row">
