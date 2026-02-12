@@ -248,12 +248,28 @@
       if (!response.ok) return null;
       const payload = await response.json();
       return {
+        raw: payload,
         state: sanitizeState(payload),
         hasScoreboard: bridgeHasScoreboard(payload)
       };
     } catch {
       return null;
     }
+  }
+
+
+  function mergeScoreboardTeam(localTeam, bridgeTeamSanitized, bridgeTeamRaw) {
+    const hasMode = typeof bridgeTeamRaw?.nameDisplayMode === 'string';
+    const hasImageUrl = typeof bridgeTeamRaw?.nameImageUrl === 'string';
+    const hasScale = Boolean(bridgeTeamRaw) && Object.prototype.hasOwnProperty.call(bridgeTeamRaw, 'nameScale');
+
+    return {
+      ...localTeam,
+      ...bridgeTeamSanitized,
+      nameDisplayMode: hasMode ? sanitizeNameDisplayMode(bridgeTeamRaw.nameDisplayMode) : sanitizeNameDisplayMode(localTeam.nameDisplayMode),
+      nameImageUrl: hasImageUrl ? sanitizeImageUrl(bridgeTeamRaw.nameImageUrl) : sanitizeImageUrl(localTeam.nameImageUrl),
+      nameScale: hasScale ? sanitizeNameScale(bridgeTeamRaw.nameScale) : sanitizeNameScale(localTeam.nameScale)
+    };
   }
 
   async function readSharedState() {
@@ -263,10 +279,25 @@
 
     const bridgeState = bridgePayload.state;
 
+    if (!bridgePayload.hasScoreboard) {
+      return sanitizeState({
+        ...localState,
+        ...bridgeState,
+        scoreboard: localState.scoreboard,
+        updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
+      });
+    }
+
+    const rawScoreboard = bridgePayload.raw?.scoreboard || {};
+    const mergedScoreboard = {
+      team1: mergeScoreboardTeam(localState.scoreboard.team1, bridgeState.scoreboard.team1, rawScoreboard.team1),
+      team2: mergeScoreboardTeam(localState.scoreboard.team2, bridgeState.scoreboard.team2, rawScoreboard.team2)
+    };
+
     return sanitizeState({
       ...localState,
       ...bridgeState,
-      scoreboard: bridgePayload.hasScoreboard ? bridgeState.scoreboard : localState.scoreboard,
+      scoreboard: mergedScoreboard,
       updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
     });
   }
