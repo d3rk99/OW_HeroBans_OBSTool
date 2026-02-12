@@ -60,13 +60,13 @@
   const sanitizeNameScale = (value) => {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return 0;
-    return Math.max(-150, Math.min(150, Math.round(numeric)));
+    return Math.max(-300, Math.min(300, Math.round(numeric)));
   };
 
   const sanitizeLogoScale = (value) => {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return 0;
-    return Math.max(-150, Math.min(150, Math.round(numeric)));
+    return Math.max(-300, Math.min(300, Math.round(numeric)));
   };
 
   const slugifyFontToken = (value) => sanitizeNameFont(value)

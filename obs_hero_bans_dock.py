@@ -86,10 +86,10 @@ def _sanitize_logo_scale(value):
     except Exception:
         return 0
 
-    if numeric < -150:
-        return -150
-    if numeric > 150:
-        return 150
+    if numeric < -300:
+        return -300
+    if numeric > 300:
+        return 300
     return numeric
 
 
@@ -103,10 +103,10 @@ def _sanitize_name_scale(value):
     except Exception:
         return 0
 
-    if numeric < -150:
-        return -150
-    if numeric > 150:
-        return 150
+    if numeric < -300:
+        return -300
+    if numeric > 300:
+        return 300
     return numeric
 
 
