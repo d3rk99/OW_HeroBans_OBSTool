@@ -74,6 +74,26 @@ def _sanitize_score(value: Any) -> int:
         return 0
 
 
+def _sanitize_logo_scale(value: Any) -> int:
+    try:
+        numeric = int(round(float(value or 0)))
+    except Exception:
+        return 0
+    return max(-50, min(50, numeric))
+
+
+def _sanitize_name_display_mode(value: Any) -> str:
+    return 'image' if str(value or '').strip().lower() == 'image' else 'text'
+
+
+def _sanitize_name_scale(value: Any) -> int:
+    try:
+        numeric = int(round(float(value or 0)))
+    except Exception:
+        return 0
+    return max(-50, min(50, numeric))
+
+
 @dataclass(frozen=True)
 class Hero:
     name: str
@@ -92,8 +112,8 @@ class SharedState:
             "team1": {"ban": ""},
             "team2": {"ban": ""},
             "scoreboard": {
-                "team1": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
-                "team2": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
+                "team1": {"name": "", "nameDisplayMode": "text", "nameImageUrl": "", "nameScale": 0, "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
+                "team2": {"name": "", "nameDisplayMode": "text", "nameImageUrl": "", "nameScale": 0, "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
             },
             "updatedAt": int(time.time() * 1000),
         }
@@ -110,7 +130,11 @@ class SharedState:
             "scoreboard": {
                 "team1": {
                     "name": str(team1_style.get("name", "") or ""),
+                    "nameDisplayMode": _sanitize_name_display_mode(team1_style.get("nameDisplayMode", "text")),
+                    "nameImageUrl": str(team1_style.get("nameImageUrl", "") or ""),
+                    "nameScale": _sanitize_name_scale(team1_style.get("nameScale", 0)),
                     "logo": str(team1_style.get("logo", "") or ""),
+                    "logoScale": _sanitize_logo_scale(team1_style.get("logoScale", 0)),
                     "score": _sanitize_score(team1_style.get("score", 0)),
                     "nameColor": str(team1_style.get("nameColor", "#e9eefc") or "#e9eefc"),
                     "bevelColor": str(team1_style.get("bevelColor", "#7dd3fc") or "#7dd3fc"),
@@ -118,7 +142,11 @@ class SharedState:
                 },
                 "team2": {
                     "name": str(team2_style.get("name", "") or ""),
+                    "nameDisplayMode": _sanitize_name_display_mode(team2_style.get("nameDisplayMode", "text")),
+                    "nameImageUrl": str(team2_style.get("nameImageUrl", "") or ""),
+                    "nameScale": _sanitize_name_scale(team2_style.get("nameScale", 0)),
                     "logo": str(team2_style.get("logo", "") or ""),
+                    "logoScale": _sanitize_logo_scale(team2_style.get("logoScale", 0)),
                     "score": _sanitize_score(team2_style.get("score", 0)),
                     "nameColor": str(team2_style.get("nameColor", "#e9eefc") or "#e9eefc"),
                     "bevelColor": str(team2_style.get("bevelColor", "#7dd3fc") or "#7dd3fc"),
