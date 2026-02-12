@@ -523,8 +523,9 @@
         }
       } else if (role === 'logo') {
         const scaleAmount = sanitizeLogoScale(scoreboardTeam.logoScale);
-        const logoScaleMultiplier = 1 + (scaleAmount / 100);
-        valueNode.style.transform = `scale(${logoScaleMultiplier})`;
+        const logoSizePercent = 100 + scaleAmount;
+        valueNode.style.width = `${logoSizePercent}%`;
+        valueNode.style.height = `${logoSizePercent}%`;
 
         if (scoreboardTeam.logo) {
           valueNode.src = scoreboardTeam.logo;
@@ -628,9 +629,11 @@
       fieldMap[teamId].logo.addEventListener('input', (event) => {
         handleInput(teamId, 'logo', event.target.value);
       });
-      fieldMap[teamId].logoScale.addEventListener('input', (event) => {
+      const onLogoScaleChange = (event) => {
         handleInput(teamId, 'logoScale', event.target.value);
-      });
+      };
+      fieldMap[teamId].logoScale.addEventListener('input', onLogoScaleChange);
+      fieldMap[teamId].logoScale.addEventListener('change', onLogoScaleChange);
       fieldMap[teamId].nameColor.addEventListener('input', (event) => {
         handleInput(teamId, 'nameColor', event.target.value);
       });
