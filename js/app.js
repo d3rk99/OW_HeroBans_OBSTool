@@ -263,11 +263,17 @@
     const hasImageUrl = typeof bridgeTeamRaw?.nameImageUrl === 'string';
     const hasScale = Boolean(bridgeTeamRaw) && Object.prototype.hasOwnProperty.call(bridgeTeamRaw, 'nameScale');
 
+    const nextMode = hasMode ? sanitizeNameDisplayMode(bridgeTeamRaw.nameDisplayMode) : sanitizeNameDisplayMode(localTeam.nameDisplayMode);
+    const nextImageUrl = hasImageUrl ? sanitizeImageUrl(bridgeTeamRaw.nameImageUrl) : sanitizeImageUrl(localTeam.nameImageUrl);
+    const localMode = sanitizeNameDisplayMode(localTeam.nameDisplayMode);
+    const localImageUrl = sanitizeImageUrl(localTeam.nameImageUrl);
+    const preserveLocalImageMode = localMode === 'image' && Boolean(localImageUrl) && !nextImageUrl;
+
     return {
       ...localTeam,
       ...bridgeTeamSanitized,
-      nameDisplayMode: hasMode ? sanitizeNameDisplayMode(bridgeTeamRaw.nameDisplayMode) : sanitizeNameDisplayMode(localTeam.nameDisplayMode),
-      nameImageUrl: hasImageUrl ? sanitizeImageUrl(bridgeTeamRaw.nameImageUrl) : sanitizeImageUrl(localTeam.nameImageUrl),
+      nameDisplayMode: preserveLocalImageMode ? localMode : nextMode,
+      nameImageUrl: preserveLocalImageMode ? localImageUrl : nextImageUrl,
       nameScale: hasScale ? sanitizeNameScale(bridgeTeamRaw.nameScale) : sanitizeNameScale(localTeam.nameScale)
     };
   }
@@ -278,13 +284,16 @@
     if (!bridgePayload) return localState;
 
     const bridgeState = bridgePayload.state;
+    const localUpdatedAt = Number(localState.updatedAt) || 0;
+    const bridgeUpdatedAt = Number(bridgeState.updatedAt) || 0;
+    const preferLocalScoreboard = localUpdatedAt >= bridgeUpdatedAt;
 
-    if (!bridgePayload.hasScoreboard) {
+    if (!bridgePayload.hasScoreboard || preferLocalScoreboard) {
       return sanitizeState({
         ...localState,
         ...bridgeState,
         scoreboard: localState.scoreboard,
-        updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
+        updatedAt: Math.max(localUpdatedAt, bridgeUpdatedAt)
       });
     }
 
@@ -298,7 +307,7 @@
       ...localState,
       ...bridgeState,
       scoreboard: mergedScoreboard,
-      updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
+      updatedAt: Math.max(localUpdatedAt, bridgeUpdatedAt)
     });
   }
 
