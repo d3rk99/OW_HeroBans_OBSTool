@@ -79,7 +79,7 @@ def _sanitize_logo_scale(value: Any) -> int:
         numeric = int(round(float(value or 0)))
     except Exception:
         return 0
-    return max(-50, min(50, numeric))
+    return max(-150, min(150, numeric))
 
 
 def _sanitize_name_display_mode(value: Any) -> str:
@@ -91,7 +91,7 @@ def _sanitize_name_scale(value: Any) -> int:
         numeric = int(round(float(value or 0)))
     except Exception:
         return 0
-    return max(-50, min(50, numeric))
+    return max(-150, min(150, numeric))
 
 
 @dataclass(frozen=True)
