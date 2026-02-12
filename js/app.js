@@ -20,8 +20,8 @@
     team1: { ban: '' },
     team2: { ban: '' },
     scoreboard: {
-      team1: { name: '', nameDisplayMode: 'text', nameImageUrl: '', logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' },
-      team2: { name: '', nameDisplayMode: 'text', nameImageUrl: '', logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' }
+      team1: { name: '', nameDisplayMode: 'text', nameImageUrl: '', nameScale: 0, logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' },
+      team2: { name: '', nameDisplayMode: 'text', nameImageUrl: '', nameScale: 0, logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' }
     },
     updatedAt: Date.now()
   });
@@ -57,6 +57,12 @@
   const sanitizeNameDisplayMode = (value) => String(value || '').trim().toLowerCase() === 'image' ? 'image' : 'text';
 
   const sanitizeImageUrl = (value) => String(value || '').trim();
+  const sanitizeNameScale = (value) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(-50, Math.min(50, Math.round(numeric)));
+  };
+
   const sanitizeLogoScale = (value) => {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return 0;
@@ -167,6 +173,7 @@
           name: payload?.scoreboard?.team1?.name || '',
           nameDisplayMode: sanitizeNameDisplayMode(payload?.scoreboard?.team1?.nameDisplayMode),
           nameImageUrl: sanitizeImageUrl(payload?.scoreboard?.team1?.nameImageUrl),
+          nameScale: sanitizeNameScale(payload?.scoreboard?.team1?.nameScale),
           logo: payload?.scoreboard?.team1?.logo || '',
           logoScale: sanitizeLogoScale(payload?.scoreboard?.team1?.logoScale),
           score: sanitizeScore(payload?.scoreboard?.team1?.score),
@@ -178,6 +185,7 @@
           name: payload?.scoreboard?.team2?.name || '',
           nameDisplayMode: sanitizeNameDisplayMode(payload?.scoreboard?.team2?.nameDisplayMode),
           nameImageUrl: sanitizeImageUrl(payload?.scoreboard?.team2?.nameImageUrl),
+          nameScale: sanitizeNameScale(payload?.scoreboard?.team2?.nameScale),
           logo: payload?.scoreboard?.team2?.logo || '',
           logoScale: sanitizeLogoScale(payload?.scoreboard?.team2?.logoScale),
           score: sanitizeScore(payload?.scoreboard?.team2?.score),
@@ -511,6 +519,8 @@
         const nameMode = sanitizeNameDisplayMode(scoreboardTeam.nameDisplayMode);
         const imageUrl = sanitizeImageUrl(scoreboardTeam.nameImageUrl);
         const useImage = nameMode === 'image' && Boolean(imageUrl);
+        const nameScaleAmount = sanitizeNameScale(scoreboardTeam.nameScale);
+        valueNode.style.setProperty('--scoreboard-name-scale', String((100 + nameScaleAmount) / 100));
 
         valueNode.classList.remove('is-font-varsity', 'is-font-block', 'is-font-classic', 'is-font-custom', 'is-image');
         valueNode.style.removeProperty('--scoreboard-custom-font-family');
@@ -563,8 +573,8 @@
 
     const applyState = async () => {
       const state = await readSharedState();
-      const scoreboardTeam = state?.scoreboard?.[team] || { name: '', nameDisplayMode: 'text', nameImageUrl: '', logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' };
-      const signature = `${scoreboardTeam.name}|${scoreboardTeam.nameDisplayMode}|${scoreboardTeam.nameImageUrl}|${scoreboardTeam.logo}|${scoreboardTeam.logoScale}|${scoreboardTeam.score}|${scoreboardTeam.nameColor}|${scoreboardTeam.bevelColor}|${scoreboardTeam.nameFont}|${state.updatedAt}`;
+      const scoreboardTeam = state?.scoreboard?.[team] || { name: '', nameDisplayMode: 'text', nameImageUrl: '', nameScale: 0, logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' };
+      const signature = `${scoreboardTeam.name}|${scoreboardTeam.nameDisplayMode}|${scoreboardTeam.nameImageUrl}|${scoreboardTeam.nameScale}|${scoreboardTeam.logo}|${scoreboardTeam.logoScale}|${scoreboardTeam.score}|${scoreboardTeam.nameColor}|${scoreboardTeam.bevelColor}|${scoreboardTeam.nameFont}|${state.updatedAt}`;
       if (signature === lastSignature) return;
       lastSignature = signature;
       await paint(scoreboardTeam);
@@ -600,6 +610,8 @@
       team1: {
         name: document.getElementById('score-team1-name'),
         nameUseImage: document.getElementById('score-team1-name-use-image'),
+        nameScale: document.getElementById('score-team1-name-scale'),
+        nameScaleValue: document.getElementById('score-team1-name-scale-value'),
         logo: document.getElementById('score-team1-logo'),
         logoScale: document.getElementById('score-team1-logo-scale'),
         logoScaleValue: document.getElementById('score-team1-logo-scale-value'),
@@ -610,6 +622,8 @@
       team2: {
         name: document.getElementById('score-team2-name'),
         nameUseImage: document.getElementById('score-team2-name-use-image'),
+        nameScale: document.getElementById('score-team2-name-scale'),
+        nameScaleValue: document.getElementById('score-team2-name-scale-value'),
         logo: document.getElementById('score-team2-logo'),
         logoScale: document.getElementById('score-team2-logo-scale'),
         logoScaleValue: document.getElementById('score-team2-logo-scale-value'),
@@ -622,7 +636,7 @@
     const updateButton = document.getElementById('scoreboard-update');
     const swapButton = document.getElementById('scoreboard-swap');
 
-    if (!fieldMap.team1.name || !fieldMap.team2.name || !fieldMap.team1.nameUseImage || !fieldMap.team2.nameUseImage || !updateButton || !swapButton || !fieldMap.team1.logoScale || !fieldMap.team2.logoScale || !fieldMap.team1.nameColor || !fieldMap.team2.nameColor || !fieldMap.team1.bevelColor || !fieldMap.team2.bevelColor || !fieldMap.team1.nameFont || !fieldMap.team2.nameFont) return;
+    if (!fieldMap.team1.name || !fieldMap.team2.name || !fieldMap.team1.nameUseImage || !fieldMap.team2.nameUseImage || !fieldMap.team1.nameScale || !fieldMap.team2.nameScale || !updateButton || !swapButton || !fieldMap.team1.logoScale || !fieldMap.team2.logoScale || !fieldMap.team1.nameColor || !fieldMap.team2.nameColor || !fieldMap.team1.bevelColor || !fieldMap.team2.bevelColor || !fieldMap.team1.nameFont || !fieldMap.team2.nameFont) return;
 
     await hydrateFontSelectors(
       [fieldMap.team1.nameFont, fieldMap.team2.nameFont],
@@ -640,6 +654,11 @@
         pendingState.scoreboard[teamId][key] = sanitizeNameDisplayMode(value);
       } else if (key === 'nameImageUrl') {
         pendingState.scoreboard[teamId][key] = sanitizeImageUrl(value);
+      } else if (key === 'nameScale') {
+        pendingState.scoreboard[teamId][key] = sanitizeNameScale(value);
+        if (fieldMap[teamId].nameScaleValue) {
+          fieldMap[teamId].nameScaleValue.textContent = String(pendingState.scoreboard[teamId][key]);
+        }
       } else if (key === 'logoScale') {
         pendingState.scoreboard[teamId][key] = sanitizeLogoScale(value);
         if (fieldMap[teamId].logoScaleValue) {
@@ -660,6 +679,11 @@
         handleInput(teamId, 'nameDisplayMode', nextMode);
         syncInputs();
       });
+      const onNameScaleChange = (event) => {
+        handleInput(teamId, 'nameScale', event.target.value);
+      };
+      fieldMap[teamId].nameScale.addEventListener('input', onNameScaleChange);
+      fieldMap[teamId].nameScale.addEventListener('change', onNameScaleChange);
       fieldMap[teamId].logo.addEventListener('input', (event) => {
         handleInput(teamId, 'logo', event.target.value);
       });
@@ -741,6 +765,8 @@
         const nameInput = document.getElementById(`${teamPrefix}-name`);
         const nameUseImageInput = document.getElementById(`${teamPrefix}-name-use-image`);
         const logoInput = document.getElementById(`${teamPrefix}-logo`);
+        const nameScaleInput = document.getElementById(`${teamPrefix}-name-scale`);
+        const nameScaleValue = document.getElementById(`${teamPrefix}-name-scale-value`);
         const logoScaleInput = document.getElementById(`${teamPrefix}-logo-scale`);
         const logoScaleValue = document.getElementById(`${teamPrefix}-logo-scale-value`);
         const scoreInput = document.getElementById(`ticker-${teamId}-score`);
@@ -754,6 +780,9 @@
           nameInput.placeholder = imageMode ? 'https://.../team-name.png' : `Enter ${teamId === 'team1' ? 'Team 1' : 'Team 2'} name`;
         }
         if (nameUseImageInput) nameUseImageInput.checked = imageMode;
+        const cleanNameScale = sanitizeNameScale(pendingState.scoreboard[teamId].nameScale);
+        if (nameScaleInput) nameScaleInput.value = String(cleanNameScale);
+        if (nameScaleValue) nameScaleValue.textContent = String(cleanNameScale);
         if (logoInput) logoInput.value = pendingState.scoreboard[teamId].logo || '';
         const cleanLogoScale = sanitizeLogoScale(pendingState.scoreboard[teamId].logoScale);
         if (logoScaleInput) logoScaleInput.value = String(cleanLogoScale);

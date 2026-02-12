@@ -663,7 +663,8 @@ input[type="color"] {
   width: 86px;
 }
 
-.logo-scale-control {
+.logo-scale-control,
+.name-scale-control {
   margin-top: 0.2rem;
 }
 
@@ -711,6 +712,8 @@ input[type="number"] {
   font-family: var(--scoreboard-font, "Impact", "Arial Black", "Segoe UI", sans-serif);
   color: var(--scoreboard-name-color, #e9eefc);
   line-height: 1;
+  transform: scale(var(--scoreboard-name-scale, 1));
+  transform-origin: center center;
   text-shadow:
     -2px -2px 0 var(--scoreboard-name-bevel-color, #7dd3fc),
     2px 2px 0 rgba(0, 0, 0, 0.45),
