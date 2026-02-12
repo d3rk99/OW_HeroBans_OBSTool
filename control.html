@@ -94,6 +94,13 @@
 
           <label for="score-team1-logo">Team Logo URL / Path</label>
           <input id="score-team1-logo" type="text" placeholder="https://... or ./assets/logo.png" />
+          <div class="logo-scale-control">
+            <label for="score-team1-logo-scale">Logo Size</label>
+            <div class="logo-scale-row">
+              <input id="score-team1-logo-scale" type="range" min="-50" max="50" step="1" value="0" />
+              <span id="score-team1-logo-scale-value" class="logo-scale-value">0</span>
+            </div>
+          </div>
         </section>
 
         <section class="team-column" aria-labelledby="scoreboard-team2-heading">
@@ -122,6 +129,13 @@
 
           <label for="score-team2-logo">Team Logo URL / Path</label>
           <input id="score-team2-logo" type="text" placeholder="https://... or ./assets/logo.png" />
+          <div class="logo-scale-control">
+            <label for="score-team2-logo-scale">Logo Size</label>
+            <div class="logo-scale-row">
+              <input id="score-team2-logo-scale" type="range" min="-50" max="50" step="1" value="0" />
+              <span id="score-team2-logo-scale-value" class="logo-scale-value">0</span>
+            </div>
+          </div>
         </section>
 
         <div class="sync-row" aria-label="Scoreboard team info update controls">

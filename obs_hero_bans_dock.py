@@ -80,6 +80,19 @@ def _sanitize_score(value):
     return numeric if numeric >= 0 else 0
 
 
+def _sanitize_logo_scale(value):
+    try:
+        numeric = int(round(float(value)))
+    except Exception:
+        return 0
+
+    if numeric < -50:
+        return -50
+    if numeric > 50:
+        return 50
+    return numeric
+
+
 class _BridgeState(object):
     def __init__(self):
         self._lock = threading.Lock()
@@ -92,8 +105,8 @@ class _BridgeState(object):
             "team1": {"ban": ""},
             "team2": {"ban": ""},
             "scoreboard": {
-                "team1": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
-                "team2": {"name": "", "logo": "", "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
+                "team1": {"name": "", "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
+                "team2": {"name": "", "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
             },
             "updatedAt": int(time.time() * 1000),
         }
@@ -113,6 +126,7 @@ class _BridgeState(object):
                 "team1": {
                     "name": str(sb_team1.get("name", "") or ""),
                     "logo": str(sb_team1.get("logo", "") or ""),
+                    "logoScale": _sanitize_logo_scale(sb_team1.get("logoScale", 0)),
                     "score": _sanitize_score(sb_team1.get("score", 0)),
                     "nameColor": str(sb_team1.get("nameColor", "#e9eefc") or "#e9eefc"),
                     "bevelColor": str(sb_team1.get("bevelColor", "#7dd3fc") or "#7dd3fc"),
@@ -121,6 +135,7 @@ class _BridgeState(object):
                 "team2": {
                     "name": str(sb_team2.get("name", "") or ""),
                     "logo": str(sb_team2.get("logo", "") or ""),
+                    "logoScale": _sanitize_logo_scale(sb_team2.get("logoScale", 0)),
                     "score": _sanitize_score(sb_team2.get("score", 0)),
                     "nameColor": str(sb_team2.get("nameColor", "#e9eefc") or "#e9eefc"),
                     "bevelColor": str(sb_team2.get("bevelColor", "#7dd3fc") or "#7dd3fc"),
@@ -162,6 +177,7 @@ class _BridgeState(object):
                     "team1": {
                         "name": self._state["scoreboard"]["team1"]["name"],
                         "logo": self._state["scoreboard"]["team1"]["logo"],
+                        "logoScale": self._state["scoreboard"]["team1"].get("logoScale", 0),
                         "score": self._state["scoreboard"]["team1"]["score"],
                         "nameColor": self._state["scoreboard"]["team1"]["nameColor"],
                         "bevelColor": self._state["scoreboard"]["team1"]["bevelColor"],
@@ -170,6 +186,7 @@ class _BridgeState(object):
                     "team2": {
                         "name": self._state["scoreboard"]["team2"]["name"],
                         "logo": self._state["scoreboard"]["team2"]["logo"],
+                        "logoScale": self._state["scoreboard"]["team2"].get("logoScale", 0),
                         "score": self._state["scoreboard"]["team2"]["score"],
                         "nameColor": self._state["scoreboard"]["team2"]["nameColor"],
                         "bevelColor": self._state["scoreboard"]["team2"]["bevelColor"],
@@ -190,6 +207,7 @@ class _BridgeState(object):
                     "team1": {
                         "name": self._state["scoreboard"]["team1"]["name"],
                         "logo": self._state["scoreboard"]["team1"]["logo"],
+                        "logoScale": self._state["scoreboard"]["team1"].get("logoScale", 0),
                         "score": self._state["scoreboard"]["team1"]["score"],
                         "nameColor": self._state["scoreboard"]["team1"]["nameColor"],
                         "bevelColor": self._state["scoreboard"]["team1"]["bevelColor"],
@@ -198,6 +216,7 @@ class _BridgeState(object):
                     "team2": {
                         "name": self._state["scoreboard"]["team2"]["name"],
                         "logo": self._state["scoreboard"]["team2"]["logo"],
+                        "logoScale": self._state["scoreboard"]["team2"].get("logoScale", 0),
                         "score": self._state["scoreboard"]["team2"]["score"],
                         "nameColor": self._state["scoreboard"]["team2"]["nameColor"],
                         "bevelColor": self._state["scoreboard"]["team2"]["bevelColor"],
