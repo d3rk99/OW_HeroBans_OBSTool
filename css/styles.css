@@ -603,6 +603,29 @@ input[type="color"] {
 .style-row > div:nth-child(3) {
   width: 86px;
 }
+
+.logo-scale-control {
+  margin-top: 0.2rem;
+}
+
+.logo-scale-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.logo-scale-row input[type="range"] {
+  width: 100%;
+}
+
+.logo-scale-value {
+  min-width: 2.5ch;
+  text-align: right;
+  font-weight: 700;
+  color: var(--muted);
+}
+
 input[type="number"] {
   width: 100%;
   border-radius: 8px;
@@ -665,6 +688,7 @@ input[type="number"] {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  transform-origin: center center;
 }
 
 @media (max-width: 900px) {
