@@ -625,6 +625,7 @@
     ['team1', 'team2'].forEach((teamId) => {
       fieldMap[teamId].name.addEventListener('input', (event) => {
         handleInput(teamId, 'name', event.target.value);
+        updateScoreTickerHeading(teamId, event.target.value);
       });
       fieldMap[teamId].logo.addEventListener('input', (event) => {
         handleInput(teamId, 'logo', event.target.value);
@@ -693,6 +694,14 @@
     });
   }
 
+  function updateScoreTickerHeading(teamId, teamName) {
+    const heading = document.getElementById(`ticker-${teamId}-heading`);
+    if (!heading) return;
+
+    const fallback = teamId === 'team1' ? 'Team 1 Score' : 'Team 2 Score';
+    heading.textContent = teamName && teamName.trim() ? `${teamName.trim()} Score` : fallback;
+  }
+
   async function initControlPage() {
     const pendingState = await readSharedState();
 
@@ -713,6 +722,7 @@
         const bevelColorInput = document.getElementById(`${teamPrefix}-bevel-color`);
         const fontInput = document.getElementById(`${teamPrefix}-font`);
         if (nameInput) nameInput.value = pendingState.scoreboard[teamId].name || '';
+        updateScoreTickerHeading(teamId, pendingState.scoreboard[teamId].name || '');
         if (logoInput) logoInput.value = pendingState.scoreboard[teamId].logo || '';
         const cleanLogoScale = sanitizeLogoScale(pendingState.scoreboard[teamId].logoScale);
         if (logoScaleInput) logoScaleInput.value = String(cleanLogoScale);
