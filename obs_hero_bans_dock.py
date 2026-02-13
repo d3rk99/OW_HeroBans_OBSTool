@@ -93,6 +93,18 @@ def _sanitize_logo_scale(value):
     return numeric
 
 
+def _sanitize_name_png_scale(value):
+    return _sanitize_logo_scale(value)
+
+
+def _sanitize_name_png_toggle(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in ("1", "true", "yes", "on")
+    return bool(value)
+
+
 class _BridgeState(object):
     def __init__(self):
         self._lock = threading.Lock()
@@ -105,8 +117,8 @@ class _BridgeState(object):
             "team1": {"ban": ""},
             "team2": {"ban": ""},
             "scoreboard": {
-                "team1": {"name": "", "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
-                "team2": {"name": "", "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
+                "team1": {"name": "", "nameUsePng": False, "namePng": "", "namePngScale": 0, "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
+                "team2": {"name": "", "nameUsePng": False, "namePng": "", "namePngScale": 0, "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
             },
             "updatedAt": int(time.time() * 1000),
         }
@@ -125,6 +137,9 @@ class _BridgeState(object):
             "scoreboard": {
                 "team1": {
                     "name": str(sb_team1.get("name", "") or ""),
+                    "nameUsePng": _sanitize_name_png_toggle(sb_team1.get("nameUsePng", False)),
+                    "namePng": str(sb_team1.get("namePng", "") or ""),
+                    "namePngScale": _sanitize_name_png_scale(sb_team1.get("namePngScale", 0)),
                     "logo": str(sb_team1.get("logo", "") or ""),
                     "logoScale": _sanitize_logo_scale(sb_team1.get("logoScale", 0)),
                     "score": _sanitize_score(sb_team1.get("score", 0)),
@@ -134,6 +149,9 @@ class _BridgeState(object):
                 },
                 "team2": {
                     "name": str(sb_team2.get("name", "") or ""),
+                    "nameUsePng": _sanitize_name_png_toggle(sb_team2.get("nameUsePng", False)),
+                    "namePng": str(sb_team2.get("namePng", "") or ""),
+                    "namePngScale": _sanitize_name_png_scale(sb_team2.get("namePngScale", 0)),
                     "logo": str(sb_team2.get("logo", "") or ""),
                     "logoScale": _sanitize_logo_scale(sb_team2.get("logoScale", 0)),
                     "score": _sanitize_score(sb_team2.get("score", 0)),
@@ -176,6 +194,9 @@ class _BridgeState(object):
                 "scoreboard": {
                     "team1": {
                         "name": self._state["scoreboard"]["team1"]["name"],
+                        "nameUsePng": self._state["scoreboard"]["team1"].get("nameUsePng", False),
+                        "namePng": self._state["scoreboard"]["team1"].get("namePng", ""),
+                        "namePngScale": self._state["scoreboard"]["team1"].get("namePngScale", 0),
                         "logo": self._state["scoreboard"]["team1"]["logo"],
                         "logoScale": self._state["scoreboard"]["team1"].get("logoScale", 0),
                         "score": self._state["scoreboard"]["team1"]["score"],
@@ -185,6 +206,9 @@ class _BridgeState(object):
                     },
                     "team2": {
                         "name": self._state["scoreboard"]["team2"]["name"],
+                        "nameUsePng": self._state["scoreboard"]["team2"].get("nameUsePng", False),
+                        "namePng": self._state["scoreboard"]["team2"].get("namePng", ""),
+                        "namePngScale": self._state["scoreboard"]["team2"].get("namePngScale", 0),
                         "logo": self._state["scoreboard"]["team2"]["logo"],
                         "logoScale": self._state["scoreboard"]["team2"].get("logoScale", 0),
                         "score": self._state["scoreboard"]["team2"]["score"],
@@ -206,6 +230,9 @@ class _BridgeState(object):
                 "scoreboard": {
                     "team1": {
                         "name": self._state["scoreboard"]["team1"]["name"],
+                        "nameUsePng": self._state["scoreboard"]["team1"].get("nameUsePng", False),
+                        "namePng": self._state["scoreboard"]["team1"].get("namePng", ""),
+                        "namePngScale": self._state["scoreboard"]["team1"].get("namePngScale", 0),
                         "logo": self._state["scoreboard"]["team1"]["logo"],
                         "logoScale": self._state["scoreboard"]["team1"].get("logoScale", 0),
                         "score": self._state["scoreboard"]["team1"]["score"],
@@ -215,6 +242,9 @@ class _BridgeState(object):
                     },
                     "team2": {
                         "name": self._state["scoreboard"]["team2"]["name"],
+                        "nameUsePng": self._state["scoreboard"]["team2"].get("nameUsePng", False),
+                        "namePng": self._state["scoreboard"]["team2"].get("namePng", ""),
+                        "namePngScale": self._state["scoreboard"]["team2"].get("namePngScale", 0),
                         "logo": self._state["scoreboard"]["team2"]["logo"],
                         "logoScale": self._state["scoreboard"]["team2"].get("logoScale", 0),
                         "score": self._state["scoreboard"]["team2"]["score"],

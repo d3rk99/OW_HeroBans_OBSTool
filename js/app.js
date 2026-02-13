@@ -20,8 +20,8 @@
     team1: { ban: '' },
     team2: { ban: '' },
     scoreboard: {
-      team1: { name: '', logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' },
-      team2: { name: '', logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' }
+      team1: { name: '', nameUsePng: false, namePng: '', namePngScale: 0, logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' },
+      team2: { name: '', nameUsePng: false, namePng: '', namePngScale: 0, logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' }
     },
     updatedAt: Date.now()
   });
@@ -54,6 +54,18 @@
   };
 
   const sanitizeLogoScale = (value) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(-50, Math.min(50, Math.round(numeric)));
+  };
+
+  const sanitizeNamePngToggle = (value) => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
+    return Boolean(value);
+  };
+
+  const sanitizeNamePngScale = (value) => {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return 0;
     return Math.max(-50, Math.min(50, Math.round(numeric)));
@@ -161,6 +173,9 @@
       scoreboard: {
         team1: {
           name: payload?.scoreboard?.team1?.name || '',
+          nameUsePng: sanitizeNamePngToggle(payload?.scoreboard?.team1?.nameUsePng),
+          namePng: payload?.scoreboard?.team1?.namePng || '',
+          namePngScale: sanitizeNamePngScale(payload?.scoreboard?.team1?.namePngScale),
           logo: payload?.scoreboard?.team1?.logo || '',
           logoScale: sanitizeLogoScale(payload?.scoreboard?.team1?.logoScale),
           score: sanitizeScore(payload?.scoreboard?.team1?.score),
@@ -170,6 +185,9 @@
         },
         team2: {
           name: payload?.scoreboard?.team2?.name || '',
+          nameUsePng: sanitizeNamePngToggle(payload?.scoreboard?.team2?.nameUsePng),
+          namePng: payload?.scoreboard?.team2?.namePng || '',
+          namePngScale: sanitizeNamePngScale(payload?.scoreboard?.team2?.namePngScale),
           logo: payload?.scoreboard?.team2?.logo || '',
           logoScale: sanitizeLogoScale(payload?.scoreboard?.team2?.logoScale),
           score: sanitizeScore(payload?.scoreboard?.team2?.score),
@@ -500,27 +518,50 @@
 
     const paint = async (scoreboardTeam) => {
       if (role === 'name') {
-        valueNode.textContent = scoreboardTeam.name || 'TEAM';
-        valueNode.style.setProperty('--scoreboard-name-color', sanitizeNameColor(scoreboardTeam.nameColor));
-        valueNode.style.setProperty('--scoreboard-name-bevel-color', sanitizeBevelColor(scoreboardTeam.bevelColor));
+        const textNode = valueNode.dataset.scoreboardNameText === 'true' ? valueNode : stage.querySelector('[data-scoreboard-name-text]');
+        const imageNode = stage.querySelector('[data-scoreboard-name-image]');
+        const usePng = sanitizeNamePngToggle(scoreboardTeam.nameUsePng) && Boolean((scoreboardTeam.namePng || '').trim());
 
-        const fontToken = sanitizeNameFont(scoreboardTeam.nameFont);
-        valueNode.classList.remove('is-font-varsity', 'is-font-block', 'is-font-classic', 'is-font-custom');
-        valueNode.style.removeProperty('--scoreboard-custom-font-family');
+        if (textNode) {
+          textNode.textContent = scoreboardTeam.name || 'TEAM';
+          textNode.style.setProperty('--scoreboard-name-color', sanitizeNameColor(scoreboardTeam.nameColor));
+          textNode.style.setProperty('--scoreboard-name-bevel-color', sanitizeBevelColor(scoreboardTeam.bevelColor));
 
-        if (BUILTIN_FONT_VALUES.has(fontToken)) {
-          valueNode.classList.add(`is-font-${fontToken}`);
-        } else if (fontToken.startsWith('file:')) {
-          const family = await ensureCustomFontLoaded(fontToken);
-          if (family) {
-            valueNode.classList.add('is-font-custom');
-            valueNode.style.setProperty('--scoreboard-custom-font-family', `${family}, "Impact", "Arial Black", sans-serif`);
+          const fontToken = sanitizeNameFont(scoreboardTeam.nameFont);
+          textNode.classList.remove('is-font-varsity', 'is-font-block', 'is-font-classic', 'is-font-custom');
+          textNode.style.removeProperty('--scoreboard-custom-font-family');
+
+          if (BUILTIN_FONT_VALUES.has(fontToken)) {
+            textNode.classList.add(`is-font-${fontToken}`);
+          } else if (fontToken.startsWith('file:')) {
+            const family = await ensureCustomFontLoaded(fontToken);
+            if (family) {
+              textNode.classList.add('is-font-custom');
+              textNode.style.setProperty('--scoreboard-custom-font-family', `${family}, "Impact", "Arial Black", sans-serif`);
+            } else {
+              textNode.classList.add('is-font-varsity');
+            }
           } else {
-            valueNode.classList.add('is-font-varsity');
+            textNode.classList.add('is-font-varsity');
           }
-        } else {
-          valueNode.classList.add('is-font-varsity');
+
+          textNode.style.display = usePng ? 'none' : '';
         }
+
+        if (imageNode) {
+          const pngScale = sanitizeNamePngScale(scoreboardTeam.namePngScale);
+          const sizePercent = 100 + pngScale;
+          imageNode.style.width = `${sizePercent}%`;
+          imageNode.style.height = `${sizePercent}%`;
+          if (usePng) {
+            imageNode.src = scoreboardTeam.namePng;
+            imageNode.style.display = 'block';
+          } else {
+            imageNode.removeAttribute('src');
+            imageNode.style.display = 'none';
+          }
+        }
+
       } else if (role === 'logo') {
         const scaleAmount = sanitizeLogoScale(scoreboardTeam.logoScale);
         const logoSizePercent = 100 + scaleAmount;
@@ -541,8 +582,8 @@
 
     const applyState = async () => {
       const state = await readSharedState();
-      const scoreboardTeam = state?.scoreboard?.[team] || { name: '', logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' };
-      const signature = `${scoreboardTeam.name}|${scoreboardTeam.logo}|${scoreboardTeam.logoScale}|${scoreboardTeam.score}|${scoreboardTeam.nameColor}|${scoreboardTeam.bevelColor}|${scoreboardTeam.nameFont}|${state.updatedAt}`;
+      const scoreboardTeam = state?.scoreboard?.[team] || { name: '', nameUsePng: false, namePng: '', namePngScale: 0, logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' };
+      const signature = `${scoreboardTeam.name}|${scoreboardTeam.nameUsePng}|${scoreboardTeam.namePng}|${scoreboardTeam.namePngScale}|${scoreboardTeam.logo}|${scoreboardTeam.logoScale}|${scoreboardTeam.score}|${scoreboardTeam.nameColor}|${scoreboardTeam.bevelColor}|${scoreboardTeam.nameFont}|${state.updatedAt}`;
       if (signature === lastSignature) return;
       lastSignature = signature;
       await paint(scoreboardTeam);
@@ -577,6 +618,10 @@
     const fieldMap = {
       team1: {
         name: document.getElementById('score-team1-name'),
+        nameUsePng: document.getElementById('score-team1-name-use-png'),
+        namePng: document.getElementById('score-team1-name-png'),
+        namePngScale: document.getElementById('score-team1-name-png-scale'),
+        namePngScaleValue: document.getElementById('score-team1-name-png-scale-value'),
         logo: document.getElementById('score-team1-logo'),
         logoScale: document.getElementById('score-team1-logo-scale'),
         logoScaleValue: document.getElementById('score-team1-logo-scale-value'),
@@ -586,6 +631,10 @@
       },
       team2: {
         name: document.getElementById('score-team2-name'),
+        nameUsePng: document.getElementById('score-team2-name-use-png'),
+        namePng: document.getElementById('score-team2-name-png'),
+        namePngScale: document.getElementById('score-team2-name-png-scale'),
+        namePngScaleValue: document.getElementById('score-team2-name-png-scale-value'),
         logo: document.getElementById('score-team2-logo'),
         logoScale: document.getElementById('score-team2-logo-scale'),
         logoScaleValue: document.getElementById('score-team2-logo-scale-value'),
@@ -598,7 +647,7 @@
     const updateButton = document.getElementById('scoreboard-update');
     const swapButton = document.getElementById('scoreboard-swap');
 
-    if (!fieldMap.team1.name || !fieldMap.team2.name || !updateButton || !swapButton || !fieldMap.team1.logoScale || !fieldMap.team2.logoScale || !fieldMap.team1.nameColor || !fieldMap.team2.nameColor || !fieldMap.team1.bevelColor || !fieldMap.team2.bevelColor || !fieldMap.team1.nameFont || !fieldMap.team2.nameFont) return;
+    if (!fieldMap.team1.name || !fieldMap.team2.name || !updateButton || !swapButton || !fieldMap.team1.logoScale || !fieldMap.team2.logoScale || !fieldMap.team1.nameUsePng || !fieldMap.team2.nameUsePng || !fieldMap.team1.namePng || !fieldMap.team2.namePng || !fieldMap.team1.namePngScale || !fieldMap.team2.namePngScale || !fieldMap.team1.nameColor || !fieldMap.team2.nameColor || !fieldMap.team1.bevelColor || !fieldMap.team2.bevelColor || !fieldMap.team1.nameFont || !fieldMap.team2.nameFont) return;
 
     await hydrateFontSelectors(
       [fieldMap.team1.nameFont, fieldMap.team2.nameFont],
@@ -612,6 +661,13 @@
         pendingState.scoreboard[teamId][key] = sanitizeBevelColor(value);
       } else if (key === 'nameFont') {
         pendingState.scoreboard[teamId][key] = sanitizeNameFont(value);
+      } else if (key === 'nameUsePng') {
+        pendingState.scoreboard[teamId][key] = sanitizeNamePngToggle(value);
+      } else if (key === 'namePngScale') {
+        pendingState.scoreboard[teamId][key] = sanitizeNamePngScale(value);
+        if (fieldMap[teamId].namePngScaleValue) {
+          fieldMap[teamId].namePngScaleValue.textContent = String(pendingState.scoreboard[teamId][key]);
+        }
       } else if (key === 'logoScale') {
         pendingState.scoreboard[teamId][key] = sanitizeLogoScale(value);
         if (fieldMap[teamId].logoScaleValue) {
@@ -627,6 +683,17 @@
         handleInput(teamId, 'name', event.target.value);
         updateScoreTickerHeading(teamId, event.target.value);
       });
+      fieldMap[teamId].nameUsePng.addEventListener('change', (event) => {
+        handleInput(teamId, 'nameUsePng', event.target.checked);
+      });
+      fieldMap[teamId].namePng.addEventListener('input', (event) => {
+        handleInput(teamId, 'namePng', event.target.value);
+      });
+      const onNamePngScaleChange = (event) => {
+        handleInput(teamId, 'namePngScale', event.target.value);
+      };
+      fieldMap[teamId].namePngScale.addEventListener('input', onNamePngScaleChange);
+      fieldMap[teamId].namePngScale.addEventListener('change', onNamePngScaleChange);
       fieldMap[teamId].logo.addEventListener('input', (event) => {
         handleInput(teamId, 'logo', event.target.value);
       });
@@ -714,6 +781,10 @@
 
         const teamPrefix = teamId === 'team1' ? 'score-team1' : 'score-team2';
         const nameInput = document.getElementById(`${teamPrefix}-name`);
+        const nameUsePngInput = document.getElementById(`${teamPrefix}-name-use-png`);
+        const namePngInput = document.getElementById(`${teamPrefix}-name-png`);
+        const namePngScaleInput = document.getElementById(`${teamPrefix}-name-png-scale`);
+        const namePngScaleValue = document.getElementById(`${teamPrefix}-name-png-scale-value`);
         const logoInput = document.getElementById(`${teamPrefix}-logo`);
         const logoScaleInput = document.getElementById(`${teamPrefix}-logo-scale`);
         const logoScaleValue = document.getElementById(`${teamPrefix}-logo-scale-value`);
@@ -723,6 +794,11 @@
         const fontInput = document.getElementById(`${teamPrefix}-font`);
         if (nameInput) nameInput.value = pendingState.scoreboard[teamId].name || '';
         updateScoreTickerHeading(teamId, pendingState.scoreboard[teamId].name || '');
+        if (nameUsePngInput) nameUsePngInput.checked = sanitizeNamePngToggle(pendingState.scoreboard[teamId].nameUsePng);
+        if (namePngInput) namePngInput.value = pendingState.scoreboard[teamId].namePng || '';
+        const cleanNamePngScale = sanitizeNamePngScale(pendingState.scoreboard[teamId].namePngScale);
+        if (namePngScaleInput) namePngScaleInput.value = String(cleanNamePngScale);
+        if (namePngScaleValue) namePngScaleValue.textContent = String(cleanNamePngScale);
         if (logoInput) logoInput.value = pendingState.scoreboard[teamId].logo || '';
         const cleanLogoScale = sanitizeLogoScale(pendingState.scoreboard[teamId].logoScale);
         if (logoScaleInput) logoScaleInput.value = String(cleanLogoScale);

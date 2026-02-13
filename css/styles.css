@@ -80,6 +80,18 @@ label {
   font-weight: 600;
 }
 
+.inline-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.1rem 0;
+}
+
+.inline-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
 input[type="text"] {
   width: 100%;
   border-radius: 8px;
@@ -689,6 +701,14 @@ input[type="number"] {
   height: 100%;
   object-fit: contain;
   display: block;
+  margin: 0 auto;
+}
+
+.scoreboard-name-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: none;
   margin: 0 auto;
 }
 
