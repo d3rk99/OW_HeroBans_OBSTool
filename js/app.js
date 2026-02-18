@@ -614,6 +614,11 @@
     });
   }
 
+  function getActiveTabId() {
+    const activePanel = document.querySelector('.tab-panel.is-active');
+    return activePanel?.id || '';
+  }
+
   async function initScoreboardControl(pendingState, syncInputs) {
     const fieldMap = {
       team1: {
@@ -838,10 +843,36 @@
     if (reset) {
       reset.addEventListener('click', () => {
         const empty = defaultState();
-        pendingState.team1.ban = empty.team1.ban;
-        pendingState.team2.ban = empty.team2.ban;
-        pendingState.scoreboard.team1 = { ...empty.scoreboard.team1 };
-        pendingState.scoreboard.team2 = { ...empty.scoreboard.team2 };
+
+        const activeTabId = getActiveTabId();
+        if (activeTabId === 'hero-bans-tab') {
+          pendingState.team1.ban = empty.team1.ban;
+          pendingState.team2.ban = empty.team2.ban;
+        } else if (activeTabId === 'scoreboard-tab') {
+          pendingState.scoreboard.team1.name = empty.scoreboard.team1.name;
+          pendingState.scoreboard.team1.nameUsePng = empty.scoreboard.team1.nameUsePng;
+          pendingState.scoreboard.team1.namePng = empty.scoreboard.team1.namePng;
+          pendingState.scoreboard.team1.namePngScale = empty.scoreboard.team1.namePngScale;
+          pendingState.scoreboard.team1.logo = empty.scoreboard.team1.logo;
+          pendingState.scoreboard.team1.logoScale = empty.scoreboard.team1.logoScale;
+          pendingState.scoreboard.team1.nameColor = empty.scoreboard.team1.nameColor;
+          pendingState.scoreboard.team1.bevelColor = empty.scoreboard.team1.bevelColor;
+          pendingState.scoreboard.team1.nameFont = empty.scoreboard.team1.nameFont;
+
+          pendingState.scoreboard.team2.name = empty.scoreboard.team2.name;
+          pendingState.scoreboard.team2.nameUsePng = empty.scoreboard.team2.nameUsePng;
+          pendingState.scoreboard.team2.namePng = empty.scoreboard.team2.namePng;
+          pendingState.scoreboard.team2.namePngScale = empty.scoreboard.team2.namePngScale;
+          pendingState.scoreboard.team2.logo = empty.scoreboard.team2.logo;
+          pendingState.scoreboard.team2.logoScale = empty.scoreboard.team2.logoScale;
+          pendingState.scoreboard.team2.nameColor = empty.scoreboard.team2.nameColor;
+          pendingState.scoreboard.team2.bevelColor = empty.scoreboard.team2.bevelColor;
+          pendingState.scoreboard.team2.nameFont = empty.scoreboard.team2.nameFont;
+        } else if (activeTabId === 'score-tab') {
+          pendingState.scoreboard.team1.score = empty.scoreboard.team1.score;
+          pendingState.scoreboard.team2.score = empty.scoreboard.team2.score;
+        }
+
         syncInputs();
         writeState(pendingState);
       });
