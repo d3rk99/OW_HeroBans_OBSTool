@@ -29,8 +29,8 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
   "team1": { "ban": "Ana" },
   "team2": { "ban": "Reinhardt" },
   "scoreboard": {
-    "team1": { "name": "Team Alpha", "logo": "./assets/team-alpha.png", "score": 1, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity" },
-    "team2": { "name": "Team Bravo", "logo": "./assets/team-bravo.png", "score": 2, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity" }
+    "team1": { "name": "Team Alpha", "nameUsePng": false, "namePng": "", "namePngScale": 0, "logo": "./assets/team-alpha.png", "score": 1, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity" },
+    "team2": { "name": "Team Bravo", "nameUsePng": false, "namePng": "", "namePngScale": 0, "logo": "./assets/team-bravo.png", "score": 2, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity" }
   },
   "updatedAt": 1234567890
 }
@@ -39,7 +39,7 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 - `control.html` writes both hero-ban and scoreboard state updates.
 - Bridge state is cached to `data/controller_state_cache.json` so controller values are restored after restarting OBS/GUI.
 - `team1.html` and `team2.html` read hero-ban state.
-- Scoreboard overlay HTML files read scoreboard state (team names, logos, scores, and team-name style settings).
+- Scoreboard overlay HTML files read scoreboard state (team names, optional team-name PNGs with size, logos, scores, and team-name style settings).
 - The controller has a dedicated **Score** tab with large +/- controls that automatically publish score updates (no manual update click needed).
 - Overlay pages listen for storage events and also poll state every 500ms for robust updates in OBS/browser contexts.
 
