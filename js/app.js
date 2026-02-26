@@ -642,11 +642,30 @@
     });
   }
 
-  function resolveValorantMapImage(mapName) {
+  function resolveValorantMapImageCandidates(mapName) {
     const cleanName = sanitizeMapName(mapName);
-    if (!cleanName) return '';
+    if (!cleanName) return [];
+
     const slug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    return `./assets/maps/${slug}.png`;
+    const lower = cleanName.toLowerCase();
+    const encoded = encodeURIComponent(cleanName);
+
+    const candidates = [
+      `./assets/maps/${cleanName}.png`,
+      `./assets/maps/${encoded}.png`,
+      `./assets/maps/${slug}.png`,
+      `./assets/maps/${lower}.png`,
+      `./assets/maps/${cleanName}.jpg`,
+      `./assets/maps/${encoded}.jpg`,
+      `./assets/maps/${slug}.jpg`,
+      `./assets/maps/${lower}.jpg`,
+      `./assets/maps/${cleanName}.webp`,
+      `./assets/maps/${encoded}.webp`,
+      `./assets/maps/${slug}.webp`,
+      `./assets/maps/${lower}.webp`
+    ];
+
+    return Array.from(new Set(candidates));
   }
 
   function renderValorantMapOverlay() {
@@ -680,10 +699,24 @@
           return;
         }
 
-        imageNode.src = resolveValorantMapImage(selectedMap);
+        const candidates = resolveValorantMapImageCandidates(selectedMap);
+        if (!candidates.length) {
+          imageNode.removeAttribute('src');
+          imageNode.style.display = 'none';
+          return;
+        }
+
+        let candidateIndex = 0;
+        imageNode.src = candidates[candidateIndex];
         imageNode.style.display = 'block';
         imageNode.onerror = () => {
-          imageNode.style.display = 'none';
+          candidateIndex += 1;
+          if (candidateIndex >= candidates.length) {
+            imageNode.removeAttribute('src');
+            imageNode.style.display = 'none';
+            return;
+          }
+          imageNode.src = candidates[candidateIndex];
         };
         imageNode.onload = () => {
           imageNode.style.display = 'block';
