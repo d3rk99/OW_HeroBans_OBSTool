@@ -101,6 +101,13 @@ If you cannot install Qt packages into the OBS scripting Python, use OBS-native 
 2. If you prefer different filenames, update the matching hero entry in `data/heroes.json`.
 3. If an image is missing, overlays automatically show a placeholder state while still showing the selected hero name.
 
+## Adding Valorant map images
+
+1. Add map images into `assets/maps/`.
+2. Recommended filenames are exact map names, for example `Ascent.png`, `Bind.png`, and `Haven.png`.
+3. The overlay also accepts legacy slug names like `ascent.png` and supports `.png`, `.jpg`, or `.webp`.
+4. If a map image is missing, the overlay keeps the map label visible and hides the image.
+
 ## Usage tips
 
 - Type part of a hero name in either team search box to filter quickly.

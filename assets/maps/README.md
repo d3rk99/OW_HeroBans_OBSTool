@@ -1,11 +1,8 @@
 Place Valorant map images in this folder.
 
-Expected filename format used by the overlay:
-- lowercase map name
-- spaces/symbols replaced with hyphens
-- .png extension
+The overlay now tries multiple filename patterns so either of these styles will work:
+- Exact map name (`Ascent.png`, `Icebox.jpg`, `Lotus.webp`)
+- URL-encoded exact name (`Breeze%20Night.png`)
+- Legacy slug format (`ascent.png`, `icebox.png`, `split.png`)
 
-Examples:
-- Ascent -> ascent.png
-- Icebox -> icebox.png
-- Pearl -> pearl.png
+Supported extensions: `.png`, `.jpg`, `.webp`.
