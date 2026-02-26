@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valorant Map Picks and Bans Overlay</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body class="overlay-page transparent valorant-overlay-page">
+  <main class="overlay-stage valorant-map-stage" data-valorant-map-overlay>
+    <section class="valorant-map-shell" aria-live="polite">
+      <section class="valorant-map-board">
+        <article class="valorant-slot valorant-slot-ban" data-map-slot="ban1">
+          <img class="valorant-map-image" alt="Banned map" data-map-image />
+          <div class="valorant-slot-content">
+            <span class="valorant-role ban">BAN</span>
+            <span class="valorant-role-sub">MAP</span>
+            <span class="valorant-map-name" data-map-label>MAP</span>
+          </div>
+        </article>
+        <article class="valorant-slot valorant-slot-ban" data-map-slot="ban2">
+          <img class="valorant-map-image" alt="Banned map" data-map-image />
+          <div class="valorant-slot-content">
+            <span class="valorant-role ban">BAN</span>
+            <span class="valorant-role-sub">MAP</span>
+            <span class="valorant-map-name" data-map-label>MAP</span>
+          </div>
+        </article>
+
+        <article class="valorant-slot valorant-slot-pick" data-map-slot="pick1">
+          <img class="valorant-map-image" alt="Picked map" data-map-image />
+          <div class="valorant-slot-content centered">
+            <span class="valorant-role">MAP</span>
+            <span class="valorant-role-sub">PICK</span>
+            <span class="valorant-pick-number">1</span>
+            <span class="valorant-pick-underline"></span>
+            <span class="valorant-map-name" data-map-label>MAP</span>
+          </div>
+        </article>
+
+        <article class="valorant-slot valorant-slot-pick" data-map-slot="pick2">
+          <img class="valorant-map-image" alt="Picked map" data-map-image />
+          <div class="valorant-slot-content centered">
+            <span class="valorant-role">MAP</span>
+            <span class="valorant-role-sub">PICK</span>
+            <span class="valorant-pick-number">2</span>
+            <span class="valorant-pick-underline"></span>
+            <span class="valorant-map-name" data-map-label>MAP</span>
+          </div>
+        </article>
+
+        <article class="valorant-slot valorant-slot-ban" data-map-slot="ban3">
+          <img class="valorant-map-image" alt="Banned map" data-map-image />
+          <div class="valorant-slot-content">
+            <span class="valorant-role ban">BAN</span>
+            <span class="valorant-role-sub">MAP</span>
+            <span class="valorant-map-name" data-map-label>MAP</span>
+          </div>
+        </article>
+        <article class="valorant-slot valorant-slot-ban" data-map-slot="ban4">
+          <img class="valorant-map-image" alt="Banned map" data-map-image />
+          <div class="valorant-slot-content">
+            <span class="valorant-role ban">BAN</span>
+            <span class="valorant-role-sub">MAP</span>
+            <span class="valorant-map-name" data-map-label>MAP</span>
+          </div>
+        </article>
+
+        <article class="valorant-slot valorant-slot-pick" data-map-slot="pick3">
+          <img class="valorant-map-image" alt="Picked map" data-map-image />
+          <div class="valorant-slot-content centered">
+            <span class="valorant-role">MAP</span>
+            <span class="valorant-role-sub">PICK</span>
+            <span class="valorant-pick-number">3</span>
+            <span class="valorant-pick-underline"></span>
+            <span class="valorant-map-name" data-map-label>MAP</span>
+          </div>
+        </article>
+      </section>
+    </section>
+  </main>
+
+  <script src="./js/heroes-data.js" defer></script>
+  <script src="./js/app.js" defer></script>
+</body>
+</html>
