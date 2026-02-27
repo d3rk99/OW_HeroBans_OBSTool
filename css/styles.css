@@ -789,6 +789,8 @@ input[type="number"] {
 }
 
 .valorant-ban-card {
+  --ban-split-left: 64%;
+  --ban-split-right: 38%;
   border-top: 3px solid #ff2d3d;
   border-bottom: 3px solid #ff2d3d;
   display: grid;
@@ -809,16 +811,16 @@ input[type="number"] {
 }
 
 .ban-top {
-  top: 0;
-  bottom: 50%;
+  inset: 0;
+  clip-path: polygon(0 0, 100% 0, 100% var(--ban-split-right), 0 var(--ban-split-left));
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
 }
 
 .ban-bottom {
-  top: 50%;
-  bottom: 0;
+  inset: 0;
+  clip-path: polygon(0 var(--ban-split-left), 100% var(--ban-split-right), 100% 100%, 0 100%);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -826,11 +828,11 @@ input[type="number"] {
 
 .ban-diagonal {
   position: absolute;
-  left: -6%;
-  right: -8%;
-  top: 66%;
+  left: -2%;
+  right: -2%;
+  top: var(--ban-split-left);
   height: 3px;
-  transform: rotate(-42deg);
+  transform: rotate(-37.5deg);
   transform-origin: left center;
   background: #ff2d3d;
   box-shadow: 0 0 9px rgba(255, 45, 61, 0.9);
