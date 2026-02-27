@@ -198,34 +198,50 @@
 
     <section id="valorant-map-tab" class="tab-panel" aria-label="Valorant Map Picks and Bans Controller">
       <div class="valorant-map-grid">
-        <section class="team-column" aria-labelledby="valorant-map-heading">
-          <h2 id="valorant-map-heading">Valorant Map Sequence</h2>
+        <section class="team-column valorant-controller" aria-labelledby="valorant-map-heading">
+          <h2 id="valorant-map-heading">Valorant Map Picks/Bans</h2>
+          <p class="valorant-controller-note">Configure the five broadcast panels. Empty values show as — on the overlay.</p>
 
-          <label for="valorant-ban-1">1st Map Ban Pick</label>
-          <select id="valorant-ban-1"></select>
+          <div class="valorant-control-groups">
+            <fieldset class="valorant-control-group">
+              <legend>Section 1 · BAN MAP</legend>
+              <label for="valorant-ban-1">Ban 1</label>
+              <select id="valorant-ban-1"></select>
+              <label for="valorant-ban-2">Ban 2</label>
+              <select id="valorant-ban-2"></select>
+            </fieldset>
 
-          <label for="valorant-ban-2">2nd Map Ban Pick</label>
-          <select id="valorant-ban-2"></select>
+            <fieldset class="valorant-control-group">
+              <legend>Section 2 · MAP PICK 1</legend>
+              <label for="valorant-pick-1">Pick 1</label>
+              <select id="valorant-pick-1"></select>
+            </fieldset>
 
-          <label for="valorant-pick-1">1st Map Pick</label>
-          <select id="valorant-pick-1"></select>
+            <fieldset class="valorant-control-group">
+              <legend>Section 3 · MAP PICK 2</legend>
+              <label for="valorant-pick-2">Pick 2</label>
+              <select id="valorant-pick-2"></select>
+            </fieldset>
 
-          <label for="valorant-pick-2">2nd Map Pick</label>
-          <select id="valorant-pick-2"></select>
+            <fieldset class="valorant-control-group">
+              <legend>Section 4 · BAN MAP</legend>
+              <label for="valorant-ban-3">Ban 3</label>
+              <select id="valorant-ban-3"></select>
+              <label for="valorant-ban-4">Ban 4</label>
+              <select id="valorant-ban-4"></select>
+            </fieldset>
 
-          <label for="valorant-ban-3">3rd Map Ban Pick</label>
-          <select id="valorant-ban-3"></select>
+            <fieldset class="valorant-control-group">
+              <legend>Section 5 · MAP PICK 3</legend>
+              <label for="valorant-pick-3">Pick 3</label>
+              <select id="valorant-pick-3"></select>
+            </fieldset>
+          </div>
 
-          <label for="valorant-ban-4">4th Map Ban Pick</label>
-          <select id="valorant-ban-4"></select>
-
-          <label for="valorant-pick-3">3rd Map Pick</label>
-          <select id="valorant-pick-3"></select>
+          <div class="sync-row" aria-label="Valorant map update controls">
+            <button id="valorant-clear" class="secondary-btn" type="button">Clear All</button>
+          </div>
         </section>
-
-        <div class="sync-row" aria-label="Valorant map update controls">
-          <button id="valorant-update" class="primary-btn" type="button">Update Map Overlay</button>
-        </div>
       </div>
     </section>
   </main>

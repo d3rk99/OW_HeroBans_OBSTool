@@ -1025,3 +1025,185 @@ input[type="number"] {
     padding: 0.8rem;
   }
 }
+
+/* Valorant map veto controller rebuild */
+.valorant-controller-note {
+  margin: 0.1rem 0 0.9rem;
+  color: var(--muted);
+}
+
+.valorant-control-groups {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.valorant-control-group {
+  border: 1px solid rgba(125, 150, 191, 0.4);
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin: 0;
+  display: grid;
+  gap: 0.4rem;
+  background: rgba(12, 20, 34, 0.55);
+}
+
+.valorant-control-group legend {
+  padding: 0 0.45rem;
+  color: #dce6ff;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* Valorant map veto overlay rebuild */
+.valorant-overlay-page {
+  --bg: #090d14;
+  --panel-bg: linear-gradient(160deg, #202633 0%, #121923 45%, #0c121b 100%);
+  --border: rgba(198, 209, 226, 0.45);
+  --ban-red: #e45a67;
+  --pick-green: #42db9d;
+  --text: #f0f4fb;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.045), transparent 48%),
+    radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.03), transparent 35%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.012) 0 2px, transparent 2px 4px),
+    var(--bg);
+}
+
+.valorant-map-stage {
+  width: min(96vw, 1520px);
+}
+
+.valorant-map-shell {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  background: rgba(11, 16, 24, 0.72);
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.45);
+}
+
+.valorant-map-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.valorant-panel {
+  position: relative;
+  min-height: 330px;
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 360ms ease, transform 360ms ease;
+}
+
+.valorant-panel.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.valorant-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 30%, rgba(0, 0, 0, 0.5));
+}
+
+.valorant-panel-ban {
+  border-color: rgba(228, 90, 103, 0.75);
+}
+
+.valorant-panel-ban::before {
+  content: '';
+  position: absolute;
+  left: -16%;
+  top: 69%;
+  width: 155%;
+  height: 3px;
+  background: var(--ban-red);
+  transform: rotate(-40deg);
+  box-shadow: 0 0 8px rgba(228, 90, 103, 0.45);
+  z-index: 2;
+}
+
+.valorant-ban-slot {
+  position: absolute;
+  left: 18px;
+  right: 40%;
+  z-index: 3;
+  display: grid;
+  justify-items: start;
+  gap: 0.05rem;
+  text-transform: uppercase;
+}
+
+.valorant-ban-slot.top {
+  top: 46px;
+}
+
+.valorant-ban-slot.bottom {
+  bottom: 44px;
+}
+
+.valorant-pick-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+  gap: 0.4rem;
+  text-transform: uppercase;
+}
+
+.valorant-slot-label {
+  color: var(--text);
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  font-size: clamp(1rem, 1.8vw, 1.55rem);
+}
+
+.valorant-slot-label.ban {
+  color: var(--ban-red);
+}
+
+.valorant-map-name {
+  color: var(--text);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  font-size: clamp(1.2rem, 2.45vw, 2.15rem);
+}
+
+.valorant-pick-underline {
+  width: clamp(44px, 27%, 70px);
+  height: 4px;
+  border-radius: 999px;
+  background: var(--pick-green);
+  box-shadow: 0 0 8px rgba(66, 219, 157, 0.4);
+}
+
+@media (max-width: 900px) {
+  .valorant-map-board {
+    grid-template-columns: 1fr;
+  }
+
+  .valorant-panel {
+    min-height: 175px;
+  }
+
+  .valorant-panel-ban::before {
+    top: 50%;
+  }
+
+  .valorant-ban-slot.top {
+    top: 20px;
+  }
+
+  .valorant-ban-slot.bottom {
+    bottom: 20px;
+  }
+}
