@@ -10,6 +10,7 @@ Usage:
 
 import json
 import os
+import re
 import sys
 import threading
 import time
@@ -33,6 +34,7 @@ FONTS_DIR = os.path.join(SCRIPT_DIR, "assets", "Fonts")
 STATE_CACHE_PATH = os.path.join(SCRIPT_DIR, "data", "controller_state_cache.json")
 FONT_EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
 VALORANT_MAP_OPTIONS = {"Ascent", "Bind", "Breeze", "Fracture", "Haven", "Icebox", "Lotus", "Pearl", "Split", "Sunset", "Abyss"}
+VALORANT_MAP_UUID_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
 
 def _humanize_font_name(file_name):
@@ -110,7 +112,11 @@ def _sanitize_valorant_map(value):
     cleaned = str(value or "").strip()
     if not cleaned:
         return ""
-    return cleaned if cleaned in VALORANT_MAP_OPTIONS else ""
+    if cleaned in VALORANT_MAP_OPTIONS:
+        return cleaned
+    if VALORANT_MAP_UUID_RE.match(cleaned):
+        return cleaned.lower()
+    return ""
 
 
 class _BridgeState(object):
