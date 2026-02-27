@@ -17,7 +17,6 @@
       <button class="tab-btn is-active" type="button" data-tab-target="hero-bans-tab">Overwatch Bans</button>
       <button class="tab-btn" type="button" data-tab-target="scoreboard-tab">Scoreboard Teams</button>
       <button class="tab-btn" type="button" data-tab-target="score-tab">Score</button>
-      <button class="tab-btn" type="button" data-tab-target="valorant-map-tab">Valorant Map Picks/Bans</button>
     </nav>
 
     <section id="hero-bans-tab" class="tab-panel is-active" aria-label="Overwatch Bans Controller">
@@ -195,48 +194,15 @@
         </section>
       </div>
     </section>
-
-    <section id="valorant-map-tab" class="tab-panel" aria-label="Valorant Map Picks and Bans Controller">
-      <div class="valorant-map-grid">
-        <section class="team-column" aria-labelledby="valorant-map-heading">
-          <h2 id="valorant-map-heading">Valorant Map Sequence</h2>
-
-          <label for="valorant-ban-1">1st Map Ban Pick</label>
-          <select id="valorant-ban-1"></select>
-
-          <label for="valorant-ban-2">2nd Map Ban Pick</label>
-          <select id="valorant-ban-2"></select>
-
-          <label for="valorant-pick-1">1st Map Pick</label>
-          <select id="valorant-pick-1"></select>
-
-          <label for="valorant-pick-2">2nd Map Pick</label>
-          <select id="valorant-pick-2"></select>
-
-          <label for="valorant-ban-3">3rd Map Ban Pick</label>
-          <select id="valorant-ban-3"></select>
-
-          <label for="valorant-ban-4">4th Map Ban Pick</label>
-          <select id="valorant-ban-4"></select>
-
-          <label for="valorant-pick-3">3rd Map Pick</label>
-          <select id="valorant-pick-3"></select>
-        </section>
-
-        <div class="sync-row" aria-label="Valorant map update controls">
-          <button id="valorant-update" class="primary-btn" type="button">Update Map Overlay</button>
-        </div>
-      </div>
-    </section>
   </main>
 
   <footer class="control-footer">
-    <button id="reset-all" class="danger-btn" type="button">Reset All</button>
+    <button id="reset-all" class="danger-btn" type="button">Reset Active Tab</button>
     <p>
       OBS setup: hero bans use <code>team1.html</code> and <code>team2.html</code>.
       Scoreboard overlays use <code>scoreboard-team1-name.html</code>, <code>scoreboard-team2-name.html</code>,
       <code>scoreboard-team1-logo.html</code>, <code>scoreboard-team2-logo.html</code>,
-      <code>scoreboard-team1-score.html</code>, <code>scoreboard-team2-score.html</code>, and <code>valorant-maps.html</code>.
+      <code>scoreboard-team1-score.html</code>, and <code>scoreboard-team2-score.html</code>.
     </p>
   </footer>
 
