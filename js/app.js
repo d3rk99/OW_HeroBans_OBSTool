@@ -269,6 +269,13 @@
     );
   }
 
+  function bridgeHasValorantMapVeto(payload) {
+    if (!payload || typeof payload !== 'object') return false;
+    const veto = payload.valorantMapVeto;
+    if (!veto || typeof veto !== 'object') return false;
+    return ['ban1', 'ban2', 'pick1', 'pick2', 'ban3', 'ban4', 'pick3'].some((key) => Object.prototype.hasOwnProperty.call(veto, key));
+  }
+
   async function readBridgeState() {
     try {
       const response = await fetch(BRIDGE_STATE_URL, { cache: 'no-store' });
@@ -276,7 +283,8 @@
       const payload = await response.json();
       return {
         state: sanitizeState(payload),
-        hasScoreboard: bridgeHasScoreboard(payload)
+        hasScoreboard: bridgeHasScoreboard(payload),
+        hasValorantMapVeto: bridgeHasValorantMapVeto(payload)
       };
     } catch {
       return null;
@@ -294,6 +302,7 @@
       ...localState,
       ...bridgeState,
       scoreboard: bridgePayload.hasScoreboard ? bridgeState.scoreboard : localState.scoreboard,
+      valorantMapVeto: bridgePayload.hasValorantMapVeto ? bridgeState.valorantMapVeto : localState.valorantMapVeto,
       updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
     });
   }
