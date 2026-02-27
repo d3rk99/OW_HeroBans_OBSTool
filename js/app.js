@@ -653,7 +653,7 @@
     const stage = document.querySelector('[data-valorant-map-overlay]');
     if (!stage) return;
 
-    const mapNodes = Array.from(stage.querySelectorAll('[data-map-slot]'));
+    const mapNodes = Array.from(stage.querySelectorAll('[data-map-slot-item]'));
     let lastSignature = '';
 
     const paint = async () => {
@@ -664,7 +664,7 @@
       lastSignature = signature;
 
       mapNodes.forEach((node) => {
-        const slot = node.dataset.mapSlot;
+        const slot = node.dataset.mapSlotItem;
         const imageNode = node.querySelector('[data-map-image]');
         const labelNode = node.querySelector('[data-map-label]');
         const selectedMap = sanitizeMapName(mapState[slot]);

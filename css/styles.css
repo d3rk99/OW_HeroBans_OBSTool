@@ -824,7 +824,7 @@ input[type="number"] {
   }
 }
 
-/* Valorant map overlay style refresh */
+/* Valorant map overlay style refresh (5-panel layout) */
 .valorant-overlay-page {
   background:
     radial-gradient(circle at 22% 45%, rgba(31, 56, 99, 0.35), transparent 45%),
@@ -847,12 +847,12 @@ input[type="number"] {
 
 .valorant-map-board {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(5, 1fr);
   gap: 16px;
   min-height: min(56vh, 520px);
 }
 
-.valorant-slot {
+.valorant-panel {
   position: relative;
   overflow: hidden;
   min-height: min(56vh, 520px);
@@ -860,7 +860,7 @@ input[type="number"] {
   background: linear-gradient(160deg, rgba(44, 60, 88, 0.35) 0%, rgba(8, 15, 31, 0.72) 55%, rgba(8, 14, 25, 0.9) 100%);
 }
 
-.valorant-slot::before {
+.valorant-panel::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -868,28 +868,34 @@ input[type="number"] {
   z-index: 1;
 }
 
-.valorant-slot-pick {
+.valorant-panel-pick {
   border-top-color: #3be4bd;
 }
 
-.valorant-slot-ban {
+.valorant-panel-ban {
   border-top-color: #ff365d;
   border-bottom-color: #ff365d;
 }
 
-.valorant-slot:nth-child(2),
-.valorant-slot:nth-child(6) {
-  border-right: 2px solid rgba(180, 196, 228, 0.3);
-}
-
-.valorant-slot:nth-child(2)::after,
-.valorant-slot:nth-child(6)::after {
-  content: '';
+.valorant-ban-half {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top right, transparent 49.35%, #ff365d 49.7%, #ff365d 50.3%, transparent 50.65%);
+}
+
+.valorant-ban-half.top {
+  clip-path: polygon(0 0, 100% 0, 100% 52%, 0 76%);
+}
+
+.valorant-ban-half.bottom {
+  clip-path: polygon(0 78%, 100% 54%, 100% 100%, 0 100%);
+}
+
+.valorant-ban-divider {
+  position: absolute;
+  inset: 0;
   z-index: 3;
   pointer-events: none;
+  background: linear-gradient(to top right, transparent 49.35%, #ff365d 49.7%, #ff365d 50.3%, transparent 50.65%);
 }
 
 .valorant-map-image {
@@ -902,26 +908,38 @@ input[type="number"] {
   display: none;
 }
 
-.valorant-slot-ban .valorant-map-image {
+.valorant-panel-ban .valorant-map-image,
+.valorant-ban-half .valorant-map-image {
   filter: grayscale(100%) contrast(1.08);
 }
 
-.valorant-slot-content {
+.valorant-panel-content {
   position: absolute;
   inset: 0;
   z-index: 4;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 3.1rem 1rem;
+  justify-content: center;
   text-align: center;
   text-transform: uppercase;
   font-weight: 800;
   letter-spacing: 0.04em;
   color: #f4f7ff;
+  padding: 1rem;
+  gap: 0.05rem;
 }
 
-.valorant-slot-content.centered {
+.valorant-ban-half.top .valorant-panel-content {
+  justify-content: flex-start;
+  padding-top: 3rem;
+}
+
+.valorant-ban-half.bottom .valorant-panel-content {
+  justify-content: flex-end;
+  padding-bottom: 3rem;
+}
+
+.valorant-panel-content.centered {
   justify-content: center;
   gap: 0.15rem;
   padding: 1.6rem 1rem;
@@ -939,7 +957,6 @@ input[type="number"] {
 .valorant-role-sub {
   font-size: clamp(1.1rem, 2.55vw, 2rem);
   line-height: 0.95;
-  margin-top: 0.05rem;
 }
 
 .valorant-pick-number {
@@ -957,7 +974,7 @@ input[type="number"] {
 }
 
 .valorant-map-name {
-  font-size: clamp(0.85rem, 1.15vw, 1.1rem);
+  font-size: clamp(0.8rem, 1.1vw, 1.05rem);
   color: rgba(241, 248, 255, 0.94);
   letter-spacing: 0.07em;
   line-height: 1.1;
@@ -965,7 +982,7 @@ input[type="number"] {
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
 }
 
-.valorant-slot-content.centered .valorant-map-name {
+.valorant-panel-content.centered .valorant-map-name {
   margin-top: 0.2rem;
 }
 
@@ -980,16 +997,24 @@ input[type="number"] {
     min-height: auto;
   }
 
-  .valorant-slot {
-    min-height: 140px;
+  .valorant-panel {
+    min-height: 160px;
   }
 
-  .valorant-slot:nth-child(2)::after,
-  .valorant-slot:nth-child(6)::after {
+  .valorant-ban-half.top,
+  .valorant-ban-half.bottom {
+    clip-path: none;
+    position: relative;
+    min-height: 80px;
+  }
+
+  .valorant-ban-divider {
     display: none;
   }
 
-  .valorant-slot-content {
+  .valorant-ban-half.top .valorant-panel-content,
+  .valorant-ban-half.bottom .valorant-panel-content,
+  .valorant-panel-content {
     padding: 1rem;
   }
 }
