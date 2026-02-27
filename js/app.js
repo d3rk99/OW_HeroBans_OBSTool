@@ -292,12 +292,16 @@
     if (!bridgePayload) return localState;
 
     const bridgeState = bridgePayload.state;
+    const localUpdatedAt = Number(localState.updatedAt) || 0;
+    const bridgeUpdatedAt = Number(bridgeState.updatedAt) || 0;
+    const newestState = bridgeUpdatedAt >= localUpdatedAt ? bridgeState : localState;
 
     return sanitizeState({
       ...localState,
       ...bridgeState,
+      ...newestState,
       scoreboard: bridgePayload.hasScoreboard ? bridgeState.scoreboard : localState.scoreboard,
-      updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
+      updatedAt: Math.max(localUpdatedAt, bridgeUpdatedAt)
     });
   }
 
@@ -698,15 +702,20 @@
       mapNodes.forEach((node) => {
         const slot = node.dataset.mapSlotItem;
         const imageNode = node.querySelector('[data-map-image]');
+        const mapNameNode = node.querySelector('[data-map-name]');
         const selectedMap = sanitizeMapName(mapState[slot]);
 
         if (!imageNode) return;
         if (!selectedMap) {
           imageNode.removeAttribute('src');
           imageNode.style.display = 'none';
+          node.classList.remove('has-map');
+          if (mapNameNode) mapNameNode.textContent = '';
           return;
         }
 
+        if (mapNameNode) mapNameNode.textContent = selectedMap;
+        node.classList.add('has-map');
         applyValorantMapImage(imageNode, selectedMap);
       });
     };
