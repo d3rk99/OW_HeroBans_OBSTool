@@ -291,9 +291,12 @@
     return valorantMapsByUuid.get(sanitizeValorantMapSelection(uuid)) || null;
   }
 
-  function getValorantMapImage(map) {
-    if (!map) return '';
-    return map.splash || map.listViewIcon || map.displayIcon || '';
+  function getValorantMapImages(map) {
+    if (!map) return [];
+    const ordered = [map.splash, map.listViewIcon, map.displayIcon]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+    return Array.from(new Set(ordered));
   }
 
   function preload(url) {
@@ -913,14 +916,15 @@
     const pickSlots = ['pick1', 'pick2', 'pick3'];
     const banSlots = ['ban1', 'ban2', 'ban3', 'ban4'];
 
-    const applyBackground = (node, type, imageUrl) => {
+    const applyBackground = (node, type, imageUrls) => {
       if (!node) return;
       const base = type === 'ban'
         ? 'linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.90))'
         : 'linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.85))';
 
-      if (imageUrl) {
-        node.style.backgroundImage = `${base}, url("${imageUrl}")`;
+      if (Array.isArray(imageUrls) && imageUrls.length) {
+        const layers = imageUrls.map((url) => `url("${url}")`).join(', ');
+        node.style.backgroundImage = `${base}, ${layers}`;
       } else {
         node.style.backgroundImage = '';
       }
@@ -937,8 +941,8 @@
         const map = getValorantMapByUuid(state.valorantMapVeto[fieldId]);
         const displayName = map?.displayName || 'MAP';
         if (node) node.textContent = displayName;
-        const imageUrl = getValorantMapImage(map);
-        applyBackground(half, 'ban', imageUrl);
+        const imageUrls = getValorantMapImages(map);
+        applyBackground(half, 'ban', imageUrls);
       });
 
       pickSlots.forEach((fieldId) => {
@@ -950,15 +954,15 @@
           node.textContent = displayName;
           node.classList.toggle('is-visible', Boolean(displayName));
         }
-        const imageUrl = getValorantMapImage(map);
-        applyBackground(card, 'pick', imageUrl);
+        const imageUrls = getValorantMapImages(map);
+        applyBackground(card, 'pick', imageUrls);
       });
     };
 
     const preloadSelected = (vetoState) => {
       VETO_FIELD_IDS.forEach((fieldId) => {
         const map = getValorantMapByUuid(vetoState[fieldId]);
-        preload(getValorantMapImage(map));
+        getValorantMapImages(map).forEach(preload);
       });
     };
 
