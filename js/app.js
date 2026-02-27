@@ -293,7 +293,7 @@
 
   function getValorantMapImage(map) {
     if (!map) return '';
-    return map.listViewIcon || map.splash || map.displayIcon || '';
+    return map.splash || map.listViewIcon || map.displayIcon || '';
   }
 
   function preload(url) {
