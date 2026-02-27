@@ -826,11 +826,17 @@ input[type="number"] {
 
 /* Valorant map overlay style refresh (5-panel layout) */
 .valorant-overlay-page {
+  --bg: #090d14;
+  --panel-bg: linear-gradient(160deg, rgba(55, 73, 104, 0.36) 0%, rgba(8, 15, 31, 0.76) 58%, rgba(8, 14, 25, 0.96) 100%);
+  --border: rgba(148, 163, 189, 0.36);
+  --ban-red: #e45a67;
+  --pick-green: #37e4bf;
+  --text: #f0f4fb;
   background:
     radial-gradient(circle at 22% 42%, rgba(33, 63, 114, 0.28), transparent 48%),
     radial-gradient(circle at 76% 30%, rgba(32, 58, 96, 0.2), transparent 44%),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.014) 0 20px, rgba(255, 255, 255, 0.005) 20px 40px),
-    #050b18;
+    var(--bg);
 }
 
 .valorant-map-stage {
@@ -856,8 +862,8 @@ input[type="number"] {
   position: relative;
   overflow: hidden;
   min-height: 520px;
-  border: 2px solid rgba(148, 163, 189, 0.36);
-  background: linear-gradient(160deg, rgba(55, 73, 104, 0.36) 0%, rgba(8, 15, 31, 0.76) 58%, rgba(8, 14, 25, 0.96) 100%);
+  border: 2px solid var(--border);
+  background: var(--panel-bg);
 }
 
 .valorant-panel::before {
@@ -873,155 +879,177 @@ input[type="number"] {
 }
 
 .valorant-panel-ban {
-  border-top-color: #ff355d;
-  border-bottom-color: #ff355d;
+  border-color: rgba(228, 90, 103, 0.75);
 }
 
-.valorant-ban-half {
+/* Reusable ban card component */
+.valorant-ban-card {
+  /* Keep all diagonal pieces locked to one 30° center line. */
+  --angle: -30deg;
+  --gap: clamp(10px, 1.1vw, 16px);
+  --line-left: 63%;
+  --line-right: 37%;
+  --slash-center: 50%;
+  --red: var(--ban-red);
+  --label-left: clamp(12px, 7%, 22px);
+}
+
+.valorant-ban-card.is-active {
+  box-shadow: 0 0 0 1px rgba(228, 90, 103, 0.7), 0 0 22px rgba(228, 90, 103, 0.25);
+}
+
+.valorant-ban-card.is-locked {
+  border-color: rgba(255, 75, 102, 0.92);
+  box-shadow: 0 0 0 1px rgba(255, 75, 102, 0.72), 0 0 28px rgba(255, 75, 102, 0.35);
+}
+
+.valorant-ban-card__slot {
   position: absolute;
   inset: 0;
 }
 
-.valorant-ban-half.top {
-  clip-path: polygon(0 0, 100% 0, 100% 42%, 0 71%);
+.valorant-ban-card__slot.top {
+  clip-path: polygon(0 0, 100% 0, 100% calc(var(--line-right) - var(--gap)), 0 calc(var(--line-left) - var(--gap)));
 }
 
-.valorant-ban-half.bottom {
-  clip-path: polygon(0 76%, 100% 47%, 100% 100%, 0 100%);
+.valorant-ban-card__slot.bottom {
+  clip-path: polygon(0 calc(var(--line-left) + var(--gap)), 100% calc(var(--line-right) + var(--gap)), 100% 100%, 0 100%);
 }
 
-.valorant-ban-divider {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.valorant-ban-divider::before,
-.valorant-ban-divider::after {
-  content: '';
-  position: absolute;
-  left: -14%;
-  width: 136%;
-  transform-origin: left center;
-  transform: rotate(-39deg);
-}
-
-.valorant-ban-divider::before {
-  top: 70.8%;
-  height: 3px;
-  background: #ff355d;
-  box-shadow: 0 0 10px rgba(255, 53, 93, 0.35);
-}
-
-.valorant-ban-divider::after {
-  top: 74%;
-  height: 2px;
-  background: rgba(182, 194, 219, 0.46);
-}
-
-.valorant-map-image {
+.valorant-ban-card__image {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.78;
+  filter: grayscale(20%) contrast(1.04);
   display: none;
 }
 
-.valorant-panel-ban .valorant-map-image,
-.valorant-ban-half .valorant-map-image {
-  filter: grayscale(100%) contrast(1.08);
-}
-
-.valorant-panel-content {
+.valorant-ban-card__overlay {
   position: absolute;
   inset: 0;
+  background: linear-gradient(165deg, rgba(2, 8, 20, 0.34) 0%, rgba(5, 11, 22, 0.72) 62%, rgba(2, 6, 13, 0.82) 100%);
+}
+
+.valorant-ban-card__label {
+  position: absolute;
   z-index: 4;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  left: var(--label-left);
+  right: 36%;
+  display: grid;
+  justify-items: start;
   text-transform: uppercase;
+  line-height: 1.03;
+}
+
+.valorant-ban-card__slot.top .valorant-ban-card__label {
+  top: clamp(14px, 14%, 48px);
+}
+
+.valorant-ban-card__slot.bottom .valorant-ban-card__label {
+  bottom: clamp(12px, 13%, 42px);
+}
+
+.valorant-ban-card__gap {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(4, 7, 14, 0.86), rgba(24, 28, 38, 0.7), rgba(4, 7, 14, 0.86));
+  clip-path: polygon(0 calc(var(--line-left) - var(--gap)), 100% calc(var(--line-right) - var(--gap)), 100% calc(var(--line-right) + var(--gap)), 0 calc(var(--line-left) + var(--gap)));
+}
+
+.valorant-ban-card__slash,
+.valorant-ban-card__slash::after {
+  position: absolute;
+  content: '';
+  left: -30%;
+  top: var(--slash-center);
+  width: 170%;
+  height: 2px;
+  transform-origin: center;
+  transform: rotate(var(--angle));
+}
+
+.valorant-ban-card__slash {
+  z-index: 6;
+  background: var(--red);
+  box-shadow: 0 0 10px rgba(228, 90, 103, 0.45);
+}
+
+.valorant-ban-card__slash::after {
+  top: 4px;
+  height: 2px;
+  background: rgba(179, 189, 207, 0.32);
+}
+
+.valorant-ban-card.is-locked .valorant-ban-card__slash {
+  background: #ff4c6a;
+  box-shadow: 0 0 12px rgba(255, 76, 106, 0.6);
+}
+
+
+.valorant-pick-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+  gap: 0.4rem;
+  text-transform: uppercase;
+}
+
+.valorant-slot-label {
+  color: var(--text);
   font-weight: 800;
+  letter-spacing: 0.07em;
+  font-size: clamp(1rem, 1.8vw, 1.55rem);
+}
+
+.valorant-slot-label.ban {
+  color: var(--ban-red);
+}
+
+.valorant-map-name {
+  color: var(--text);
+  font-weight: 900;
   letter-spacing: 0.04em;
-  color: #f4f7ff;
-}
-
-.valorant-panel-content.ban-top {
-  justify-content: flex-start;
-  padding-top: 52px;
-}
-
-.valorant-panel-content.ban-bottom {
-  justify-content: flex-end;
-  padding-bottom: 52px;
-}
-
-.valorant-panel-content.centered {
-  justify-content: center;
-  gap: 0.12rem;
-  padding: 1rem;
-}
-
-.valorant-role {
-  font-size: clamp(1.05rem, 2.55vw, 1.98rem);
   line-height: 0.95;
-}
-
-.valorant-role.ban {
-  color: #ff355d;
-}
-
-.valorant-role-sub {
-  font-size: clamp(1.05rem, 2.45vw, 1.9rem);
-  line-height: 0.95;
-}
-
-.valorant-pick-number {
-  font-size: clamp(2.2rem, 6.3vw, 4.8rem);
-  line-height: 0.95;
-  margin-top: 0.24rem;
+  font-size: clamp(1.2rem, 2.45vw, 2.15rem);
 }
 
 .valorant-pick-underline {
-  width: clamp(40px, 31%, 70px);
+  width: clamp(44px, 27%, 70px);
   height: 4px;
   border-radius: 999px;
-  margin: 0.3rem auto 0;
-  background: #37e4bf;
+  background: var(--pick-green);
+  box-shadow: 0 0 8px rgba(66, 219, 157, 0.4);
 }
 
 @media (max-width: 900px) {
-  .valorant-map-shell {
-    padding: 10px;
-  }
-
   .valorant-map-board {
     grid-template-columns: 1fr;
-    min-height: auto;
-    gap: 10px;
   }
 
   .valorant-panel {
-    min-height: 170px;
+    min-height: 175px;
   }
 
-  .valorant-ban-half.top,
-  .valorant-ban-half.bottom {
-    clip-path: none;
-    position: relative;
-    min-height: 85px;
+  .valorant-ban-card {
+    --gap: 8px;
+    --line-left: 62%;
+    --line-right: 38%;
+    --slash-center: 50%;
   }
 
-  .valorant-ban-divider {
-    display: none;
+  .valorant-ban-card__slot.top .valorant-ban-card__label {
+    top: 14px;
   }
 
-  .valorant-panel-content.ban-top,
-  .valorant-panel-content.ban-bottom,
-  .valorant-panel-content.centered {
-    padding: 0.8rem;
+  .valorant-ban-card__slot.bottom .valorant-ban-card__label {
+    bottom: 14px;
   }
 }
