@@ -643,6 +643,14 @@
     });
   }
 
+
+  function resolveValorantMapImage(mapName) {
+    const cleanName = sanitizeMapName(mapName);
+    if (!cleanName) return '';
+    const slug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return `./assets/maps/${slug}.png`;
+  }
+
   function runValorantPanelIntro() {
     const ANIMATION_DELAY_MS = 500;
     const PANEL_STAGGER_MS = 135;
@@ -676,10 +684,24 @@
       mapNodes.forEach((node) => {
         const slot = node.dataset.mapSlotItem;
         const nameNode = node.querySelector('[data-map-name]');
+        const imageNode = node.querySelector('[data-map-image]');
         if (!nameNode) return;
 
         const selectedMap = sanitizeMapName(mapState[slot]);
         nameNode.textContent = selectedMap || '—';
+
+        if (!imageNode) return;
+        if (!selectedMap) {
+          imageNode.removeAttribute('src');
+          imageNode.style.display = 'none';
+          return;
+        }
+
+        imageNode.src = resolveValorantMapImage(selectedMap);
+        imageNode.style.display = 'block';
+        imageNode.onerror = () => {
+          imageNode.style.display = 'none';
+        };
       });
     };
 
