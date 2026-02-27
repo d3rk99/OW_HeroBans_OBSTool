@@ -292,12 +292,16 @@
     if (!bridgePayload) return localState;
 
     const bridgeState = bridgePayload.state;
+    const localUpdatedAt = Number(localState.updatedAt) || 0;
+    const bridgeUpdatedAt = Number(bridgeState.updatedAt) || 0;
+    const newestState = bridgeUpdatedAt >= localUpdatedAt ? bridgeState : localState;
 
     return sanitizeState({
       ...localState,
       ...bridgeState,
+      ...newestState,
       scoreboard: bridgePayload.hasScoreboard ? bridgeState.scoreboard : localState.scoreboard,
-      updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
+      updatedAt: Math.max(localUpdatedAt, bridgeUpdatedAt)
     });
   }
 
@@ -642,11 +646,43 @@
     });
   }
 
-  function resolveValorantMapImage(mapName) {
+  function resolveValorantMapImageCandidates(mapName) {
     const cleanName = sanitizeMapName(mapName);
-    if (!cleanName) return '';
+    if (!cleanName) return [];
+
     const slug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    return `./assets/maps/${slug}.png`;
+    const candidates = [
+      `./assets/maps/${slug}.png`,
+      `./assets/maps/${cleanName}.png`
+    ];
+
+    return Array.from(new Set(candidates));
+  }
+
+  function applyValorantMapImage(imageNode, mapName) {
+    const candidates = resolveValorantMapImageCandidates(mapName);
+    if (!candidates.length) {
+      imageNode.removeAttribute('src');
+      imageNode.style.display = 'none';
+      return;
+    }
+
+    let candidateIndex = 0;
+    imageNode.onload = () => {
+      imageNode.style.display = 'block';
+    };
+    imageNode.onerror = () => {
+      candidateIndex += 1;
+      if (candidateIndex >= candidates.length) {
+        imageNode.removeAttribute('src');
+        imageNode.style.display = 'none';
+        return;
+      }
+      imageNode.src = candidates[candidateIndex];
+    };
+
+    imageNode.src = candidates[candidateIndex];
+    imageNode.style.display = 'block';
   }
 
   function renderValorantMapOverlay() {
@@ -666,23 +702,21 @@
       mapNodes.forEach((node) => {
         const slot = node.dataset.mapSlotItem;
         const imageNode = node.querySelector('[data-map-image]');
+        const mapNameNode = node.querySelector('[data-map-name]');
         const selectedMap = sanitizeMapName(mapState[slot]);
 
         if (!imageNode) return;
         if (!selectedMap) {
           imageNode.removeAttribute('src');
           imageNode.style.display = 'none';
+          node.classList.remove('has-map');
+          if (mapNameNode) mapNameNode.textContent = '';
           return;
         }
 
-        imageNode.src = resolveValorantMapImage(selectedMap);
-        imageNode.style.display = 'block';
-        imageNode.onerror = () => {
-          imageNode.style.display = 'none';
-        };
-        imageNode.onload = () => {
-          imageNode.style.display = 'block';
-        };
+        if (mapNameNode) mapNameNode.textContent = selectedMap;
+        node.classList.add('has-map');
+        applyValorantMapImage(imageNode, selectedMap);
       });
     };
 

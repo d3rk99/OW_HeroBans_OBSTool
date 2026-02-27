@@ -993,6 +993,27 @@ input[type="number"] {
   background: #37e4bf;
 }
 
+.valorant-map-name {
+  display: none;
+  margin-top: 0.35rem;
+  padding: 0.1rem 0.35rem;
+  font-size: clamp(1.35rem, 3.5vw, 3.2rem);
+  line-height: 1;
+  color: #f4f7ff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+[data-map-slot-item].has-map .valorant-role,
+[data-map-slot-item].has-map .valorant-role-sub,
+[data-map-slot-item].has-map .valorant-pick-number,
+[data-map-slot-item].has-map .valorant-pick-underline {
+  display: none;
+}
+
+[data-map-slot-item].has-map .valorant-map-name {
+  display: inline-block;
+}
+
 @media (max-width: 900px) {
   .valorant-map-shell {
     padding: 10px;
