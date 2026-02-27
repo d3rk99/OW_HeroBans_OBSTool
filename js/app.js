@@ -12,6 +12,7 @@
     { value: 'classic', label: 'Classic Sans' }
   ];
   const BUILTIN_FONT_VALUES = new Set(BUILTIN_NAME_FONTS.map((font) => font.value));
+  const VALORANT_MAP_OPTIONS = ['Ascent', 'Bind', 'Breeze', 'Fracture', 'Haven', 'Icebox', 'Lotus', 'Pearl', 'Split', 'Sunset', 'Abyss'];
 
   let heroList = [];
   let heroesByName = new Map();
@@ -22,6 +23,15 @@
     scoreboard: {
       team1: { name: '', nameUsePng: false, namePng: '', namePngScale: 0, logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' },
       team2: { name: '', nameUsePng: false, namePng: '', namePngScale: 0, logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' }
+    },
+    valorantMapVeto: {
+      ban1: '',
+      ban2: '',
+      pick1: '',
+      pick2: '',
+      ban3: '',
+      ban4: '',
+      pick3: ''
     },
     updatedAt: Date.now()
   });
@@ -69,6 +79,12 @@
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return 0;
     return Math.max(-50, Math.min(50, Math.round(numeric)));
+  };
+
+  const sanitizeValorantMapSelection = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    return VALORANT_MAP_OPTIONS.includes(raw) ? raw : '';
   };
 
   const slugifyFontToken = (value) => sanitizeNameFont(value)
@@ -195,6 +211,15 @@
           bevelColor: sanitizeBevelColor(payload?.scoreboard?.team2?.bevelColor),
           nameFont: sanitizeNameFont(payload?.scoreboard?.team2?.nameFont)
         }
+      },
+      valorantMapVeto: {
+        ban1: sanitizeValorantMapSelection(payload?.valorantMapVeto?.ban1),
+        ban2: sanitizeValorantMapSelection(payload?.valorantMapVeto?.ban2),
+        pick1: sanitizeValorantMapSelection(payload?.valorantMapVeto?.pick1),
+        pick2: sanitizeValorantMapSelection(payload?.valorantMapVeto?.pick2),
+        ban3: sanitizeValorantMapSelection(payload?.valorantMapVeto?.ban3),
+        ban4: sanitizeValorantMapSelection(payload?.valorantMapVeto?.ban4),
+        pick3: sanitizeValorantMapSelection(payload?.valorantMapVeto?.pick3)
       },
       updatedAt: Number(payload?.updatedAt) || Date.now()
     };
@@ -774,6 +799,98 @@
     heading.textContent = teamName && teamName.trim() ? `${teamName.trim()} Score` : fallback;
   }
 
+  function initValorantMapVetoControl(pendingState, syncInputs) {
+    const fieldIds = ['ban1', 'ban2', 'pick1', 'pick2', 'ban3', 'ban4', 'pick3'];
+
+    const fields = fieldIds.reduce((collection, fieldId) => {
+      collection[fieldId] = document.getElementById(`valorant-${fieldId}`);
+      return collection;
+    }, {});
+
+    if (fieldIds.some((fieldId) => !fields[fieldId])) return;
+
+    const renderOptions = (selectNode) => {
+      selectNode.innerHTML = '';
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = '—';
+      selectNode.appendChild(emptyOption);
+
+      VALORANT_MAP_OPTIONS.forEach((mapName) => {
+        const option = document.createElement('option');
+        option.value = mapName;
+        option.textContent = mapName;
+        selectNode.appendChild(option);
+      });
+    };
+
+    fieldIds.forEach((fieldId) => {
+      renderOptions(fields[fieldId]);
+      fields[fieldId].addEventListener('change', (event) => {
+        pendingState.valorantMapVeto[fieldId] = sanitizeValorantMapSelection(event.target.value);
+        syncInputs();
+        writeState(pendingState);
+      });
+    });
+
+    const clearButton = document.getElementById('valorant-reset');
+    if (clearButton) {
+      clearButton.addEventListener('click', () => {
+        fieldIds.forEach((fieldId) => {
+          pendingState.valorantMapVeto[fieldId] = '';
+        });
+        syncInputs();
+        writeState(pendingState);
+      });
+    }
+  }
+
+  function renderValorantMapVetoOverlay() {
+    const overlay = document.querySelector('[data-valorant-map-veto-overlay]');
+    if (!overlay) return;
+
+    const cards = Array.from(overlay.querySelectorAll('[data-veto-card]'));
+    let lastSignature = '';
+
+    const updateCardContent = (state) => {
+      ['ban1', 'ban2', 'ban3', 'ban4'].forEach((fieldId) => {
+        const node = overlay.querySelector(`[data-ban-value='${fieldId}']`);
+        if (!node) return;
+        node.textContent = state.valorantMapVeto[fieldId] || 'MAP';
+      });
+
+      ['pick1', 'pick2', 'pick3'].forEach((fieldId) => {
+        const node = overlay.querySelector(`[data-pick-value='${fieldId}']`);
+        if (!node) return;
+        node.textContent = state.valorantMapVeto[fieldId] || '';
+        node.classList.toggle('is-visible', Boolean(state.valorantMapVeto[fieldId]));
+      });
+    };
+
+    const applyState = async () => {
+      const state = await readSharedState();
+      const vetoState = state?.valorantMapVeto || defaultState().valorantMapVeto;
+      const signature = `${vetoState.ban1}|${vetoState.ban2}|${vetoState.pick1}|${vetoState.pick2}|${vetoState.ban3}|${vetoState.ban4}|${vetoState.pick3}|${state.updatedAt}`;
+      if (signature === lastSignature) return;
+      lastSignature = signature;
+      updateCardContent(state);
+    };
+
+    setTimeout(() => {
+      cards.forEach((card, index) => {
+        setTimeout(() => {
+          card.classList.add('is-visible');
+        }, index * 120);
+      });
+    }, 500);
+
+    applyState();
+    window.addEventListener('storage', (event) => {
+      if (event.key === STATE_KEY) applyState();
+    });
+    setInterval(applyState, OVERLAY_POLL_MS);
+  }
+
   async function initControlPage() {
     const pendingState = await readSharedState();
 
@@ -813,6 +930,12 @@
         if (bevelColorInput) bevelColorInput.value = sanitizeBevelColor(pendingState.scoreboard[teamId].bevelColor);
         if (fontInput) fontInput.value = sanitizeNameFont(pendingState.scoreboard[teamId].nameFont);
       });
+
+      ['ban1', 'ban2', 'pick1', 'pick2', 'ban3', 'ban4', 'pick3'].forEach((fieldId) => {
+        const selectNode = document.getElementById(`valorant-${fieldId}`);
+        if (!selectNode) return;
+        selectNode.value = sanitizeValorantMapSelection(pendingState.valorantMapVeto[fieldId]);
+      });
     };
 
     initTabs();
@@ -820,6 +943,7 @@
     installSearchForTeam('team2', { pendingState, syncInputs });
     await initScoreboardControl(pendingState, syncInputs);
     initScoreTickerControl(pendingState, syncInputs);
+    initValorantMapVetoControl(pendingState, syncInputs);
 
     const swapTeams = document.getElementById('swap-teams');
     if (swapTeams) {
@@ -871,6 +995,8 @@
         } else if (activeTabId === 'score-tab') {
           pendingState.scoreboard.team1.score = empty.scoreboard.team1.score;
           pendingState.scoreboard.team2.score = empty.scoreboard.team2.score;
+        } else if (activeTabId === 'valorant-map-veto-tab') {
+          pendingState.valorantMapVeto = { ...empty.valorantMapVeto };
         }
 
         syncInputs();
@@ -887,6 +1013,7 @@
       pendingState.team2.ban = next.team2.ban;
       pendingState.scoreboard.team1 = { ...next.scoreboard.team1 };
       pendingState.scoreboard.team2 = { ...next.scoreboard.team2 };
+      pendingState.valorantMapVeto = { ...next.valorantMapVeto };
       syncInputs();
     });
   }
@@ -905,6 +1032,10 @@
 
       if (document.querySelector('[data-scoreboard-role]')) {
         renderScoreboardOverlay();
+      }
+
+      if (document.querySelector('[data-valorant-map-veto-overlay]')) {
+        renderValorantMapVetoOverlay();
       }
     }
   }
