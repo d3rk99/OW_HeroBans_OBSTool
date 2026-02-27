@@ -12,10 +12,14 @@
     { value: 'classic', label: 'Classic Sans' }
   ];
   const BUILTIN_FONT_VALUES = new Set(BUILTIN_NAME_FONTS.map((font) => font.value));
-  const VALORANT_MAP_OPTIONS = ['Ascent', 'Bind', 'Breeze', 'Fracture', 'Haven', 'Icebox', 'Lotus', 'Pearl', 'Split', 'Sunset', 'Abyss'];
+  const VALORANT_MAPS_PATH = './assets/valorant/maps.json';
+  const VETO_FIELD_IDS = ['ban1', 'ban2', 'pick1', 'pick2', 'ban3', 'ban4', 'pick3'];
 
   let heroList = [];
   let heroesByName = new Map();
+  let valorantMaps = [];
+  let valorantMapsByUuid = new Map();
+  let valorantMapUuidByName = new Map();
 
   const defaultState = () => ({
     team1: { ban: '' },
@@ -84,7 +88,9 @@
   const sanitizeValorantMapSelection = (value) => {
     const raw = String(value || '').trim();
     if (!raw) return '';
-    return VALORANT_MAP_OPTIONS.includes(raw) ? raw : '';
+    if (!valorantMapsByUuid.size) return raw;
+    if (valorantMapsByUuid.has(raw)) return raw;
+    return valorantMapUuidByName.get(raw.toLowerCase()) || '';
   };
 
   const slugifyFontToken = (value) => sanitizeNameFont(value)
@@ -249,6 +255,60 @@
       heroList = [];
       heroesByName = new Map();
     }
+  }
+
+  function toMapAssetSlug(displayName) {
+    return String(displayName || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function normalizeValorantMap(record) {
+    if (!record || typeof record !== 'object') return null;
+    const uuid = String(record.uuid || '').trim();
+    const displayName = String(record.displayName || '').trim();
+    if (!uuid || !displayName) return null;
+
+    const imageAsset = typeof record.imageAsset === 'string' && record.imageAsset.trim()
+      ? record.imageAsset.trim()
+      : `./assets/valorant/maps/${toMapAssetSlug(displayName)}.png`;
+
+    return { uuid, displayName, imageAsset };
+  }
+
+  async function loadValorantMaps() {
+    try {
+      const response = await fetch(VALORANT_MAPS_PATH, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Failed to load maps.json (${response.status})`);
+      const payload = await response.json();
+      const maps = Array.isArray(payload?.maps) ? payload.maps.map(normalizeValorantMap).filter(Boolean) : [];
+      valorantMaps = maps;
+      valorantMapsByUuid = new Map(maps.map((map) => [map.uuid, map]));
+      valorantMapUuidByName = new Map(maps.map((map) => [map.displayName.toLowerCase(), map.uuid]));
+    } catch (error) {
+      console.warn('Valorant map cache unavailable.', error);
+      valorantMaps = [];
+      valorantMapsByUuid = new Map();
+      valorantMapUuidByName = new Map();
+    }
+  }
+
+  function getValorantMapByUuid(uuid) {
+    return valorantMapsByUuid.get(sanitizeValorantMapSelection(uuid)) || null;
+  }
+
+  function getValorantMapImages(map) {
+    if (!map) return [];
+    const localAsset = String(map.imageAsset || '').trim();
+    return localAsset ? [localAsset] : [];
+  }
+
+  function preload(url) {
+    if (!url) return;
+    const img = new Image();
+    img.src = url;
   }
 
   function readLocalState() {
@@ -809,14 +869,12 @@
   }
 
   function initValorantMapVetoControl(pendingState, syncInputs) {
-    const fieldIds = ['ban1', 'ban2', 'pick1', 'pick2', 'ban3', 'ban4', 'pick3'];
-
-    const fields = fieldIds.reduce((collection, fieldId) => {
+    const fields = VETO_FIELD_IDS.reduce((collection, fieldId) => {
       collection[fieldId] = document.getElementById(`valorant-${fieldId}`);
       return collection;
     }, {});
 
-    if (fieldIds.some((fieldId) => !fields[fieldId])) return;
+    if (VETO_FIELD_IDS.some((fieldId) => !fields[fieldId])) return;
 
     const renderOptions = (selectNode) => {
       selectNode.innerHTML = '';
@@ -825,15 +883,15 @@
       emptyOption.textContent = '—';
       selectNode.appendChild(emptyOption);
 
-      VALORANT_MAP_OPTIONS.forEach((mapName) => {
+      valorantMaps.forEach((map) => {
         const option = document.createElement('option');
-        option.value = mapName;
-        option.textContent = mapName;
+        option.value = map.uuid;
+        option.textContent = map.displayName;
         selectNode.appendChild(option);
       });
     };
 
-    fieldIds.forEach((fieldId) => {
+    VETO_FIELD_IDS.forEach((fieldId) => {
       renderOptions(fields[fieldId]);
       fields[fieldId].addEventListener('change', (event) => {
         pendingState.valorantMapVeto[fieldId] = sanitizeValorantMapSelection(event.target.value);
@@ -845,7 +903,7 @@
     const clearButton = document.getElementById('valorant-reset');
     if (clearButton) {
       clearButton.addEventListener('click', () => {
-        fieldIds.forEach((fieldId) => {
+        VETO_FIELD_IDS.forEach((fieldId) => {
           pendingState.valorantMapVeto[fieldId] = '';
         });
         syncInputs();
@@ -861,18 +919,56 @@
     const cards = Array.from(overlay.querySelectorAll('[data-veto-card]'));
     let lastSignature = '';
 
+    const pickSlots = ['pick1', 'pick2', 'pick3'];
+    const banSlots = ['ban1', 'ban2', 'ban3', 'ban4'];
+
+    const applyBackground = (node, type, imageUrls) => {
+      if (!node) return;
+      const base = type === 'ban'
+        ? 'linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.90))'
+        : 'linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.85))';
+
+      if (Array.isArray(imageUrls) && imageUrls.length) {
+        const layers = imageUrls.map((url) => `url("${url}")`).join(', ');
+        node.style.backgroundImage = `${base}, ${layers}`;
+      } else {
+        node.style.backgroundImage = '';
+      }
+      node.style.backgroundColor = '#0b0f16';
+      node.style.backgroundSize = 'cover';
+      node.style.backgroundPosition = 'center';
+      node.style.backgroundRepeat = 'no-repeat';
+    };
+
     const updateCardContent = (state) => {
-      ['ban1', 'ban2', 'ban3', 'ban4'].forEach((fieldId) => {
+      banSlots.forEach((fieldId) => {
         const node = overlay.querySelector(`[data-ban-value='${fieldId}']`);
-        if (!node) return;
-        node.textContent = state.valorantMapVeto[fieldId] || 'MAP';
+        const half = overlay.querySelector(`[data-ban-slot='${fieldId}']`);
+        const map = getValorantMapByUuid(state.valorantMapVeto[fieldId]);
+        const displayName = map?.displayName || 'MAP';
+        if (node) node.textContent = displayName;
+        const imageUrls = getValorantMapImages(map);
+        applyBackground(half, 'ban', imageUrls);
       });
 
-      ['pick1', 'pick2', 'pick3'].forEach((fieldId) => {
+      pickSlots.forEach((fieldId) => {
         const node = overlay.querySelector(`[data-pick-value='${fieldId}']`);
-        if (!node) return;
-        node.textContent = state.valorantMapVeto[fieldId] || '';
-        node.classList.toggle('is-visible', Boolean(state.valorantMapVeto[fieldId]));
+        const card = node?.closest('.valorant-pick-card');
+        const map = getValorantMapByUuid(state.valorantMapVeto[fieldId]);
+        const displayName = map?.displayName || '';
+        if (node) {
+          node.textContent = displayName;
+          node.classList.toggle('is-visible', Boolean(displayName));
+        }
+        const imageUrls = getValorantMapImages(map);
+        applyBackground(card, 'pick', imageUrls);
+      });
+    };
+
+    const preloadSelected = (vetoState) => {
+      VETO_FIELD_IDS.forEach((fieldId) => {
+        const map = getValorantMapByUuid(vetoState[fieldId]);
+        getValorantMapImages(map).forEach(preload);
       });
     };
 
@@ -882,6 +978,7 @@
       const signature = `${vetoState.ban1}|${vetoState.ban2}|${vetoState.pick1}|${vetoState.pick2}|${vetoState.ban3}|${vetoState.ban4}|${vetoState.pick3}|${state.updatedAt}`;
       if (signature === lastSignature) return;
       lastSignature = signature;
+      preloadSelected(vetoState);
       updateCardContent(state);
     };
 
@@ -940,7 +1037,7 @@
         if (fontInput) fontInput.value = sanitizeNameFont(pendingState.scoreboard[teamId].nameFont);
       });
 
-      ['ban1', 'ban2', 'pick1', 'pick2', 'ban3', 'ban4', 'pick3'].forEach((fieldId) => {
+      VETO_FIELD_IDS.forEach((fieldId) => {
         const selectNode = document.getElementById(`valorant-${fieldId}`);
         if (!selectNode) return;
         selectNode.value = sanitizeValorantMapSelection(pendingState.valorantMapVeto[fieldId]);
@@ -1028,7 +1125,7 @@
   }
 
   async function init() {
-    await loadHeroes();
+    await Promise.all([loadHeroes(), loadValorantMaps()]);
 
     if (document.body.classList.contains('control-page')) {
       initControlPage();

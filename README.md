@@ -115,3 +115,18 @@ If you cannot install Qt packages into the OBS scripting Python, use OBS-native 
 - Drop `.ttf`, `.otf`, `.woff`, or `.woff2` files under `assets/Fonts/`.
 - The controller automatically loads available files (via `/api/fonts`) into the Team Name font selectors.
 - Selected custom font files are stored in state as `file:<relative-path>` and loaded dynamically by the scoreboard name overlays.
+
+## Valorant map picks/bans map cache
+
+- The controller and `valorant-map-picks-bans.html` overlay now load map metadata from `assets/valorant/maps.json` (local file, no runtime API dependency).
+- Veto state fields (`ban1`, `ban2`, `pick1`, `pick2`, `ban3`, `ban4`, `pick3`) store Valorant map UUIDs.
+- Refresh the local map cache manually with:
+
+```bash
+node scripts/update_valorant_maps.js
+```
+
+The updater fetches `https://valorant-api.com/v1/maps` and stores map metadata plus a local `imageAsset` path (`./assets/valorant/maps/<map-name>.png`).
+
+- Runtime overlay rendering uses only the local `imageAsset` file paths (no online image dependency).
+- Add your PNGs under `assets/valorant/maps/` with names like `sunset.png`, `icebox.png`, `split.png`.

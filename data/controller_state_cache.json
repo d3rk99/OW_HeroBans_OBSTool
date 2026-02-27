@@ -1,0 +1,44 @@
+{
+  "team1": {
+    "ban": ""
+  },
+  "team2": {
+    "ban": ""
+  },
+  "scoreboard": {
+    "team1": {
+      "name": "",
+      "nameUsePng": false,
+      "namePng": "",
+      "namePngScale": 0,
+      "logo": "",
+      "logoScale": 0,
+      "score": 0,
+      "nameColor": "#e9eefc",
+      "bevelColor": "#7dd3fc",
+      "nameFont": "varsity"
+    },
+    "team2": {
+      "name": "",
+      "nameUsePng": false,
+      "namePng": "",
+      "namePngScale": 0,
+      "logo": "",
+      "logoScale": 0,
+      "score": 0,
+      "nameColor": "#e9eefc",
+      "bevelColor": "#7dd3fc",
+      "nameFont": "varsity"
+    }
+  },
+  "valorantMapVeto": {
+    "ban1": "224b0a95-48b9-f703-1bd8-67faca101b8e",
+    "ban2": "92584fbe-486a-b1b2-5ca7-8f9e7800dc84",
+    "pick1": "7eaecc1b-4337-bbf6-6ab9-04b8f06b3319",
+    "pick2": "2c9d57ec-4431-9c5e-2939-8f9ef6dd5cba",
+    "ban3": "2fe4ed3a-450a-948b-6d6b-e89a78e680a9",
+    "ban4": "b529448b-4d60-346e-e89e-00a4c527a405",
+    "pick3": "e2ad5c54-4114-a870-9641-8ea21279579a"
+  },
+  "updatedAt": 1772235877146
+}
