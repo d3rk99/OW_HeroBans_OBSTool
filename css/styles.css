@@ -557,6 +557,13 @@ button {
   gap: 1rem;
 }
 
+.valorant-map-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 560px);
+  justify-content: center;
+  gap: 1rem;
+}
+
 .ticker-score-input {
   width: 100%;
   text-align: center;
@@ -712,11 +719,96 @@ input[type="number"] {
   margin: 0 auto;
 }
 
+.valorant-map-stage {
+  width: min(92vw, 1500px);
+}
+
+.valorant-map-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: rgba(12, 18, 30, 0.72);
+  min-height: min(35vh, 320px);
+}
+
+.valorant-slot {
+  position: relative;
+  overflow: hidden;
+  border-right: 2px solid rgba(255, 255, 255, 0.42);
+  min-height: min(35vh, 320px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.8rem;
+}
+
+.valorant-slot:nth-child(2),
+.valorant-slot:nth-child(6) {
+  border-right: 0;
+}
+
+.valorant-slot:nth-child(2)::after,
+.valorant-slot:nth-child(6)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top right, transparent 49.2%, rgba(255, 255, 255, 0.7) 49.8%, rgba(255, 255, 255, 0.7) 50.2%, transparent 50.8%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.valorant-map-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.valorant-slot-ban .valorant-map-image {
+  filter: grayscale(100%);
+}
+
+.valorant-map-label {
+  position: relative;
+  z-index: 3;
+  text-transform: uppercase;
+  font-size: clamp(1rem, 1.65vw, 2rem);
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  color: #f2f4ff;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.85);
+  text-align: center;
+}
+
 @media (max-width: 900px) {
   .tab-grid,
   .scoreboard-grid,
   .score-ticker-grid {
     grid-template-columns: 1fr;
+  }
+
+  .valorant-map-board {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .valorant-slot,
+  .valorant-slot:nth-child(2),
+  .valorant-slot:nth-child(6) {
+    border-right: 0;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.35);
+    min-height: 120px;
+  }
+
+  .valorant-slot:last-child {
+    border-bottom: 0;
+  }
+
+  .valorant-slot:nth-child(2)::after,
+  .valorant-slot:nth-child(6)::after {
+    display: none;
   }
 }
 
@@ -729,5 +821,207 @@ input[type="number"] {
     flex: 1;
     font-size: 0.82rem;
     padding: 0.45rem 0.4rem;
+  }
+}
+
+/* Valorant map overlay style refresh (5-panel layout) */
+.valorant-overlay-page {
+  background:
+    radial-gradient(circle at 22% 42%, rgba(33, 63, 114, 0.28), transparent 48%),
+    radial-gradient(circle at 76% 30%, rgba(32, 58, 96, 0.2), transparent 44%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.014) 0 20px, rgba(255, 255, 255, 0.005) 20px 40px),
+    #050b18;
+}
+
+.valorant-map-stage {
+  width: min(92vw, 1370px);
+}
+
+.valorant-map-shell {
+  border: 2px solid rgba(153, 173, 209, 0.2);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(5, 10, 22, 0.32);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
+
+.valorant-map-board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  min-height: 520px;
+}
+
+.valorant-panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 520px;
+  border: 2px solid rgba(148, 163, 189, 0.36);
+  background: linear-gradient(160deg, rgba(55, 73, 104, 0.36) 0%, rgba(8, 15, 31, 0.76) 58%, rgba(8, 14, 25, 0.96) 100%);
+}
+
+.valorant-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.55));
+  z-index: 1;
+}
+
+.valorant-panel-pick {
+  border-top-color: #37e4bf;
+}
+
+.valorant-panel-ban {
+  border-top-color: #ff355d;
+  border-bottom-color: #ff355d;
+}
+
+.valorant-ban-half {
+  position: absolute;
+  inset: 0;
+}
+
+.valorant-ban-half.top {
+  clip-path: polygon(0 0, 100% 0, 100% 42%, 0 71%);
+}
+
+.valorant-ban-half.bottom {
+  clip-path: polygon(0 76%, 100% 47%, 100% 100%, 0 100%);
+}
+
+.valorant-ban-divider {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.valorant-ban-divider::before,
+.valorant-ban-divider::after {
+  content: '';
+  position: absolute;
+  left: -14%;
+  width: 136%;
+  transform-origin: left center;
+  transform: rotate(-39deg);
+}
+
+.valorant-ban-divider::before {
+  top: 70.8%;
+  height: 3px;
+  background: #ff355d;
+  box-shadow: 0 0 10px rgba(255, 53, 93, 0.35);
+}
+
+.valorant-ban-divider::after {
+  top: 74%;
+  height: 2px;
+  background: rgba(182, 194, 219, 0.46);
+}
+
+.valorant-map-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.78;
+  display: none;
+}
+
+.valorant-panel-ban .valorant-map-image,
+.valorant-ban-half .valorant-map-image {
+  filter: grayscale(100%) contrast(1.08);
+}
+
+.valorant-panel-content {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #f4f7ff;
+}
+
+.valorant-panel-content.ban-top {
+  justify-content: flex-start;
+  padding-top: 52px;
+}
+
+.valorant-panel-content.ban-bottom {
+  justify-content: flex-end;
+  padding-bottom: 52px;
+}
+
+.valorant-panel-content.centered {
+  justify-content: center;
+  gap: 0.12rem;
+  padding: 1rem;
+}
+
+.valorant-role {
+  font-size: clamp(1.05rem, 2.55vw, 1.98rem);
+  line-height: 0.95;
+}
+
+.valorant-role.ban {
+  color: #ff355d;
+}
+
+.valorant-role-sub {
+  font-size: clamp(1.05rem, 2.45vw, 1.9rem);
+  line-height: 0.95;
+}
+
+.valorant-pick-number {
+  font-size: clamp(2.2rem, 6.3vw, 4.8rem);
+  line-height: 0.95;
+  margin-top: 0.24rem;
+}
+
+.valorant-pick-underline {
+  width: clamp(40px, 31%, 70px);
+  height: 4px;
+  border-radius: 999px;
+  margin: 0.3rem auto 0;
+  background: #37e4bf;
+}
+
+@media (max-width: 900px) {
+  .valorant-map-shell {
+    padding: 10px;
+  }
+
+  .valorant-map-board {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    gap: 10px;
+  }
+
+  .valorant-panel {
+    min-height: 170px;
+  }
+
+  .valorant-ban-half.top,
+  .valorant-ban-half.bottom {
+    clip-path: none;
+    position: relative;
+    min-height: 85px;
+  }
+
+  .valorant-ban-divider {
+    display: none;
+  }
+
+  .valorant-panel-content.ban-top,
+  .valorant-panel-content.ban-bottom,
+  .valorant-panel-content.centered {
+    padding: 0.8rem;
   }
 }
