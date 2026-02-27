@@ -642,11 +642,43 @@
     });
   }
 
-  function resolveValorantMapImage(mapName) {
+  function resolveValorantMapImageCandidates(mapName) {
     const cleanName = sanitizeMapName(mapName);
-    if (!cleanName) return '';
+    if (!cleanName) return [];
+
     const slug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    return `./assets/maps/${slug}.png`;
+    const candidates = [
+      `./assets/maps/${slug}.png`,
+      `./assets/maps/${cleanName}.png`
+    ];
+
+    return Array.from(new Set(candidates));
+  }
+
+  function applyValorantMapImage(imageNode, mapName) {
+    const candidates = resolveValorantMapImageCandidates(mapName);
+    if (!candidates.length) {
+      imageNode.removeAttribute('src');
+      imageNode.style.display = 'none';
+      return;
+    }
+
+    let candidateIndex = 0;
+    imageNode.onload = () => {
+      imageNode.style.display = 'block';
+    };
+    imageNode.onerror = () => {
+      candidateIndex += 1;
+      if (candidateIndex >= candidates.length) {
+        imageNode.removeAttribute('src');
+        imageNode.style.display = 'none';
+        return;
+      }
+      imageNode.src = candidates[candidateIndex];
+    };
+
+    imageNode.src = candidates[candidateIndex];
+    imageNode.style.display = 'block';
   }
 
   function renderValorantMapOverlay() {
@@ -675,14 +707,7 @@
           return;
         }
 
-        imageNode.src = resolveValorantMapImage(selectedMap);
-        imageNode.style.display = 'block';
-        imageNode.onerror = () => {
-          imageNode.style.display = 'none';
-        };
-        imageNode.onload = () => {
-          imageNode.style.display = 'block';
-        };
+        applyValorantMapImage(imageNode, selectedMap);
       });
     };
 
