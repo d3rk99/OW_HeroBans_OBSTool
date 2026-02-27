@@ -6,6 +6,8 @@
   const FADE_TRANSITION_MS = 260;
   const BRIDGE_STATE_URL = 'http://127.0.0.1:8765/api/state';
   const BRIDGE_FONTS_URL = 'http://127.0.0.1:8765/api/fonts';
+  const VALORANT_MAP_POOL = ['Ascent', 'Bind', 'Breeze', 'Fracture', 'Haven', 'Icebox', 'Lotus', 'Pearl', 'Split', 'Sunset', 'Abyss'];
+  const VALORANT_MAP_KEYS = ['ban1', 'ban2', 'pick1', 'pick2', 'ban3', 'ban4', 'pick3'];
   const BUILTIN_NAME_FONTS = [
     { value: 'varsity', label: 'Varsity / Jersey' },
     { value: 'block', label: 'Block Bold' },
@@ -22,6 +24,15 @@
     scoreboard: {
       team1: { name: '', nameUsePng: false, namePng: '', namePngScale: 0, logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' },
       team2: { name: '', nameUsePng: false, namePng: '', namePngScale: 0, logo: '', logoScale: 0, score: 0, nameColor: '#e9eefc', bevelColor: '#7dd3fc', nameFont: 'varsity' }
+    },
+    valorantMaps: {
+      ban1: '',
+      ban2: '',
+      pick1: '',
+      pick2: '',
+      ban3: '',
+      ban4: '',
+      pick3: ''
     },
     updatedAt: Date.now()
   });
@@ -69,6 +80,14 @@
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return 0;
     return Math.max(-50, Math.min(50, Math.round(numeric)));
+  };
+
+  const sanitizeMapName = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const normalized = normalize(raw);
+    const known = VALORANT_MAP_POOL.find((mapName) => normalize(mapName) === normalized);
+    return known || raw;
   };
 
   const slugifyFontToken = (value) => sanitizeNameFont(value)
@@ -195,6 +214,15 @@
           bevelColor: sanitizeBevelColor(payload?.scoreboard?.team2?.bevelColor),
           nameFont: sanitizeNameFont(payload?.scoreboard?.team2?.nameFont)
         }
+      },
+      valorantMaps: {
+        ban1: sanitizeMapName(payload?.valorantMaps?.ban1),
+        ban2: sanitizeMapName(payload?.valorantMaps?.ban2),
+        pick1: sanitizeMapName(payload?.valorantMaps?.pick1),
+        pick2: sanitizeMapName(payload?.valorantMaps?.pick2),
+        ban3: sanitizeMapName(payload?.valorantMaps?.ban3),
+        ban4: sanitizeMapName(payload?.valorantMaps?.ban4),
+        pick3: sanitizeMapName(payload?.valorantMaps?.pick3)
       },
       updatedAt: Number(payload?.updatedAt) || Date.now()
     };
@@ -614,6 +642,108 @@
     });
   }
 
+  function resolveValorantMapImage(mapName) {
+    const cleanName = sanitizeMapName(mapName);
+    if (!cleanName) return '';
+    const slug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return `./assets/maps/${slug}.png`;
+  }
+
+  function renderValorantMapOverlay() {
+    const stage = document.querySelector('[data-valorant-map-overlay]');
+    if (!stage) return;
+
+    const mapNodes = Array.from(stage.querySelectorAll('[data-map-slot-item]'));
+    let lastSignature = '';
+
+    const paint = async () => {
+      const state = await readSharedState();
+      const mapState = state?.valorantMaps || {};
+      const signature = `${VALORANT_MAP_KEYS.map((key) => mapState[key] || '').join('|')}:${state.updatedAt}`;
+      if (signature === lastSignature) return;
+      lastSignature = signature;
+
+      mapNodes.forEach((node) => {
+        const slot = node.dataset.mapSlotItem;
+        const imageNode = node.querySelector('[data-map-image]');
+        const selectedMap = sanitizeMapName(mapState[slot]);
+
+        if (!imageNode) return;
+        if (!selectedMap) {
+          imageNode.removeAttribute('src');
+          imageNode.style.display = 'none';
+          return;
+        }
+
+        imageNode.src = resolveValorantMapImage(selectedMap);
+        imageNode.style.display = 'block';
+        imageNode.onerror = () => {
+          imageNode.style.display = 'none';
+        };
+        imageNode.onload = () => {
+          imageNode.style.display = 'block';
+        };
+      });
+    };
+
+    paint();
+    window.addEventListener('storage', (event) => {
+      if (event.key === STATE_KEY) paint();
+    });
+    setInterval(paint, OVERLAY_POLL_MS);
+  }
+
+  function initValorantMapControl(pendingState, syncInputs) {
+    const fieldMeta = [
+      { key: 'ban1', id: 'valorant-ban-1', label: '1st Map Ban Pick' },
+      { key: 'ban2', id: 'valorant-ban-2', label: '2nd Map Ban Pick' },
+      { key: 'pick1', id: 'valorant-pick-1', label: '1st Map Pick' },
+      { key: 'pick2', id: 'valorant-pick-2', label: '2nd Map Pick' },
+      { key: 'ban3', id: 'valorant-ban-3', label: '3rd Map Ban Pick' },
+      { key: 'ban4', id: 'valorant-ban-4', label: '4th Map Ban Pick' },
+      { key: 'pick3', id: 'valorant-pick-3', label: '3rd Map Pick' }
+    ];
+
+    const updateButton = document.getElementById('valorant-update');
+    if (!updateButton) return;
+
+    fieldMeta.forEach(({ key, id, label }) => {
+      const selectNode = document.getElementById(id);
+      if (!selectNode) return;
+
+      selectNode.innerHTML = '';
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = `Select ${label}`;
+      selectNode.appendChild(emptyOption);
+
+      VALORANT_MAP_POOL.forEach((mapName) => {
+        const option = document.createElement('option');
+        option.value = mapName;
+        option.textContent = mapName;
+        selectNode.appendChild(option);
+      });
+
+      const currentValue = sanitizeMapName(pendingState.valorantMaps[key]);
+      if (currentValue && !Array.from(selectNode.options).some((option) => option.value === currentValue)) {
+        const customOption = document.createElement('option');
+        customOption.value = currentValue;
+        customOption.textContent = currentValue;
+        selectNode.appendChild(customOption);
+      }
+      selectNode.value = currentValue;
+
+      selectNode.addEventListener('change', (event) => {
+        pendingState.valorantMaps[key] = sanitizeMapName(event.target.value);
+        syncInputs();
+      });
+    });
+
+    updateButton.addEventListener('click', () => {
+      writeState(pendingState);
+    });
+  }
+
   async function initScoreboardControl(pendingState, syncInputs) {
     const fieldMap = {
       team1: {
@@ -808,6 +938,29 @@
         if (bevelColorInput) bevelColorInput.value = sanitizeBevelColor(pendingState.scoreboard[teamId].bevelColor);
         if (fontInput) fontInput.value = sanitizeNameFont(pendingState.scoreboard[teamId].nameFont);
       });
+
+      VALORANT_MAP_KEYS.forEach((key) => {
+        const idMap = {
+          ban1: 'valorant-ban-1',
+          ban2: 'valorant-ban-2',
+          pick1: 'valorant-pick-1',
+          pick2: 'valorant-pick-2',
+          ban3: 'valorant-ban-3',
+          ban4: 'valorant-ban-4',
+          pick3: 'valorant-pick-3'
+        };
+        const selectNode = document.getElementById(idMap[key]);
+        if (!selectNode) return;
+
+        const cleanValue = sanitizeMapName(pendingState.valorantMaps[key]);
+        if (cleanValue && !Array.from(selectNode.options).some((option) => option.value === cleanValue)) {
+          const customOption = document.createElement('option');
+          customOption.value = cleanValue;
+          customOption.textContent = cleanValue;
+          selectNode.appendChild(customOption);
+        }
+        selectNode.value = cleanValue;
+      });
     };
 
     initTabs();
@@ -815,6 +968,7 @@
     installSearchForTeam('team2', { pendingState, syncInputs });
     await initScoreboardControl(pendingState, syncInputs);
     initScoreTickerControl(pendingState, syncInputs);
+    initValorantMapControl(pendingState, syncInputs);
 
     const swapTeams = document.getElementById('swap-teams');
     if (swapTeams) {
@@ -842,6 +996,7 @@
         pendingState.team2.ban = empty.team2.ban;
         pendingState.scoreboard.team1 = { ...empty.scoreboard.team1 };
         pendingState.scoreboard.team2 = { ...empty.scoreboard.team2 };
+        pendingState.valorantMaps = { ...empty.valorantMaps };
         syncInputs();
         writeState(pendingState);
       });
@@ -856,6 +1011,7 @@
       pendingState.team2.ban = next.team2.ban;
       pendingState.scoreboard.team1 = { ...next.scoreboard.team1 };
       pendingState.scoreboard.team2 = { ...next.scoreboard.team2 };
+      pendingState.valorantMaps = { ...next.valorantMaps };
       syncInputs();
     });
   }
@@ -874,6 +1030,10 @@
 
       if (document.querySelector('[data-scoreboard-role]')) {
         renderScoreboardOverlay();
+      }
+
+      if (document.querySelector('[data-valorant-map-overlay]')) {
+        renderValorantMapOverlay();
       }
     }
   }
