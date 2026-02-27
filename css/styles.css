@@ -731,3 +731,189 @@ input[type="number"] {
     padding: 0.45rem 0.4rem;
   }
 }
+
+.valorant-veto-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.valorant-veto-grid .team-column {
+  min-height: 240px;
+}
+
+.valorant-veto-grid .sync-row {
+  margin-top: 0.1rem;
+}
+
+.valorant-veto-overlay {
+  width: min(1860px, 100vw);
+  height: min(1020px, 100vh);
+  padding: 26px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+  border: 1px solid rgba(170, 184, 207, 0.28);
+  border-radius: 6px;
+  background: linear-gradient(145deg, rgba(7, 14, 28, 0.88) 0%, rgba(3, 8, 18, 0.82) 100%);
+}
+
+.valorant-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(45, 63, 92, 0.16) 0%, rgba(6, 13, 30, 0.92) 38%, rgba(10, 16, 31, 0.95) 100%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0 16px, transparent 16px 36px);
+  border: 1px solid rgba(180, 197, 223, 0.52);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 22px rgba(9, 13, 25, 0.55);
+  color: #f2f5f7;
+  transform: translateY(18px);
+  opacity: 0;
+  transition: transform 360ms ease, opacity 360ms ease;
+}
+
+.valorant-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(145deg, transparent 14%, rgba(132, 162, 205, 0.12) 41%, transparent 57%);
+  mix-blend-mode: screen;
+  opacity: 0.2;
+}
+
+.valorant-card.is-visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.valorant-ban-card {
+  border-top: 3px solid #ff2d3d;
+  border-bottom: 3px solid #ff2d3d;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 36px 26px;
+}
+
+.valorant-ban-card::before {
+  content: '';
+  position: absolute;
+  left: -6%;
+  right: -8%;
+  top: 66%;
+  height: 3px;
+  transform: rotate(-42deg);
+  transform-origin: left center;
+  background: #ff2d3d;
+  box-shadow: 0 0 9px rgba(255, 45, 61, 0.9);
+}
+
+.ban-slot {
+  position: relative;
+  z-index: 1;
+  text-transform: uppercase;
+}
+
+.slot-label {
+  margin: 0;
+  color: #ff2d3d;
+  font-size: clamp(1rem, 1.7vw, 2.15rem);
+  font-weight: 800;
+  letter-spacing: 0.07em;
+}
+
+.slot-value {
+  margin: 0.28rem 0 0;
+  color: #f2f5f7;
+  font-size: clamp(1.2rem, 2.05vw, 2.4rem);
+  font-weight: 760;
+  letter-spacing: 0.02em;
+}
+
+.valorant-pick-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 30px 18px;
+}
+
+.valorant-pick-card::before,
+.valorant-pick-card::after {
+  content: '';
+  position: absolute;
+  border-color: #ff2d3d;
+  border-style: solid;
+  opacity: 0.9;
+}
+
+.valorant-pick-card::before {
+  width: 26px;
+  height: 26px;
+  right: -1px;
+  top: -1px;
+  border-width: 4px 4px 0 0;
+}
+
+.valorant-pick-card::after {
+  width: 44px;
+  height: 18px;
+  left: -1px;
+  bottom: -1px;
+  border-width: 0 0 4px 4px;
+}
+
+.pick-label {
+  margin: 0;
+  font-size: clamp(1rem, 1.65vw, 2rem);
+  letter-spacing: 0.08em;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.pick-map {
+  margin: 0;
+  min-height: 1.3em;
+  font-size: clamp(1.2rem, 2.55vw, 3.25rem);
+  font-weight: 820;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1;
+  text-align: center;
+}
+
+.pick-map:not(.is-visible) {
+  opacity: 0;
+}
+
+.pick-number {
+  min-width: 84px;
+  padding: 0.1em 0.5em;
+  background: #ff2d3d;
+  color: #f8fbff;
+  text-align: center;
+  font-size: clamp(1.3rem, 2.35vw, 3.05rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.pick-underline {
+  width: 18%;
+  min-width: 46px;
+  height: 4px;
+  background: #38d39f;
+  box-shadow: 0 0 12px rgba(56, 211, 159, 0.45);
+}
+
+@media (max-width: 1200px) {
+  .valorant-veto-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .valorant-veto-overlay {
+    padding: 14px;
+    gap: 10px;
+  }
+}

@@ -44,6 +44,7 @@ HEROES_JSON = ROOT_DIR / "data" / "heroes.json"
 STATE_CACHE_PATH = ROOT_DIR / "data" / "controller_state_cache.json"
 FONTS_DIR = ROOT_DIR / "assets" / "Fonts"
 FONT_EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
+VALORANT_MAP_OPTIONS = {"Ascent", "Bind", "Breeze", "Fracture", "Haven", "Icebox", "Lotus", "Pearl", "Split", "Sunset", "Abyss"}
 
 
 def _humanize_font_name(path: Path) -> str:
@@ -99,6 +100,13 @@ def _sanitize_name_png_toggle(value: Any) -> bool:
     return bool(value)
 
 
+def _sanitize_valorant_map(value):
+    cleaned = str(value or "").strip()
+    if not cleaned:
+        return ""
+    return cleaned if cleaned in VALORANT_MAP_OPTIONS else ""
+
+
 @dataclass(frozen=True)
 class Hero:
     name: str
@@ -120,6 +128,7 @@ class SharedState:
                 "team1": {"name": "", "nameUsePng": False, "namePng": "", "namePngScale": 0, "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
                 "team2": {"name": "", "nameUsePng": False, "namePng": "", "namePngScale": 0, "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
             },
+            "valorantMapVeto": {"ban1": "", "ban2": "", "pick1": "", "pick2": "", "ban3": "", "ban4": "", "pick3": ""},
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -127,6 +136,7 @@ class SharedState:
     def sanitize(payload: dict[str, Any] | None) -> dict[str, Any]:
         payload = payload or {}
         scoreboard = payload.get("scoreboard", {}) or {}
+        valorant_map_veto = payload.get("valorantMapVeto", {}) or {}
         team1_style = scoreboard.get("team1", {}) or {}
         team2_style = scoreboard.get("team2", {}) or {}
         return {
@@ -158,6 +168,15 @@ class SharedState:
                     "nameFont": str(team2_style.get("nameFont", "varsity") or "varsity"),
                 },
             },
+            "valorantMapVeto": {
+                "ban1": _sanitize_valorant_map(valorant_map_veto.get("ban1", "")),
+                "ban2": _sanitize_valorant_map(valorant_map_veto.get("ban2", "")),
+                "pick1": _sanitize_valorant_map(valorant_map_veto.get("pick1", "")),
+                "pick2": _sanitize_valorant_map(valorant_map_veto.get("pick2", "")),
+                "ban3": _sanitize_valorant_map(valorant_map_veto.get("ban3", "")),
+                "ban4": _sanitize_valorant_map(valorant_map_veto.get("ban4", "")),
+                "pick3": _sanitize_valorant_map(valorant_map_veto.get("pick3", "")),
+            },
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -183,6 +202,7 @@ class SharedState:
                 "team1": {"ban": self._state["team1"]["ban"]},
                 "team2": {"ban": self._state["team2"]["ban"]},
                 "scoreboard": self._state["scoreboard"],
+                "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
                 "updatedAt": self._state["updatedAt"],
             }
 
@@ -194,6 +214,7 @@ class SharedState:
                 "team1": {"ban": self._state["team1"]["ban"]},
                 "team2": {"ban": self._state["team2"]["ban"]},
                 "scoreboard": self._state["scoreboard"],
+                "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
                 "updatedAt": self._state["updatedAt"],
             }
 

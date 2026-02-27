@@ -17,6 +17,7 @@
       <button class="tab-btn is-active" type="button" data-tab-target="hero-bans-tab">Overwatch Bans</button>
       <button class="tab-btn" type="button" data-tab-target="scoreboard-tab">Scoreboard Teams</button>
       <button class="tab-btn" type="button" data-tab-target="score-tab">Score</button>
+      <button class="tab-btn" type="button" data-tab-target="valorant-map-veto-tab">Valorant Map Picks/Bans</button>
     </nav>
 
     <section id="hero-bans-tab" class="tab-panel is-active" aria-label="Overwatch Bans Controller">
@@ -194,6 +195,48 @@
         </section>
       </div>
     </section>
+
+    <section id="valorant-map-veto-tab" class="tab-panel" aria-label="Valorant Map Picks and Bans Controller">
+      <div class="valorant-veto-grid">
+        <section class="team-column" aria-labelledby="valorant-ban-round-1-heading">
+          <h2 id="valorant-ban-round-1-heading">Ban Round 1</h2>
+          <label for="valorant-ban1">Ban 1</label>
+          <select id="valorant-ban1"></select>
+          <label for="valorant-ban2">Ban 2</label>
+          <select id="valorant-ban2"></select>
+        </section>
+
+        <section class="team-column" aria-labelledby="valorant-pick-1-heading">
+          <h2 id="valorant-pick-1-heading">Pick 1</h2>
+          <label for="valorant-pick1">Pick 1</label>
+          <select id="valorant-pick1"></select>
+        </section>
+
+        <section class="team-column" aria-labelledby="valorant-pick-2-heading">
+          <h2 id="valorant-pick-2-heading">Pick 2</h2>
+          <label for="valorant-pick2">Pick 2</label>
+          <select id="valorant-pick2"></select>
+        </section>
+
+        <section class="team-column" aria-labelledby="valorant-ban-round-2-heading">
+          <h2 id="valorant-ban-round-2-heading">Ban Round 2</h2>
+          <label for="valorant-ban3">Ban 3</label>
+          <select id="valorant-ban3"></select>
+          <label for="valorant-ban4">Ban 4</label>
+          <select id="valorant-ban4"></select>
+        </section>
+
+        <section class="team-column" aria-labelledby="valorant-pick-3-heading">
+          <h2 id="valorant-pick-3-heading">Pick 3</h2>
+          <label for="valorant-pick3">Pick 3</label>
+          <select id="valorant-pick3"></select>
+        </section>
+
+        <div class="sync-row" aria-label="Valorant map pick and ban controls">
+          <button id="valorant-reset" class="secondary-btn" type="button">Clear/Reset</button>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="control-footer">
@@ -203,6 +246,7 @@
       Scoreboard overlays use <code>scoreboard-team1-name.html</code>, <code>scoreboard-team2-name.html</code>,
       <code>scoreboard-team1-logo.html</code>, <code>scoreboard-team2-logo.html</code>,
       <code>scoreboard-team1-score.html</code>, and <code>scoreboard-team2-score.html</code>.
+      Valorant map picks/bans overlay uses <code>valorant-map-picks-bans.html</code>.
     </p>
   </footer>
 

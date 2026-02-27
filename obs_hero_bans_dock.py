@@ -32,6 +32,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 FONTS_DIR = os.path.join(SCRIPT_DIR, "assets", "Fonts")
 STATE_CACHE_PATH = os.path.join(SCRIPT_DIR, "data", "controller_state_cache.json")
 FONT_EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
+VALORANT_MAP_OPTIONS = {"Ascent", "Bind", "Breeze", "Fracture", "Haven", "Icebox", "Lotus", "Pearl", "Split", "Sunset", "Abyss"}
 
 
 def _humanize_font_name(file_name):
@@ -105,6 +106,13 @@ def _sanitize_name_png_toggle(value):
     return bool(value)
 
 
+def _sanitize_valorant_map(value):
+    cleaned = str(value or "").strip()
+    if not cleaned:
+        return ""
+    return cleaned if cleaned in VALORANT_MAP_OPTIONS else ""
+
+
 class _BridgeState(object):
     def __init__(self):
         self._lock = threading.Lock()
@@ -120,6 +128,7 @@ class _BridgeState(object):
                 "team1": {"name": "", "nameUsePng": False, "namePng": "", "namePngScale": 0, "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
                 "team2": {"name": "", "nameUsePng": False, "namePng": "", "namePngScale": 0, "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
             },
+            "valorantMapVeto": {"ban1": "", "ban2": "", "pick1": "", "pick2": "", "ban3": "", "ban4": "", "pick3": ""},
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -131,6 +140,7 @@ class _BridgeState(object):
         scoreboard = payload.get("scoreboard", {}) or {}
         sb_team1 = scoreboard.get("team1", {}) or {}
         sb_team2 = scoreboard.get("team2", {}) or {}
+        valorant_map_veto = payload.get("valorantMapVeto", {}) or {}
         return {
             "team1": {"ban": str(team1.get("ban", "") or "")},
             "team2": {"ban": str(team2.get("ban", "") or "")},
@@ -159,6 +169,15 @@ class _BridgeState(object):
                     "bevelColor": str(sb_team2.get("bevelColor", "#7dd3fc") or "#7dd3fc"),
                     "nameFont": str(sb_team2.get("nameFont", "varsity") or "varsity"),
                 },
+            },
+            "valorantMapVeto": {
+                "ban1": _sanitize_valorant_map(valorant_map_veto.get("ban1", "")),
+                "ban2": _sanitize_valorant_map(valorant_map_veto.get("ban2", "")),
+                "pick1": _sanitize_valorant_map(valorant_map_veto.get("pick1", "")),
+                "pick2": _sanitize_valorant_map(valorant_map_veto.get("pick2", "")),
+                "ban3": _sanitize_valorant_map(valorant_map_veto.get("ban3", "")),
+                "ban4": _sanitize_valorant_map(valorant_map_veto.get("ban4", "")),
+                "pick3": _sanitize_valorant_map(valorant_map_veto.get("pick3", "")),
             },
             "updatedAt": int(time.time() * 1000),
         }
@@ -217,6 +236,7 @@ class _BridgeState(object):
                         "nameFont": self._state["scoreboard"]["team2"]["nameFont"],
                     },
                 },
+                "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
                 "updatedAt": self._state["updatedAt"],
             }
 
@@ -253,6 +273,7 @@ class _BridgeState(object):
                         "nameFont": self._state["scoreboard"]["team2"]["nameFont"],
                     },
                 },
+                "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
                 "updatedAt": self._state["updatedAt"],
             }
 
