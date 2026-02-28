@@ -899,8 +899,8 @@
 
     const getAvailableMaps = () => getValorantPoolMaps(pendingState.valorantMapPool);
 
-    const renderOptions = (selectNode, options) => {
-      const previousValue = sanitizeValorantMapSelection(selectNode.value);
+    const renderOptions = (selectNode, options, selectedValue = '') => {
+      const cleanSelectedValue = sanitizeValorantMapSelection(selectedValue);
       selectNode.innerHTML = '';
       const emptyOption = document.createElement('option');
       emptyOption.value = '';
@@ -914,7 +914,7 @@
         selectNode.appendChild(option);
       });
 
-      selectNode.value = options.some((map) => map.uuid === previousValue) ? previousValue : '';
+      selectNode.value = options.some((map) => map.uuid === cleanSelectedValue) ? cleanSelectedValue : '';
     };
 
     const syncMapPoolFromCheckboxes = () => {
@@ -934,9 +934,31 @@
         }
       });
 
+      const seenSelections = new Set();
       VETO_FIELD_IDS.forEach((fieldId) => {
-        renderOptions(fields[fieldId], availableMaps);
-        fields[fieldId].value = sanitizeValorantMapSelection(pendingState.valorantMapVeto[fieldId]);
+        const currentValue = sanitizeValorantMapSelection(pendingState.valorantMapVeto[fieldId]);
+        if (!currentValue) return;
+        if (seenSelections.has(currentValue)) {
+          pendingState.valorantMapVeto[fieldId] = '';
+          return;
+        }
+        seenSelections.add(currentValue);
+      });
+
+      VETO_FIELD_IDS.forEach((fieldId) => {
+        const currentValue = sanitizeValorantMapSelection(pendingState.valorantMapVeto[fieldId]);
+        const selectedInOtherFields = new Set(
+          VETO_FIELD_IDS
+            .filter((otherFieldId) => otherFieldId !== fieldId)
+            .map((otherFieldId) => sanitizeValorantMapSelection(pendingState.valorantMapVeto[otherFieldId]))
+            .filter(Boolean)
+        );
+
+        const optionsForField = availableMaps.filter(
+          (map) => !selectedInOtherFields.has(map.uuid) || map.uuid === currentValue
+        );
+
+        renderOptions(fields[fieldId], optionsForField, currentValue);
       });
     };
 
