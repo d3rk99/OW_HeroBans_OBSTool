@@ -356,6 +356,11 @@
     return ['ban1', 'ban2', 'pick1', 'pick2', 'ban3', 'ban4', 'pick3'].some((key) => Object.prototype.hasOwnProperty.call(veto, key));
   }
 
+  function bridgeHasValorantMapPool(payload) {
+    if (!payload || typeof payload !== 'object') return false;
+    return Array.isArray(payload.valorantMapPool);
+  }
+
   async function readBridgeState() {
     try {
       const response = await fetch(BRIDGE_STATE_URL, { cache: 'no-store' });
@@ -364,7 +369,8 @@
       return {
         state: sanitizeState(payload),
         hasScoreboard: bridgeHasScoreboard(payload),
-        hasValorantMapVeto: bridgeHasValorantMapVeto(payload)
+        hasValorantMapVeto: bridgeHasValorantMapVeto(payload),
+        hasValorantMapPool: bridgeHasValorantMapPool(payload)
       };
     } catch {
       return null;
@@ -383,6 +389,7 @@
       ...bridgeState,
       scoreboard: bridgePayload.hasScoreboard ? bridgeState.scoreboard : localState.scoreboard,
       valorantMapVeto: bridgePayload.hasValorantMapVeto ? bridgeState.valorantMapVeto : localState.valorantMapVeto,
+      valorantMapPool: bridgePayload.hasValorantMapPool ? bridgeState.valorantMapPool : localState.valorantMapPool,
       updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
     });
   }
