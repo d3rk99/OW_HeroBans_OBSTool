@@ -1029,7 +1029,6 @@
     const overlay = document.querySelector('[data-valorant-map-veto-overlay]');
     if (!overlay) return;
 
-    const cards = Array.from(overlay.querySelectorAll('[data-veto-card]'));
     let lastSignature = '';
 
     const pickSlots = ['pick1', 'pick2', 'pick3'];
@@ -1038,12 +1037,12 @@
     const applyBackground = (node, type, imageUrls) => {
       if (!node) return;
       const base = type === 'ban'
-        ? 'linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.90))'
-        : '';
+        ? 'linear-gradient(to bottom, rgba(255, 45, 61, 0.5) 0%, rgba(255, 45, 61, 0) 25%), linear-gradient(to top, rgba(255, 45, 61, 0.5) 0%, rgba(255, 45, 61, 0) 25%), linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.90))'
+        : 'linear-gradient(to bottom, rgba(54, 203, 121, 0.5) 0%, rgba(54, 203, 121, 0) 25%), linear-gradient(to top, rgba(54, 203, 121, 0.5) 0%, rgba(54, 203, 121, 0) 25%)';
 
       if (Array.isArray(imageUrls) && imageUrls.length) {
         const layers = imageUrls.map((url) => `url("${url}")`).join(', ');
-        node.style.backgroundImage = base ? `${base}, ${layers}` : layers;
+        node.style.backgroundImage = `${base}, ${layers}`;
       } else {
         node.style.backgroundImage = '';
       }
@@ -1096,12 +1095,7 @@
     };
 
     setTimeout(() => {
-      overlay.classList.add('is-visible');
-      cards.forEach((card, index) => {
-        setTimeout(() => {
-          card.classList.add('is-visible');
-        }, index * 240);
-      });
+      document.body.classList.add('animate-in');
     }, 500);
 
     applyState();
