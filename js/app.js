@@ -1037,8 +1037,8 @@
     const applyBackground = (node, type, imageUrls) => {
       if (!node) return;
       const base = type === 'ban'
-        ? 'linear-gradient(to top, rgba(255, 45, 61, 0.5) 0%, rgba(255, 45, 61, 0) 25%), linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.90))'
-        : 'linear-gradient(to top, rgba(54, 203, 121, 0.5) 0%, rgba(54, 203, 121, 0) 25%)';
+        ? 'linear-gradient(to bottom, rgba(255, 45, 61, 0.5) 0%, rgba(255, 45, 61, 0) 25%), linear-gradient(to top, rgba(255, 45, 61, 0.5) 0%, rgba(255, 45, 61, 0) 25%), linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.90))'
+        : 'linear-gradient(to bottom, rgba(54, 203, 121, 0.5) 0%, rgba(54, 203, 121, 0) 25%), linear-gradient(to top, rgba(54, 203, 121, 0.5) 0%, rgba(54, 203, 121, 0) 25%)';
 
       if (Array.isArray(imageUrls) && imageUrls.length) {
         const layers = imageUrls.map((url) => `url("${url}")`).join(', ');

@@ -874,7 +874,9 @@ body.animate-in .valorant-card:nth-child(5) {
   text-transform: uppercase;
   padding: 36px 26px;
   background-color: #0b0f16;
-  background-image: linear-gradient(to top, rgba(255, 45, 61, 0.5) 0%, rgba(255, 45, 61, 0) 25%);
+  background-image:
+    linear-gradient(to bottom, rgba(255, 45, 61, 0.5) 0%, rgba(255, 45, 61, 0) 25%),
+    linear-gradient(to top, rgba(255, 45, 61, 0.5) 0%, rgba(255, 45, 61, 0) 25%);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -934,6 +936,7 @@ body.animate-in .valorant-card:nth-child(5) {
   gap: 0.65rem;
   padding: 30px 18px;
   background-image:
+    linear-gradient(to bottom, rgba(54, 203, 121, 0.5) 0%, rgba(54, 203, 121, 0) 25%),
     linear-gradient(to top, rgba(54, 203, 121, 0.5) 0%, rgba(54, 203, 121, 0) 25%),
     linear-gradient(135deg, rgba(45, 63, 92, 0.16) 0%, rgba(6, 13, 30, 0.92) 38%, rgba(10, 16, 31, 0.95) 100%),
     repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0 16px, transparent 16px 36px);
