@@ -746,6 +746,45 @@ input[type="number"] {
   margin-top: 0.1rem;
 }
 
+.valorant-map-pool-column {
+  grid-column: 1 / -1;
+}
+
+.valorant-map-pool {
+  border: 1px solid rgba(169, 187, 215, 0.36);
+  border-radius: 8px;
+  background: rgba(9, 14, 27, 0.7);
+  padding: 0.5rem 0.65rem;
+}
+
+.valorant-map-pool summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #dce8ff;
+}
+
+.valorant-map-pool-list {
+  margin-top: 0.6rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.45rem 0.7rem;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.valorant-map-pool-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #edf3ff;
+  font-size: 0.92rem;
+}
+
+.valorant-map-pool-item input {
+  width: 1rem;
+  height: 1rem;
+}
+
 .valorant-veto-overlay {
   width: min(1860px, 100vw);
   height: min(1020px, 100vh);

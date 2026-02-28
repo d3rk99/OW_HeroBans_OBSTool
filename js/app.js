@@ -20,6 +20,7 @@
   let valorantMaps = [];
   let valorantMapsByUuid = new Map();
   let valorantMapUuidByName = new Map();
+  let refreshValorantMapPoolOptions = null;
 
   const defaultState = () => ({
     team1: { ban: '' },
@@ -37,6 +38,7 @@
       ban4: '',
       pick3: ''
     },
+    valorantMapPool: valorantMaps.map((map) => map.uuid),
     updatedAt: Date.now()
   });
 
@@ -91,6 +93,23 @@
     if (!valorantMapsByUuid.size) return raw;
     if (valorantMapsByUuid.has(raw)) return raw;
     return valorantMapUuidByName.get(raw.toLowerCase()) || '';
+  };
+
+  const sanitizeValorantMapPool = (value) => {
+    const source = Array.isArray(value) ? value : valorantMaps.map((map) => map.uuid);
+    const seen = new Set();
+    return source
+      .map((entry) => sanitizeValorantMapSelection(entry))
+      .filter((uuid) => {
+        if (!uuid || seen.has(uuid)) return false;
+        seen.add(uuid);
+        return true;
+      });
+  };
+
+  const getValorantPoolMaps = (pool) => {
+    const allowed = new Set(sanitizeValorantMapPool(pool));
+    return valorantMaps.filter((map) => allowed.has(map.uuid));
   };
 
   const slugifyFontToken = (value) => sanitizeNameFont(value)
@@ -227,6 +246,7 @@
         ban4: sanitizeValorantMapSelection(payload?.valorantMapVeto?.ban4),
         pick3: sanitizeValorantMapSelection(payload?.valorantMapVeto?.pick3)
       },
+      valorantMapPool: sanitizeValorantMapPool(payload?.valorantMapPool),
       updatedAt: Number(payload?.updatedAt) || Date.now()
     };
   }
@@ -873,26 +893,90 @@
       collection[fieldId] = document.getElementById(`valorant-${fieldId}`);
       return collection;
     }, {});
+    const mapPoolList = document.getElementById('valorant-map-pool-list');
 
     if (VETO_FIELD_IDS.some((fieldId) => !fields[fieldId])) return;
 
-    const renderOptions = (selectNode) => {
+    const getAvailableMaps = () => getValorantPoolMaps(pendingState.valorantMapPool);
+
+    const renderOptions = (selectNode, options) => {
+      const previousValue = sanitizeValorantMapSelection(selectNode.value);
       selectNode.innerHTML = '';
       const emptyOption = document.createElement('option');
       emptyOption.value = '';
       emptyOption.textContent = '—';
       selectNode.appendChild(emptyOption);
 
-      valorantMaps.forEach((map) => {
+      options.forEach((map) => {
         const option = document.createElement('option');
         option.value = map.uuid;
         option.textContent = map.displayName;
         selectNode.appendChild(option);
       });
+
+      selectNode.value = options.some((map) => map.uuid === previousValue) ? previousValue : '';
     };
 
+    const syncMapPoolFromCheckboxes = () => {
+      if (!mapPoolList) return;
+      const checked = Array.from(mapPoolList.querySelectorAll('input[type="checkbox"][data-map-uuid]:checked'));
+      pendingState.valorantMapPool = sanitizeValorantMapPool(checked.map((node) => node.dataset.mapUuid));
+    };
+
+    const rebuildFieldOptions = () => {
+      const availableMaps = getAvailableMaps();
+      const availableUuids = new Set(availableMaps.map((map) => map.uuid));
+
+      VETO_FIELD_IDS.forEach((fieldId) => {
+        const currentValue = sanitizeValorantMapSelection(pendingState.valorantMapVeto[fieldId]);
+        if (currentValue && !availableUuids.has(currentValue)) {
+          pendingState.valorantMapVeto[fieldId] = '';
+        }
+      });
+
+      VETO_FIELD_IDS.forEach((fieldId) => {
+        renderOptions(fields[fieldId], availableMaps);
+        fields[fieldId].value = sanitizeValorantMapSelection(pendingState.valorantMapVeto[fieldId]);
+      });
+    };
+
+    const buildMapPoolList = () => {
+      if (!mapPoolList) return;
+      mapPoolList.innerHTML = '';
+
+      valorantMaps.forEach((map) => {
+        const item = document.createElement('label');
+        item.className = 'valorant-map-pool-item';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.dataset.mapUuid = map.uuid;
+
+        const text = document.createElement('span');
+        text.textContent = map.displayName;
+
+        item.appendChild(checkbox);
+        item.appendChild(text);
+        mapPoolList.appendChild(item);
+      });
+
+      mapPoolList.addEventListener('change', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement) || target.type !== 'checkbox') return;
+        syncMapPoolFromCheckboxes();
+        rebuildFieldOptions();
+        syncInputs();
+        writeState(pendingState);
+      });
+    };
+
+    pendingState.valorantMapPool = sanitizeValorantMapPool(pendingState.valorantMapPool);
+    buildMapPoolList();
+    refreshValorantMapPoolOptions = rebuildFieldOptions;
+    rebuildFieldOptions();
+    syncInputs();
+
     VETO_FIELD_IDS.forEach((fieldId) => {
-      renderOptions(fields[fieldId]);
       fields[fieldId].addEventListener('change', (event) => {
         pendingState.valorantMapVeto[fieldId] = sanitizeValorantMapSelection(event.target.value);
         syncInputs();
@@ -1037,11 +1121,23 @@
         if (fontInput) fontInput.value = sanitizeNameFont(pendingState.scoreboard[teamId].nameFont);
       });
 
+      if (typeof refreshValorantMapPoolOptions === 'function') {
+        refreshValorantMapPoolOptions();
+      }
+
       VETO_FIELD_IDS.forEach((fieldId) => {
         const selectNode = document.getElementById(`valorant-${fieldId}`);
         if (!selectNode) return;
         selectNode.value = sanitizeValorantMapSelection(pendingState.valorantMapVeto[fieldId]);
       });
+
+      const mapPoolList = document.getElementById('valorant-map-pool-list');
+      if (mapPoolList) {
+        const selected = new Set(sanitizeValorantMapPool(pendingState.valorantMapPool));
+        mapPoolList.querySelectorAll('input[type="checkbox"][data-map-uuid]').forEach((checkbox) => {
+          checkbox.checked = selected.has(checkbox.dataset.mapUuid || '');
+        });
+      }
     };
 
     initTabs();
@@ -1103,6 +1199,7 @@
           pendingState.scoreboard.team2.score = empty.scoreboard.team2.score;
         } else if (activeTabId === 'valorant-map-veto-tab') {
           pendingState.valorantMapVeto = { ...empty.valorantMapVeto };
+          pendingState.valorantMapPool = [...empty.valorantMapPool];
         }
 
         syncInputs();
@@ -1120,6 +1217,7 @@
       pendingState.scoreboard.team1 = { ...next.scoreboard.team1 };
       pendingState.scoreboard.team2 = { ...next.scoreboard.team2 };
       pendingState.valorantMapVeto = { ...next.valorantMapVeto };
+      pendingState.valorantMapPool = [...sanitizeValorantMapPool(next.valorantMapPool)];
       syncInputs();
     });
   }
