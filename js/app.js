@@ -1096,10 +1096,11 @@
     };
 
     setTimeout(() => {
+      overlay.classList.add('is-visible');
       cards.forEach((card, index) => {
         setTimeout(() => {
           card.classList.add('is-visible');
-        }, index * 120);
+        }, index * 240);
       });
     }, 500);
 
