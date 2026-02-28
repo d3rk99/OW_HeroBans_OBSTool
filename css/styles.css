@@ -795,6 +795,12 @@ input[type="number"] {
   border: 1px solid rgba(170, 184, 207, 0.00);
   border-radius: 6px;
   background: linear-gradient(145deg, rgba(7, 14, 28, 0.00) 0%, rgba(3, 8, 18, 0.00) 100%);
+  opacity: 0;
+  transition: opacity 720ms ease;
+}
+
+.valorant-veto-overlay.is-visible {
+  opacity: 1;
 }
 
 .valorant-card {
@@ -809,7 +815,7 @@ input[type="number"] {
   color: #f2f5f7;
   transform: translateY(18px);
   opacity: 0;
-  transition: transform 360ms ease, opacity 360ms ease;
+  transition: transform 720ms ease, opacity 720ms ease;
 }
 
 .valorant-card::after {
