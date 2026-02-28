@@ -832,7 +832,7 @@ input[type="number"] {
   right: -2%;
   top: var(--ban-split-left);
   height: 3px;
-  transform: rotate(-32.5deg);
+  transform: rotate(-31deg);
   transform-origin: left center;
   background: #ff2d3d;
   box-shadow: 0 0 9px rgba(255, 45, 61, 0.9);
