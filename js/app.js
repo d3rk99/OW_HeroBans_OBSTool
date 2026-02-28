@@ -926,11 +926,11 @@
       if (!node) return;
       const base = type === 'ban'
         ? 'linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.90))'
-        : 'linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.85))';
+        : '';
 
       if (Array.isArray(imageUrls) && imageUrls.length) {
         const layers = imageUrls.map((url) => `url("${url}")`).join(', ');
-        node.style.backgroundImage = `${base}, ${layers}`;
+        node.style.backgroundImage = base ? `${base}, ${layers}` : layers;
       } else {
         node.style.backgroundImage = '';
       }
