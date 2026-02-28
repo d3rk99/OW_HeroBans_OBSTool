@@ -1029,7 +1029,6 @@
     const overlay = document.querySelector('[data-valorant-map-veto-overlay]');
     if (!overlay) return;
 
-    const cards = Array.from(overlay.querySelectorAll('[data-veto-card]'));
     let lastSignature = '';
 
     const pickSlots = ['pick1', 'pick2', 'pick3'];
@@ -1096,12 +1095,7 @@
     };
 
     setTimeout(() => {
-      overlay.classList.add('is-visible');
-      cards.forEach((card, index) => {
-        setTimeout(() => {
-          card.classList.add('is-visible');
-        }, index * 240);
-      });
+      document.body.classList.add('animate-in');
     }, 500);
 
     applyState();
