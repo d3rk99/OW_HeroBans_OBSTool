@@ -45,8 +45,9 @@ HEROES_JSON = ROOT_DIR / "data" / "heroes.json"
 STATE_CACHE_PATH = ROOT_DIR / "data" / "controller_state_cache.json"
 FONTS_DIR = ROOT_DIR / "assets" / "Fonts"
 FONT_EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
-VALORANT_MAP_OPTIONS = {"Ascent", "Bind", "Breeze", "Fracture", "Haven", "Icebox", "Lotus", "Pearl", "Split", "Sunset", "Abyss"}
+VALORANT_MAP_OPTIONS = {"Ascent", "Bind", "Breeze", "Fracture", "Haven", "Icebox", "Lotus", "Pearl", "Split", "Sunset", "Abyss", "Corrode"}
 VALORANT_MAP_UUID_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+VALORANT_MAP_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 
 def _humanize_font_name(path: Path) -> str:
@@ -109,6 +110,8 @@ def _sanitize_valorant_map(value):
     if cleaned in VALORANT_MAP_OPTIONS:
         return cleaned
     if VALORANT_MAP_UUID_RE.match(cleaned):
+        return cleaned.lower()
+    if VALORANT_MAP_ID_RE.match(cleaned.lower()):
         return cleaned.lower()
     return ""
 
