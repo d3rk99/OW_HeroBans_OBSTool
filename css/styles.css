@@ -978,11 +978,11 @@ body.animate-in .valorant-card:nth-child(5) {
 }
 
 .pick-team-slot--defenders {
-  margin-bottom: 0.7rem;
+  margin-bottom: 1.35rem;
 }
 
 .pick-team-slot--attackers {
-  margin-top: 0.7rem;
+  margin-top: 1.35rem;
 }
 
 .pick-team-label {
