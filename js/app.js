@@ -38,6 +38,11 @@
       ban4: '',
       pick3: ''
     },
+    valorantPickSides: {
+      pick1: { defenders: 'team1', attackers: 'team2' },
+      pick2: { defenders: 'team1', attackers: 'team2' },
+      pick3: { defenders: 'team1', attackers: 'team2' }
+    },
     valorantMapPool: valorantMaps.map((map) => map.uuid),
     updatedAt: Date.now()
   });
@@ -107,6 +112,16 @@
       });
   };
 
+
+  const sanitizeValorantPickTeam = (value) => (String(value || '').trim() === 'team2' ? 'team2' : 'team1');
+
+  const sanitizeValorantPickSides = (value) => {
+    const base = { defenders: 'team1', attackers: 'team2' };
+    const defenders = sanitizeValorantPickTeam(value?.defenders || base.defenders);
+    let attackers = sanitizeValorantPickTeam(value?.attackers || base.attackers);
+    if (attackers === defenders) attackers = defenders === 'team1' ? 'team2' : 'team1';
+    return { defenders, attackers };
+  };
   const getValorantPoolMaps = (pool) => {
     const allowed = new Set(sanitizeValorantMapPool(pool));
     return valorantMaps.filter((map) => allowed.has(map.uuid));
@@ -247,6 +262,11 @@
         pick3: sanitizeValorantMapSelection(payload?.valorantMapVeto?.pick3)
       },
       valorantMapPool: sanitizeValorantMapPool(payload?.valorantMapPool),
+      valorantPickSides: {
+        pick1: sanitizeValorantPickSides(payload?.valorantPickSides?.pick1),
+        pick2: sanitizeValorantPickSides(payload?.valorantPickSides?.pick2),
+        pick3: sanitizeValorantPickSides(payload?.valorantPickSides?.pick3)
+      },
       updatedAt: Number(payload?.updatedAt) || Date.now()
     };
   }
@@ -361,6 +381,13 @@
     return Array.isArray(payload.valorantMapPool);
   }
 
+  function bridgeHasValorantPickSides(payload) {
+    if (!payload || typeof payload !== 'object') return false;
+    const sides = payload.valorantPickSides;
+    if (!sides || typeof sides !== 'object') return false;
+    return ['pick1', 'pick2', 'pick3'].some((key) => Object.prototype.hasOwnProperty.call(sides, key));
+  }
+
   async function readBridgeState() {
     try {
       const response = await fetch(BRIDGE_STATE_URL, { cache: 'no-store' });
@@ -370,7 +397,8 @@
         state: sanitizeState(payload),
         hasScoreboard: bridgeHasScoreboard(payload),
         hasValorantMapVeto: bridgeHasValorantMapVeto(payload),
-        hasValorantMapPool: bridgeHasValorantMapPool(payload)
+        hasValorantMapPool: bridgeHasValorantMapPool(payload),
+        hasValorantPickSides: bridgeHasValorantPickSides(payload)
       };
     } catch {
       return null;
@@ -390,6 +418,7 @@
       scoreboard: bridgePayload.hasScoreboard ? bridgeState.scoreboard : localState.scoreboard,
       valorantMapVeto: bridgePayload.hasValorantMapVeto ? bridgeState.valorantMapVeto : localState.valorantMapVeto,
       valorantMapPool: bridgePayload.hasValorantMapPool ? bridgeState.valorantMapPool : localState.valorantMapPool,
+      valorantPickSides: bridgePayload.hasValorantPickSides ? bridgeState.valorantPickSides : localState.valorantPickSides,
       updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
     });
   }
@@ -900,6 +929,20 @@
       collection[fieldId] = document.getElementById(`valorant-${fieldId}`);
       return collection;
     }, {});
+    const sideFields = {
+      pick1: {
+        defenders: document.getElementById('valorant-pick1-defenders'),
+        attackers: document.getElementById('valorant-pick1-attackers')
+      },
+      pick2: {
+        defenders: document.getElementById('valorant-pick2-defenders'),
+        attackers: document.getElementById('valorant-pick2-attackers')
+      },
+      pick3: {
+        defenders: document.getElementById('valorant-pick3-defenders'),
+        attackers: document.getElementById('valorant-pick3-attackers')
+      }
+    };
     const mapPoolList = document.getElementById('valorant-map-pool-list');
 
     if (VETO_FIELD_IDS.some((fieldId) => !fields[fieldId])) return;
@@ -1000,6 +1043,12 @@
     };
 
     pendingState.valorantMapPool = sanitizeValorantMapPool(pendingState.valorantMapPool);
+    pendingState.valorantPickSides = {
+      pick1: sanitizeValorantPickSides(pendingState?.valorantPickSides?.pick1),
+      pick2: sanitizeValorantPickSides(pendingState?.valorantPickSides?.pick2),
+      pick3: sanitizeValorantPickSides(pendingState?.valorantPickSides?.pick3)
+    };
+
     buildMapPoolList();
     refreshValorantMapPoolOptions = rebuildFieldOptions;
     rebuildFieldOptions();
@@ -1013,12 +1062,38 @@
       });
     });
 
+    ['pick1', 'pick2', 'pick3'].forEach((pickId) => {
+      const sideControl = sideFields[pickId];
+      if (!sideControl?.defenders || !sideControl?.attackers) return;
+
+      sideControl.defenders.addEventListener('change', (event) => {
+        const defenders = sanitizeValorantPickTeam(event.target.value);
+        const attackers = defenders === 'team1' ? 'team2' : 'team1';
+        pendingState.valorantPickSides[pickId] = { defenders, attackers };
+        syncInputs();
+        writeState(pendingState);
+      });
+
+      sideControl.attackers.addEventListener('change', (event) => {
+        const attackers = sanitizeValorantPickTeam(event.target.value);
+        const defenders = attackers === 'team1' ? 'team2' : 'team1';
+        pendingState.valorantPickSides[pickId] = { defenders, attackers };
+        syncInputs();
+        writeState(pendingState);
+      });
+    });
+
     const clearButton = document.getElementById('valorant-reset');
     if (clearButton) {
       clearButton.addEventListener('click', () => {
         VETO_FIELD_IDS.forEach((fieldId) => {
           pendingState.valorantMapVeto[fieldId] = '';
         });
+        pendingState.valorantPickSides = {
+          pick1: { defenders: 'team1', attackers: 'team2' },
+          pick2: { defenders: 'team1', attackers: 'team2' },
+          pick3: { defenders: 'team1', attackers: 'team2' }
+        };
         syncInputs();
         writeState(pendingState);
       });
@@ -1033,6 +1108,13 @@
 
     const pickSlots = ['pick1', 'pick2', 'pick3'];
     const banSlots = ['ban1', 'ban2', 'ban3', 'ban4'];
+
+    const setTeamLogo = (node, logoPath) => {
+      if (!node) return;
+      const hasLogo = Boolean((logoPath || '').trim());
+      node.classList.toggle('is-empty', !hasLogo);
+      node.style.backgroundImage = hasLogo ? `url("${logoPath}")` : 'none';
+    };
 
     const applyBackground = (node, type, imageUrls) => {
       if (!node) return;
@@ -1068,10 +1150,17 @@
         const card = node?.closest('.valorant-pick-card');
         const map = getValorantMapByUuid(state.valorantMapVeto[fieldId]);
         const displayName = map?.displayName || '';
+        const sideState = sanitizeValorantPickSides(state?.valorantPickSides?.[fieldId]);
         if (node) {
           node.textContent = displayName;
           node.classList.toggle('is-visible', Boolean(displayName));
         }
+        const defendersNode = overlay.querySelector(`[data-pick-team-logo='${fieldId}-defenders']`);
+        const attackersNode = overlay.querySelector(`[data-pick-team-logo='${fieldId}-attackers']`);
+        const defendersLogo = state?.scoreboard?.[sideState.defenders]?.logo || '';
+        const attackersLogo = state?.scoreboard?.[sideState.attackers]?.logo || '';
+        setTeamLogo(defendersNode, defendersLogo);
+        setTeamLogo(attackersNode, attackersLogo);
         const imageUrls = getValorantMapImages(map);
         applyBackground(card, 'pick', imageUrls);
       });
@@ -1087,7 +1176,8 @@
     const applyState = async () => {
       const state = await readSharedState();
       const vetoState = state?.valorantMapVeto || defaultState().valorantMapVeto;
-      const signature = `${vetoState.ban1}|${vetoState.ban2}|${vetoState.pick1}|${vetoState.pick2}|${vetoState.ban3}|${vetoState.ban4}|${vetoState.pick3}|${state.updatedAt}`;
+      const sideState = state?.valorantPickSides || {};
+      const signature = `${vetoState.ban1}|${vetoState.ban2}|${vetoState.pick1}|${vetoState.pick2}|${vetoState.ban3}|${vetoState.ban4}|${vetoState.pick3}|${JSON.stringify(sideState)}|${state?.scoreboard?.team1?.logo || ''}|${state?.scoreboard?.team2?.logo || ''}|${state.updatedAt}`;
       if (signature === lastSignature) return;
       lastSignature = signature;
       preloadSelected(vetoState);
@@ -1153,6 +1243,14 @@
         const selectNode = document.getElementById(`valorant-${fieldId}`);
         if (!selectNode) return;
         selectNode.value = sanitizeValorantMapSelection(pendingState.valorantMapVeto[fieldId]);
+      });
+
+      ['pick1', 'pick2', 'pick3'].forEach((pickId) => {
+        const sideState = sanitizeValorantPickSides(pendingState?.valorantPickSides?.[pickId]);
+        const defendersNode = document.getElementById(`valorant-${pickId}-defenders`);
+        const attackersNode = document.getElementById(`valorant-${pickId}-attackers`);
+        if (defendersNode) defendersNode.value = sideState.defenders;
+        if (attackersNode) attackersNode.value = sideState.attackers;
       });
 
       const mapPoolList = document.getElementById('valorant-map-pool-list');
@@ -1224,6 +1322,11 @@
         } else if (activeTabId === 'valorant-map-veto-tab') {
           pendingState.valorantMapVeto = { ...empty.valorantMapVeto };
           pendingState.valorantMapPool = [...empty.valorantMapPool];
+          pendingState.valorantPickSides = {
+            pick1: { ...empty.valorantPickSides.pick1 },
+            pick2: { ...empty.valorantPickSides.pick2 },
+            pick3: { ...empty.valorantPickSides.pick3 }
+          };
         }
 
         syncInputs();
@@ -1242,6 +1345,11 @@
       pendingState.scoreboard.team2 = { ...next.scoreboard.team2 };
       pendingState.valorantMapVeto = { ...next.valorantMapVeto };
       pendingState.valorantMapPool = [...sanitizeValorantMapPool(next.valorantMapPool)];
+      pendingState.valorantPickSides = {
+        pick1: sanitizeValorantPickSides(next?.valorantPickSides?.pick1),
+        pick2: sanitizeValorantPickSides(next?.valorantPickSides?.pick2),
+        pick3: sanitizeValorantPickSides(next?.valorantPickSides?.pick3)
+      };
       syncInputs();
     });
   }

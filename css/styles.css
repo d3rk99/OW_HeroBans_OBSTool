@@ -933,8 +933,8 @@ body.animate-in .valorant-card:nth-child(5) {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 0.65rem;
-  padding: 30px 18px;
+  gap: 0.5rem;
+  padding: 20px 18px;
   background-image:
     linear-gradient(to bottom, rgba(54, 203, 121, 0.5) 0%, rgba(54, 203, 121, 0) 25%),
     linear-gradient(to top, rgba(54, 203, 121, 0.5) 0%, rgba(54, 203, 121, 0) 25%),
@@ -965,6 +965,49 @@ body.animate-in .valorant-card:nth-child(5) {
   left: -1px;
   bottom: -1px;
   border-width: 0 0 4px 4px;
+}
+
+
+.pick-team-slot {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  z-index: 1;
+}
+
+.pick-team-slot--defenders {
+  margin-bottom: 0.25rem;
+}
+
+.pick-team-slot--attackers {
+  margin-top: 0.25rem;
+}
+
+.pick-team-label {
+  margin: 0;
+  font-size: clamp(0.8rem, 1vw, 1.35rem);
+  letter-spacing: 0.05em;
+  font-weight: 760;
+  text-transform: uppercase;
+  -webkit-text-stroke: 5px #000;
+  paint-order: stroke fill;
+}
+
+.pick-team-logo {
+  width: clamp(66px, 7.2vw, 128px);
+  aspect-ratio: 1 / 1;
+  border: 3px solid rgba(235, 242, 255, 0.95);
+  background-color: rgba(8, 16, 32, 0.82);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.pick-team-logo.is-empty {
+  border-color: rgba(235, 242, 255, 0.55);
+  background-image: none;
 }
 
 .pick-label {
