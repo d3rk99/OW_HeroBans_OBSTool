@@ -1066,20 +1066,23 @@
       const sideControl = sideFields[pickId];
       if (!sideControl?.defenders || !sideControl?.attackers) return;
 
-      sideControl.defenders.addEventListener('change', (event) => {
-        const defenders = sanitizeValorantPickTeam(event.target.value);
-        const attackers = defenders === 'team1' ? 'team2' : 'team1';
-        pendingState.valorantPickSides[pickId] = { defenders, attackers };
+      const persistSides = (sideKey, value) => {
+        const cleanTeam = sanitizeValorantPickTeam(value);
+        const nextSides = sideKey === 'defenders'
+          ? { defenders: cleanTeam, attackers: cleanTeam === 'team1' ? 'team2' : 'team1' }
+          : { attackers: cleanTeam, defenders: cleanTeam === 'team1' ? 'team2' : 'team1' };
+        pendingState.valorantPickSides[pickId] = nextSides;
         syncInputs();
         writeState(pendingState);
-      });
+      };
 
-      sideControl.attackers.addEventListener('change', (event) => {
-        const attackers = sanitizeValorantPickTeam(event.target.value);
-        const defenders = attackers === 'team1' ? 'team2' : 'team1';
-        pendingState.valorantPickSides[pickId] = { defenders, attackers };
-        syncInputs();
-        writeState(pendingState);
+      ['change', 'input'].forEach((eventName) => {
+        sideControl.defenders.addEventListener(eventName, (event) => {
+          persistSides('defenders', event.target.value);
+        });
+        sideControl.attackers.addEventListener(eventName, (event) => {
+          persistSides('attackers', event.target.value);
+        });
       });
     });
 
