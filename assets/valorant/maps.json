@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-27T00:00:00.000Z",
+  "updatedAt": "2026-03-05T00:00:00.000Z",
   "maps": [
     {
       "uuid": "224b0a95-48b9-f703-1bd8-67faca101b8e",
@@ -32,6 +32,14 @@
       "listViewIcon": "https://media.valorant-api.com/maps/2fe4ed3a-450a-948b-6d6b-e89a78e680a9/listviewicon.png",
       "splash": "https://media.valorant-api.com/maps/2fe4ed3a-450a-948b-6d6b-e89a78e680a9/splash.png",
       "displayIcon": "https://media.valorant-api.com/maps/2fe4ed3a-450a-948b-6d6b-e89a78e680a9/displayicon.png"
+    },
+    {
+      "uuid": "corrode",
+      "displayName": "Corrode",
+      "imageAsset": "./assets/valorant/maps/Corrode.png",
+      "listViewIcon": null,
+      "splash": null,
+      "displayIcon": null
     },
     {
       "uuid": "b529448b-4d60-346e-e89e-00a4c527a405",
