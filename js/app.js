@@ -979,8 +979,17 @@
     ['pick1', 'pick2', 'pick3'].forEach((pickId) => {
       const team1Label = document.getElementById(`valorant-${pickId}-team1-score-label`);
       const team2Label = document.getElementById(`valorant-${pickId}-team2-score-label`);
+      const winnerSelect = document.getElementById(`valorant-${pickId}-winner`);
+
       if (team1Label) team1Label.textContent = `${leftName} Score`;
       if (team2Label) team2Label.textContent = `${rightName} Score`;
+
+      if (winnerSelect) {
+        const team1Option = winnerSelect.querySelector("option[value='team1']");
+        const team2Option = winnerSelect.querySelector("option[value='team2']");
+        if (team1Option) team1Option.textContent = leftName;
+        if (team2Option) team2Option.textContent = rightName;
+      }
     });
   }
 
