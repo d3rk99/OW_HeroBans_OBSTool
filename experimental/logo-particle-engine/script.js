@@ -9,6 +9,7 @@ const speedInput = document.getElementById('speed');
 const depthInput = document.getElementById('depth');
 const startAngleInput = document.getElementById('startAngle');
 const team1ResetToggle = document.getElementById('team1ResetToggle');
+const holdTimeInput = document.getElementById('holdTime');
 const startSequenceButton = document.getElementById('startSequence');
 const burstButton = document.getElementById('burst');
 const resetButton = document.getElementById('reset');
@@ -295,6 +296,15 @@ function nextLoadedLogoIndex(fromIndex) {
   return fromIndex;
 }
 
+function getHoldTimeMs() {
+  const secs = Number(holdTimeInput.value);
+  const safeSecs = Number.isFinite(secs) ? Math.min(15, Math.max(2, secs)) : 6;
+  if (String(safeSecs) !== holdTimeInput.value) {
+    holdTimeInput.value = String(safeSecs);
+  }
+  return safeSecs * 1000;
+}
+
 function startSequence() {
   if (sequenceTimer) clearInterval(sequenceTimer);
 
@@ -302,7 +312,7 @@ function startSequence() {
   sequenceTimer = setInterval(() => {
     const nextIndex = nextLoadedLogoIndex(activeLogoIndex);
     showLogo(nextIndex);
-  }, 6000);
+  }, getHoldTimeMs());
 }
 
 async function loadDefaultLogos() {
@@ -376,6 +386,10 @@ depthInput.addEventListener('input', () => {
 
 startAngleInput.addEventListener('input', () => {
   getLogo1StartRotation();
+});
+
+holdTimeInput.addEventListener('input', () => {
+  startSequence();
 });
 
 startSequenceButton.addEventListener('click', startSequence);
