@@ -990,6 +990,15 @@
         if (team1Option) team1Option.textContent = leftName;
         if (team2Option) team2Option.textContent = rightName;
       }
+
+      ['defenders', 'attackers'].forEach((side) => {
+        const sideSelect = document.getElementById(`valorant-${pickId}-${side}`);
+        if (!sideSelect) return;
+        const team1Option = sideSelect.querySelector("option[value='team1']");
+        const team2Option = sideSelect.querySelector("option[value='team2']");
+        if (team1Option) team1Option.textContent = leftName;
+        if (team2Option) team2Option.textContent = rightName;
+      });
     });
   }
 
