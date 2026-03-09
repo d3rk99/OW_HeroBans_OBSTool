@@ -19,6 +19,7 @@ Then open:
 - Particles form **Team 1 logo**, then transition into **Team 2 logo** after your configured hold time.
 - The sequence continuously loops.
 - Once particles settle into a logo, they slowly rotate with perspective for a 3D-style look.
+- Burst/reform now uses a softer, more graceful transition with smoothed color blending between logo states.
 - Team 1 can either restart at your selected start angle (0–359°) or continue rotation, based on the reset toggle; Team 2 continues from the current rotation.
 - Uploading a new image for either team updates that logo on the fly.
 

@@ -43,6 +43,22 @@ function getLogo1StartRotation() {
   return (normalized * Math.PI) / 180;
 }
 
+function parseRgba(color) {
+  const m = color.match(/rgba?\(([^)]+)\)/);
+  if (!m) return { r: 116, g: 244, b: 255, a: 0.9 };
+  const parts = m[1].split(',').map((v) => Number(v.trim()));
+  return {
+    r: parts[0] ?? 116,
+    g: parts[1] ?? 244,
+    b: parts[2] ?? 255,
+    a: parts[3] ?? 0.9
+  };
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
 class Particle {
   constructor(mx, my, mz) {
     this.mx = mx;
@@ -57,14 +73,15 @@ class Particle {
     this.targetX = mx;
     this.targetY = my;
     this.targetZ = mz;
-    this.color = 'rgba(116, 244, 255, 0.9)';
+    this.color = { r: 116, g: 244, b: 255, a: 0.9 };
+    this.targetColor = { r: 116, g: 244, b: 255, a: 0.9 };
   }
 
   retarget(target) {
     this.targetX = target.x;
     this.targetY = target.y;
     this.targetZ = target.z;
-    this.color = target.color;
+    this.targetColor = parseRgba(target.color);
   }
 
   update(dt) {
@@ -73,17 +90,26 @@ class Particle {
     const dy = this.targetY - this.my;
     const dz = this.targetZ - this.mz;
 
-    this.vx += dx * settle * 0.08;
-    this.vy += dy * settle * 0.08;
-    this.vz += dz * settle * 0.08;
+    const spring = 0.06;
+    const damping = 0.9;
 
-    this.vx *= 0.86;
-    this.vy *= 0.86;
-    this.vz *= 0.86;
+    this.vx += dx * settle * spring;
+    this.vy += dy * settle * spring;
+    this.vz += dz * settle * spring;
+
+    this.vx *= damping;
+    this.vy *= damping;
+    this.vz *= damping;
 
     this.mx += this.vx;
     this.my += this.vy;
     this.mz += this.vz;
+
+    const colorLerp = Math.min(0.18, 0.03 + settle * 0.04);
+    this.color.r = lerp(this.color.r, this.targetColor.r, colorLerp);
+    this.color.g = lerp(this.color.g, this.targetColor.g, colorLerp);
+    this.color.b = lerp(this.color.b, this.targetColor.b, colorLerp);
+    this.color.a = lerp(this.color.a, this.targetColor.a, colorLerp);
 
     this.baseSize = Number(sizeInput.value);
   }
@@ -123,7 +149,7 @@ class Particle {
     const radius = Math.max(0.5, this.baseSize * p.perspective);
 
     ctx.beginPath();
-    ctx.fillStyle = this.color;
+    ctx.fillStyle = `rgba(${Math.round(this.color.r)}, ${Math.round(this.color.g)}, ${Math.round(this.color.b)}, ${this.color.a.toFixed(3)})`;
     ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
     ctx.fill();
   }
@@ -205,9 +231,14 @@ function syncParticlesToTargets() {
 function burst() {
   settleBlend = 0;
   particles.forEach((p) => {
-    p.vx += (Math.random() - 0.5) * 90;
-    p.vy += (Math.random() - 0.5) * 90;
-    p.vz += (Math.random() - 0.5) * 90;
+    const outward = 18;
+    const swirl = 10;
+    const radialX = p.targetX * 0.012;
+    const radialY = p.targetY * 0.012;
+
+    p.vx += radialX + (Math.random() - 0.5) * outward + (Math.random() - 0.5) * swirl;
+    p.vy += radialY + (Math.random() - 0.5) * outward + (Math.random() - 0.5) * swirl;
+    p.vz += (Math.random() - 0.5) * 12;
   });
 }
 
