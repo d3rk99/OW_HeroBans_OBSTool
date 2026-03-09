@@ -10,6 +10,7 @@ const depthInput = document.getElementById('depth');
 const startAngleInput = document.getElementById('startAngle');
 const team1ResetToggle = document.getElementById('team1ResetToggle');
 const holdTimeInput = document.getElementById('holdTime');
+const burstForceInput = document.getElementById('burstForce');
 const startSequenceButton = document.getElementById('startSequence');
 const burstButton = document.getElementById('burst');
 const resetButton = document.getElementById('reset');
@@ -228,17 +229,27 @@ function syncParticlesToTargets() {
   });
 }
 
+function getBurstForce() {
+  const raw = Number(burstForceInput.value);
+  const force = Number.isFinite(raw) ? Math.min(2, Math.max(0, raw)) : 1;
+  if (String(force) !== burstForceInput.value) {
+    burstForceInput.value = String(force);
+  }
+  return force;
+}
+
 function burst() {
   settleBlend = 0;
+  const force = getBurstForce();
   particles.forEach((p) => {
-    const outward = 18;
-    const swirl = 10;
-    const radialX = p.targetX * 0.012;
-    const radialY = p.targetY * 0.012;
+    const outward = 18 * force;
+    const swirl = 10 * force;
+    const radialX = p.targetX * 0.012 * force;
+    const radialY = p.targetY * 0.012 * force;
 
     p.vx += radialX + (Math.random() - 0.5) * outward + (Math.random() - 0.5) * swirl;
     p.vy += radialY + (Math.random() - 0.5) * outward + (Math.random() - 0.5) * swirl;
-    p.vz += (Math.random() - 0.5) * 12;
+    p.vz += (Math.random() - 0.5) * 12 * force;
   });
 }
 

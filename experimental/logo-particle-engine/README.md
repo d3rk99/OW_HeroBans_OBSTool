@@ -33,6 +33,7 @@ Then open:
 - **Team 1 Start Angle (°):** sets the reset angle for Team 1 (0–359).
 - **Team 1 Reset Mode:** toggle whether Team 1 resets to the selected angle or keeps continuous rotation.
 - **Logo Hold Time (seconds):** controls how long each logo remains before switching (live-adjustable).
+- **Burst Force:** controls how strong the burst impulse is (0 = minimal movement, 2 = strong).
 - **Start Sequence:** force-restart the timed logo cycle.
 - **Burst + Reform:** explodes particles, then they return to target.
 - **Load Defaults:** restores the built-in default team marks.
