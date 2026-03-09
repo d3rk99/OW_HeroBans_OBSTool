@@ -1,10 +1,12 @@
 const canvas = document.getElementById('scene');
 const ctx = canvas.getContext('2d');
 
-const logoInput = document.getElementById('logoInput');
+const team1Input = document.getElementById('team1Input');
+const team2Input = document.getElementById('team2Input');
 const densityInput = document.getElementById('density');
 const sizeInput = document.getElementById('size');
 const speedInput = document.getElementById('speed');
+const startSequenceButton = document.getElementById('startSequence');
 const burstButton = document.getElementById('burst');
 const resetButton = document.getElementById('reset');
 
@@ -14,7 +16,9 @@ const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
 const particles = [];
 let targets = [];
 let glowTick = 0;
-let currentImage = null;
+let logos = [null, null];
+let activeLogoIndex = 0;
+let sequenceTimer = null;
 
 class Particle {
   constructor(x, y) {
@@ -174,8 +178,35 @@ function loadImageFromUrl(url) {
   });
 }
 
-async function loadDefault() {
-  const fallbackSVG = encodeURIComponent(`
+function showLogo(index) {
+  const image = logos[index];
+  if (!image) return;
+
+  activeLogoIndex = index;
+  makeTargetsFromImage(image);
+  burst();
+}
+
+function nextLoadedLogoIndex(fromIndex) {
+  for (let i = 1; i <= logos.length; i += 1) {
+    const idx = (fromIndex + i) % logos.length;
+    if (logos[idx]) return idx;
+  }
+  return fromIndex;
+}
+
+function startSequence() {
+  if (sequenceTimer) clearInterval(sequenceTimer);
+
+  showLogo(activeLogoIndex);
+  sequenceTimer = setInterval(() => {
+    const nextIndex = nextLoadedLogoIndex(activeLogoIndex);
+    showLogo(nextIndex);
+  }, 3000);
+}
+
+async function loadDefaultLogos() {
+  const fallbackSVG1 = encodeURIComponent(`
     <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 240'>
       <defs>
         <linearGradient id='g' x1='0' x2='1'>
@@ -190,31 +221,54 @@ async function loadDefault() {
     </svg>
   `);
 
-  currentImage = await loadImageFromUrl(`data:image/svg+xml;charset=utf-8,${fallbackSVG}`);
-  makeTargetsFromImage(currentImage);
+  const fallbackSVG2 = encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 240'>
+      <defs>
+        <linearGradient id='g2' x1='0' x2='1'>
+          <stop offset='0%' stop-color='#ff9a5f' />
+          <stop offset='100%' stop-color='#ff4f86' />
+        </linearGradient>
+      </defs>
+      <rect width='100%' height='100%' fill='black' fill-opacity='0'/>
+      <polygon points='120,35 205,205 35,205' fill='url(#g2)' />
+      <path d='M240 66h170l-40 110H200z' fill='url(#g2)' opacity='0.95'/>
+      <circle cx='308' cy='122' r='24' fill='white' fill-opacity='0.85'/>
+    </svg>
+  `);
+
+  logos[0] = await loadImageFromUrl(`data:image/svg+xml;charset=utf-8,${fallbackSVG1}`);
+  logos[1] = await loadImageFromUrl(`data:image/svg+xml;charset=utf-8,${fallbackSVG2}`);
+
+  activeLogoIndex = 0;
+  startSequence();
 }
 
-logoInput.addEventListener('change', async (event) => {
-  const file = event.target.files[0];
+async function handleUpload(file, index) {
   if (!file) return;
 
   const objectUrl = URL.createObjectURL(file);
   try {
-    currentImage = await loadImageFromUrl(objectUrl);
-    makeTargetsFromImage(currentImage);
-    burst();
+    logos[index] = await loadImageFromUrl(objectUrl);
+    showLogo(index);
+    startSequence();
   } catch {
     alert('Unable to load this image. Try a PNG or JPG file.');
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
-});
+}
+
+team1Input.addEventListener('change', (event) => handleUpload(event.target.files[0], 0));
+team2Input.addEventListener('change', (event) => handleUpload(event.target.files[0], 1));
 
 densityInput.addEventListener('input', () => {
-  if (currentImage) makeTargetsFromImage(currentImage);
+  if (logos[activeLogoIndex]) {
+    makeTargetsFromImage(logos[activeLogoIndex]);
+  }
 });
 
+startSequenceButton.addEventListener('click', startSequence);
 burstButton.addEventListener('click', burst);
-resetButton.addEventListener('click', loadDefault);
+resetButton.addEventListener('click', loadDefaultLogos);
 
-loadDefault().then(() => requestAnimationFrame(animate));
+loadDefaultLogos().then(() => requestAnimationFrame(animate));

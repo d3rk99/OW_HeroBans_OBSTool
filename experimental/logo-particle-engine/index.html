@@ -11,14 +11,19 @@
     <section class="header">
       <h1>Game Day Stream Opener • Logo Particle Engine</h1>
       <p>
-        Drop in any school/team logo PNG and the particles will re-form into that image in real time.
+        Load two team logos and the particles will cycle: Team 1 → Team 2 every 3 seconds.
       </p>
     </section>
 
     <section class="controls" aria-label="Particle engine controls">
       <label class="upload">
-        <span>Upload Logo (PNG)</span>
-        <input id="logoInput" type="file" accept="image/png,image/*" />
+        <span>Team 1 Logo</span>
+        <input id="team1Input" type="file" accept="image/png,image/*" />
+      </label>
+
+      <label class="upload">
+        <span>Team 2 Logo</span>
+        <input id="team2Input" type="file" accept="image/png,image/*" />
       </label>
 
       <label>
@@ -36,8 +41,9 @@
         <input id="speed" type="range" min="0.03" max="0.2" value="0.08" step="0.01" />
       </label>
 
+      <button id="startSequence" type="button">Start Sequence</button>
       <button id="burst" type="button">Burst + Reform</button>
-      <button id="reset" type="button">Load Default</button>
+      <button id="reset" type="button">Load Defaults</button>
     </section>
 
     <section class="canvas-wrap">
