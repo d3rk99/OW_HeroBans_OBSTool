@@ -197,32 +197,38 @@
     </section>
 
     <section id="valorant-map-veto-tab" class="tab-panel" aria-label="Valorant Map Picks and Bans Controller">
-      <div class="valorant-veto-grid">
-        <section class="team-column" aria-labelledby="valorant-ban-round-1-heading">
-          <h2 id="valorant-ban-round-1-heading">Ban Round 1</h2>
-          <label for="valorant-ban1">Ban 1</label>
-          <select id="valorant-ban1"></select>
-          <label for="valorant-ban2">Ban 2</label>
-          <select id="valorant-ban2"></select>
-        </section>
+      <div class="subtab-row" aria-label="Valorant controller subtabs">
+        <button class="subtab-btn is-active" type="button" data-subtab-target="valorant-map-veto-subtab">Map Veto</button>
+        <button class="subtab-btn" type="button" data-subtab-target="valorant-game-score-subtab">Game Score</button>
+      </div>
 
-        <section class="team-column" aria-labelledby="valorant-pick-1-heading">
-          <h2 id="valorant-pick-1-heading">Pick 1</h2>
-          <label for="valorant-pick1">Pick 1</label>
-          <select id="valorant-pick1"></select>
-          <label for="valorant-pick1-defenders">Defenders</label>
-          <select id="valorant-pick1-defenders">
-            <option value="team1">Team 1</option>
-            <option value="team2">Team 2</option>
-          </select>
-          <label for="valorant-pick1-attackers">Attackers</label>
-          <select id="valorant-pick1-attackers">
-            <option value="team1">Team 1</option>
-            <option value="team2">Team 2</option>
-          </select>
-        </section>
+      <section id="valorant-map-veto-subtab" class="subtab-panel is-active" aria-label="Valorant map veto controls">
+        <div class="valorant-veto-grid">
+          <section class="team-column" aria-labelledby="valorant-ban-round-1-heading">
+            <h2 id="valorant-ban-round-1-heading">Ban Round 1</h2>
+            <label for="valorant-ban1">Ban 1</label>
+            <select id="valorant-ban1"></select>
+            <label for="valorant-ban2">Ban 2</label>
+            <select id="valorant-ban2"></select>
+          </section>
 
-        <section class="team-column" aria-labelledby="valorant-pick-2-heading">
+          <section class="team-column" aria-labelledby="valorant-pick-1-heading">
+            <h2 id="valorant-pick-1-heading">Pick 1</h2>
+            <label for="valorant-pick1">Pick 1</label>
+            <select id="valorant-pick1"></select>
+            <label for="valorant-pick1-defenders">Defenders</label>
+            <select id="valorant-pick1-defenders">
+              <option value="team1">Team 1</option>
+              <option value="team2">Team 2</option>
+            </select>
+            <label for="valorant-pick1-attackers">Attackers</label>
+            <select id="valorant-pick1-attackers">
+              <option value="team1">Team 1</option>
+              <option value="team2">Team 2</option>
+            </select>
+          </section>
+
+          <section class="team-column" aria-labelledby="valorant-pick-2-heading">
           <h2 id="valorant-pick-2-heading">Pick 2</h2>
           <label for="valorant-pick2">Pick 2</label>
           <select id="valorant-pick2"></select>
@@ -238,7 +244,7 @@
           </select>
         </section>
 
-        <section class="team-column" aria-labelledby="valorant-ban-round-2-heading">
+          <section class="team-column" aria-labelledby="valorant-ban-round-2-heading">
           <h2 id="valorant-ban-round-2-heading">Ban Round 2</h2>
           <label for="valorant-ban3">Ban 3</label>
           <select id="valorant-ban3"></select>
@@ -246,7 +252,7 @@
           <select id="valorant-ban4"></select>
         </section>
 
-        <section class="team-column" aria-labelledby="valorant-pick-3-heading">
+          <section class="team-column" aria-labelledby="valorant-pick-3-heading">
           <h2 id="valorant-pick-3-heading">Pick 3</h2>
           <label for="valorant-pick3">Pick 3</label>
           <select id="valorant-pick3"></select>
@@ -262,7 +268,7 @@
           </select>
         </section>
 
-        <section class="team-column valorant-map-pool-column" aria-labelledby="valorant-map-pool-heading">
+          <section class="team-column valorant-map-pool-column" aria-labelledby="valorant-map-pool-heading">
           <h2 id="valorant-map-pool-heading">Current Map Pool</h2>
           <details class="valorant-map-pool" open>
             <summary>Select Maps in Pool</summary>
@@ -270,10 +276,57 @@
           </details>
         </section>
 
-        <div class="sync-row" aria-label="Valorant map pick and ban controls">
-          <button id="valorant-reset" class="secondary-btn" type="button">Clear/Reset</button>
+          <div class="sync-row" aria-label="Valorant map pick and ban controls">
+            <button id="valorant-reset" class="secondary-btn" type="button">Clear/Reset</button>
+          </div>
         </div>
-      </div>
+      </section>
+
+      <section id="valorant-game-score-subtab" class="subtab-panel" aria-label="Valorant game score recap controls">
+        <div class="valorant-recap-grid">
+          <section class="team-column" aria-labelledby="valorant-game1-heading">
+            <h2 id="valorant-game1-heading">Game 1 Recap</h2>
+            <label for="valorant-pick1-winner">Winner</label>
+            <select id="valorant-pick1-winner">
+              <option value="">Not Set</option>
+              <option value="team1">Team 1</option>
+              <option value="team2">Team 2</option>
+            </select>
+            <label id="valorant-pick1-team1-score-label" for="valorant-pick1-team1-score">Team 1 Score</label>
+            <input id="valorant-pick1-team1-score" type="number" min="0" step="1" value="0" />
+            <label id="valorant-pick1-team2-score-label" for="valorant-pick1-team2-score">Team 2 Score</label>
+            <input id="valorant-pick1-team2-score" type="number" min="0" step="1" value="0" />
+          </section>
+
+          <section class="team-column" aria-labelledby="valorant-game2-heading">
+            <h2 id="valorant-game2-heading">Game 2 Recap</h2>
+            <label for="valorant-pick2-winner">Winner</label>
+            <select id="valorant-pick2-winner">
+              <option value="">Not Set</option>
+              <option value="team1">Team 1</option>
+              <option value="team2">Team 2</option>
+            </select>
+            <label id="valorant-pick2-team1-score-label" for="valorant-pick2-team1-score">Team 1 Score</label>
+            <input id="valorant-pick2-team1-score" type="number" min="0" step="1" value="0" />
+            <label id="valorant-pick2-team2-score-label" for="valorant-pick2-team2-score">Team 2 Score</label>
+            <input id="valorant-pick2-team2-score" type="number" min="0" step="1" value="0" />
+          </section>
+
+          <section class="team-column" aria-labelledby="valorant-game3-heading">
+            <h2 id="valorant-game3-heading">Game 3 Recap</h2>
+            <label for="valorant-pick3-winner">Winner</label>
+            <select id="valorant-pick3-winner">
+              <option value="">Not Set</option>
+              <option value="team1">Team 1</option>
+              <option value="team2">Team 2</option>
+            </select>
+            <label id="valorant-pick3-team1-score-label" for="valorant-pick3-team1-score">Team 1 Score</label>
+            <input id="valorant-pick3-team1-score" type="number" min="0" step="1" value="0" />
+            <label id="valorant-pick3-team2-score-label" for="valorant-pick3-team2-score">Team 2 Score</label>
+            <input id="valorant-pick3-team2-score" type="number" min="0" step="1" value="0" />
+          </section>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -285,6 +338,7 @@
       <code>scoreboard-team1-logo.html</code>, <code>scoreboard-team2-logo.html</code>,
       <code>scoreboard-team1-score.html</code>, and <code>scoreboard-team2-score.html</code>.
       Valorant map picks/bans overlay uses <code>valorant-map-picks-bans.html</code>.
+      Valorant picks-only overlay uses <code>valorant-map-picks.html</code>.
     </p>
   </footer>
 

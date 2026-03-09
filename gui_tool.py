@@ -116,6 +116,33 @@ def _sanitize_valorant_map(value):
     return ""
 
 
+def _sanitize_valorant_pick_team(value):
+    return "team2" if str(value or "").strip() == "team2" else "team1"
+
+
+def _sanitize_valorant_pick_sides(value):
+    value = value or {}
+    defenders = _sanitize_valorant_pick_team(value.get("defenders", "team1"))
+    attackers = _sanitize_valorant_pick_team(value.get("attackers", "team2"))
+    if attackers == defenders:
+        attackers = "team2" if defenders == "team1" else "team1"
+    return {"defenders": defenders, "attackers": attackers}
+
+
+def _sanitize_valorant_winner(value):
+    value = str(value or "").strip()
+    return value if value in ("team1", "team2") else ""
+
+
+def _sanitize_valorant_game_score(value):
+    value = value or {}
+    return {
+        "winner": _sanitize_valorant_winner(value.get("winner", "")),
+        "team1Score": _sanitize_score(value.get("team1Score", 0)),
+        "team2Score": _sanitize_score(value.get("team2Score", 0)),
+    }
+
+
 @dataclass(frozen=True)
 class Hero:
     name: str
@@ -138,6 +165,16 @@ class SharedState:
                 "team2": {"name": "", "nameUsePng": False, "namePng": "", "namePngScale": 0, "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
             },
             "valorantMapVeto": {"ban1": "", "ban2": "", "pick1": "", "pick2": "", "ban3": "", "ban4": "", "pick3": ""},
+            "valorantPickSides": {
+                "pick1": {"defenders": "team1", "attackers": "team2"},
+                "pick2": {"defenders": "team1", "attackers": "team2"},
+                "pick3": {"defenders": "team1", "attackers": "team2"},
+            },
+            "valorantGameScore": {
+                "pick1": {"winner": "", "team1Score": 0, "team2Score": 0},
+                "pick2": {"winner": "", "team1Score": 0, "team2Score": 0},
+                "pick3": {"winner": "", "team1Score": 0, "team2Score": 0},
+            },
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -146,6 +183,8 @@ class SharedState:
         payload = payload or {}
         scoreboard = payload.get("scoreboard", {}) or {}
         valorant_map_veto = payload.get("valorantMapVeto", {}) or {}
+        valorant_pick_sides = payload.get("valorantPickSides", {}) or {}
+        valorant_game_score = payload.get("valorantGameScore", {}) or {}
         team1_style = scoreboard.get("team1", {}) or {}
         team2_style = scoreboard.get("team2", {}) or {}
         return {
@@ -186,6 +225,16 @@ class SharedState:
                 "ban4": _sanitize_valorant_map(valorant_map_veto.get("ban4", "")),
                 "pick3": _sanitize_valorant_map(valorant_map_veto.get("pick3", "")),
             },
+            "valorantPickSides": {
+                "pick1": _sanitize_valorant_pick_sides(valorant_pick_sides.get("pick1", {})),
+                "pick2": _sanitize_valorant_pick_sides(valorant_pick_sides.get("pick2", {})),
+                "pick3": _sanitize_valorant_pick_sides(valorant_pick_sides.get("pick3", {})),
+            },
+            "valorantGameScore": {
+                "pick1": _sanitize_valorant_game_score(valorant_game_score.get("pick1", {})),
+                "pick2": _sanitize_valorant_game_score(valorant_game_score.get("pick2", {})),
+                "pick3": _sanitize_valorant_game_score(valorant_game_score.get("pick3", {})),
+            },
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -212,6 +261,8 @@ class SharedState:
                 "team2": {"ban": self._state["team2"]["ban"]},
                 "scoreboard": self._state["scoreboard"],
                 "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
+                "valorantPickSides": dict(self._state.get("valorantPickSides", {})),
+                "valorantGameScore": dict(self._state.get("valorantGameScore", {})),
                 "updatedAt": self._state["updatedAt"],
             }
 
@@ -224,6 +275,8 @@ class SharedState:
                 "team2": {"ban": self._state["team2"]["ban"]},
                 "scoreboard": self._state["scoreboard"],
                 "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
+                "valorantPickSides": dict(self._state.get("valorantPickSides", {})),
+                "valorantGameScore": dict(self._state.get("valorantGameScore", {})),
                 "updatedAt": self._state["updatedAt"],
             }
 
