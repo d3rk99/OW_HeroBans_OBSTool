@@ -14,6 +14,7 @@
   const BUILTIN_FONT_VALUES = new Set(BUILTIN_NAME_FONTS.map((font) => font.value));
   const VALORANT_MAPS_PATH = './assets/valorant/maps.json';
   const VETO_FIELD_IDS = ['ban1', 'ban2', 'pick1', 'pick2', 'ban3', 'ban4', 'pick3'];
+  const VALORANT_PICK_IDS = ['pick1', 'pick2', 'pick3'];
 
   let heroList = [];
   let heroesByName = new Map();
@@ -42,6 +43,11 @@
       pick1: { defenders: 'team1', attackers: 'team2' },
       pick2: { defenders: 'team1', attackers: 'team2' },
       pick3: { defenders: 'team1', attackers: 'team2' }
+    },
+    valorantGameScore: {
+      pick1: { winner: '', team1Score: 0, team2Score: 0 },
+      pick2: { winner: '', team1Score: 0, team2Score: 0 },
+      pick3: { winner: '', team1Score: 0, team2Score: 0 }
     },
     valorantMapPool: valorantMaps.map((map) => map.uuid),
     updatedAt: Date.now()
@@ -122,6 +128,17 @@
     if (attackers === defenders) attackers = defenders === 'team1' ? 'team2' : 'team1';
     return { defenders, attackers };
   };
+
+  const sanitizeValorantWinner = (value) => {
+    const raw = String(value || '').trim();
+    return raw === 'team1' || raw === 'team2' ? raw : '';
+  };
+
+  const sanitizeValorantGameScore = (value) => ({
+    winner: sanitizeValorantWinner(value?.winner),
+    team1Score: sanitizeScore(value?.team1Score),
+    team2Score: sanitizeScore(value?.team2Score)
+  });
   const getValorantPoolMaps = (pool) => {
     const allowed = new Set(sanitizeValorantMapPool(pool));
     return valorantMaps.filter((map) => allowed.has(map.uuid));
@@ -267,6 +284,11 @@
         pick2: sanitizeValorantPickSides(payload?.valorantPickSides?.pick2),
         pick3: sanitizeValorantPickSides(payload?.valorantPickSides?.pick3)
       },
+      valorantGameScore: {
+        pick1: sanitizeValorantGameScore(payload?.valorantGameScore?.pick1),
+        pick2: sanitizeValorantGameScore(payload?.valorantGameScore?.pick2),
+        pick3: sanitizeValorantGameScore(payload?.valorantGameScore?.pick3)
+      },
       updatedAt: Number(payload?.updatedAt) || Date.now()
     };
   }
@@ -388,6 +410,13 @@
     return ['pick1', 'pick2', 'pick3'].some((key) => Object.prototype.hasOwnProperty.call(sides, key));
   }
 
+  function bridgeHasValorantGameScore(payload) {
+    if (!payload || typeof payload !== 'object') return false;
+    const gameScore = payload.valorantGameScore;
+    if (!gameScore || typeof gameScore !== 'object') return false;
+    return ['pick1', 'pick2', 'pick3'].some((key) => Object.prototype.hasOwnProperty.call(gameScore, key));
+  }
+
   async function readBridgeState() {
     try {
       const response = await fetch(BRIDGE_STATE_URL, { cache: 'no-store' });
@@ -398,7 +427,8 @@
         hasScoreboard: bridgeHasScoreboard(payload),
         hasValorantMapVeto: bridgeHasValorantMapVeto(payload),
         hasValorantMapPool: bridgeHasValorantMapPool(payload),
-        hasValorantPickSides: bridgeHasValorantPickSides(payload)
+        hasValorantPickSides: bridgeHasValorantPickSides(payload),
+        hasValorantGameScore: bridgeHasValorantGameScore(payload)
       };
     } catch {
       return null;
@@ -419,6 +449,7 @@
       valorantMapVeto: bridgePayload.hasValorantMapVeto ? bridgeState.valorantMapVeto : localState.valorantMapVeto,
       valorantMapPool: bridgePayload.hasValorantMapPool ? bridgeState.valorantMapPool : localState.valorantMapPool,
       valorantPickSides: bridgePayload.hasValorantPickSides ? bridgeState.valorantPickSides : localState.valorantPickSides,
+      valorantGameScore: bridgePayload.hasValorantGameScore ? bridgeState.valorantGameScore : localState.valorantGameScore,
       updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
     });
   }
@@ -764,6 +795,23 @@
     });
   }
 
+  function initSubtabs() {
+    const subtabButtons = Array.from(document.querySelectorAll('[data-subtab-target]'));
+    if (!subtabButtons.length) return;
+
+    subtabButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const targetId = button.dataset.subtabTarget;
+        if (!targetId) return;
+
+        subtabButtons.forEach((btn) => btn.classList.toggle('is-active', btn === button));
+        document.querySelectorAll('.subtab-panel').forEach((panel) => {
+          panel.classList.toggle('is-active', panel.id === targetId);
+        });
+      });
+    });
+  }
+
   function getActiveTabId() {
     const activePanel = document.querySelector('.tab-panel.is-active');
     return activePanel?.id || '';
@@ -944,6 +992,23 @@
       }
     };
     const mapPoolList = document.getElementById('valorant-map-pool-list');
+    const gameScoreFields = {
+      pick1: {
+        winner: document.getElementById('valorant-pick1-winner'),
+        team1Score: document.getElementById('valorant-pick1-team1-score'),
+        team2Score: document.getElementById('valorant-pick1-team2-score')
+      },
+      pick2: {
+        winner: document.getElementById('valorant-pick2-winner'),
+        team1Score: document.getElementById('valorant-pick2-team1-score'),
+        team2Score: document.getElementById('valorant-pick2-team2-score')
+      },
+      pick3: {
+        winner: document.getElementById('valorant-pick3-winner'),
+        team1Score: document.getElementById('valorant-pick3-team1-score'),
+        team2Score: document.getElementById('valorant-pick3-team2-score')
+      }
+    };
 
     if (VETO_FIELD_IDS.some((fieldId) => !fields[fieldId])) return;
 
@@ -1048,6 +1113,11 @@
       pick2: sanitizeValorantPickSides(pendingState?.valorantPickSides?.pick2),
       pick3: sanitizeValorantPickSides(pendingState?.valorantPickSides?.pick3)
     };
+    pendingState.valorantGameScore = {
+      pick1: sanitizeValorantGameScore(pendingState?.valorantGameScore?.pick1),
+      pick2: sanitizeValorantGameScore(pendingState?.valorantGameScore?.pick2),
+      pick3: sanitizeValorantGameScore(pendingState?.valorantGameScore?.pick3)
+    };
 
     buildMapPoolList();
     refreshValorantMapPoolOptions = rebuildFieldOptions;
@@ -1086,6 +1156,29 @@
       });
     });
 
+    VALORANT_PICK_IDS.forEach((pickId) => {
+      const fieldsForPick = gameScoreFields[pickId];
+      if (!fieldsForPick?.winner || !fieldsForPick?.team1Score || !fieldsForPick?.team2Score) return;
+
+      fieldsForPick.winner.addEventListener('change', (event) => {
+        pendingState.valorantGameScore[pickId].winner = sanitizeValorantWinner(event.target.value);
+        syncInputs();
+        writeState(pendingState);
+      });
+
+      fieldsForPick.team1Score.addEventListener('input', (event) => {
+        pendingState.valorantGameScore[pickId].team1Score = sanitizeScore(event.target.value);
+        syncInputs();
+        writeState(pendingState);
+      });
+
+      fieldsForPick.team2Score.addEventListener('input', (event) => {
+        pendingState.valorantGameScore[pickId].team2Score = sanitizeScore(event.target.value);
+        syncInputs();
+        writeState(pendingState);
+      });
+    });
+
     const clearButton = document.getElementById('valorant-reset');
     if (clearButton) {
       clearButton.addEventListener('click', () => {
@@ -1096,6 +1189,11 @@
           pick1: { defenders: 'team1', attackers: 'team2' },
           pick2: { defenders: 'team1', attackers: 'team2' },
           pick3: { defenders: 'team1', attackers: 'team2' }
+        };
+        pendingState.valorantGameScore = {
+          pick1: { winner: '', team1Score: 0, team2Score: 0 },
+          pick2: { winner: '', team1Score: 0, team2Score: 0 },
+          pick3: { winner: '', team1Score: 0, team2Score: 0 }
         };
         syncInputs();
         writeState(pendingState);
@@ -1151,9 +1249,14 @@
       pickSlots.forEach((fieldId) => {
         const node = overlay.querySelector(`[data-pick-value='${fieldId}']`);
         const card = node?.closest('.valorant-pick-card');
+        const recapNode = overlay.querySelector(`[data-pick-recap='${fieldId}']`);
+        const recapLogoNode = overlay.querySelector(`[data-pick-winner-logo='${fieldId}']`);
+        const recapScoreNode = overlay.querySelector(`[data-pick-scoreline='${fieldId}']`);
         const map = getValorantMapByUuid(state.valorantMapVeto[fieldId]);
         const displayName = map?.displayName || '';
         const sideState = sanitizeValorantPickSides(state?.valorantPickSides?.[fieldId]);
+        const gameScore = sanitizeValorantGameScore(state?.valorantGameScore?.[fieldId]);
+        const hasRecap = Boolean(gameScore.winner && recapNode);
         if (node) {
           node.textContent = displayName;
           node.classList.toggle('is-visible', Boolean(displayName));
@@ -1164,6 +1267,24 @@
         const attackersLogo = state?.scoreboard?.[sideState.attackers]?.logo || '';
         setTeamLogo(defendersNode, defendersLogo);
         setTeamLogo(attackersNode, attackersLogo);
+
+        if (card) {
+          card.classList.toggle('is-recap', hasRecap);
+        }
+
+        if (recapLogoNode) {
+          const winnerLogo = gameScore.winner ? (state?.scoreboard?.[gameScore.winner]?.logo || '') : '';
+          setTeamLogo(recapLogoNode, winnerLogo);
+        }
+
+        if (recapScoreNode) {
+          const team1Score = sanitizeScore(gameScore.team1Score);
+          const team2Score = sanitizeScore(gameScore.team2Score);
+          const leftScore = gameScore.winner === 'team1' ? `<strong>${team1Score}</strong>` : String(team1Score);
+          const rightScore = gameScore.winner === 'team2' ? `<strong>${team2Score}</strong>` : String(team2Score);
+          recapScoreNode.innerHTML = `<span class="pick-recap-score-left">${leftScore}</span><span class="pick-recap-score-dash">-</span><span class="pick-recap-score-right">${rightScore}</span>`;
+        }
+
         const imageUrls = getValorantMapImages(map);
         applyBackground(card, 'pick', imageUrls);
       });
@@ -1180,7 +1301,8 @@
       const state = await readSharedState();
       const vetoState = state?.valorantMapVeto || defaultState().valorantMapVeto;
       const sideState = state?.valorantPickSides || {};
-      const signature = `${vetoState.ban1}|${vetoState.ban2}|${vetoState.pick1}|${vetoState.pick2}|${vetoState.ban3}|${vetoState.ban4}|${vetoState.pick3}|${JSON.stringify(sideState)}|${state?.scoreboard?.team1?.logo || ''}|${state?.scoreboard?.team2?.logo || ''}|${state.updatedAt}`;
+      const gameScoreState = state?.valorantGameScore || {};
+      const signature = `${vetoState.ban1}|${vetoState.ban2}|${vetoState.pick1}|${vetoState.pick2}|${vetoState.ban3}|${vetoState.ban4}|${vetoState.pick3}|${JSON.stringify(sideState)}|${JSON.stringify(gameScoreState)}|${state?.scoreboard?.team1?.logo || ''}|${state?.scoreboard?.team2?.logo || ''}|${state.updatedAt}`;
       if (signature === lastSignature) return;
       lastSignature = signature;
       preloadSelected(vetoState);
@@ -1250,10 +1372,17 @@
 
       ['pick1', 'pick2', 'pick3'].forEach((pickId) => {
         const sideState = sanitizeValorantPickSides(pendingState?.valorantPickSides?.[pickId]);
+        const gameScore = sanitizeValorantGameScore(pendingState?.valorantGameScore?.[pickId]);
         const defendersNode = document.getElementById(`valorant-${pickId}-defenders`);
         const attackersNode = document.getElementById(`valorant-${pickId}-attackers`);
+        const winnerNode = document.getElementById(`valorant-${pickId}-winner`);
+        const team1ScoreNode = document.getElementById(`valorant-${pickId}-team1-score`);
+        const team2ScoreNode = document.getElementById(`valorant-${pickId}-team2-score`);
         if (defendersNode) defendersNode.value = sideState.defenders;
         if (attackersNode) attackersNode.value = sideState.attackers;
+        if (winnerNode) winnerNode.value = gameScore.winner;
+        if (team1ScoreNode) team1ScoreNode.value = String(gameScore.team1Score);
+        if (team2ScoreNode) team2ScoreNode.value = String(gameScore.team2Score);
       });
 
       const mapPoolList = document.getElementById('valorant-map-pool-list');
@@ -1266,6 +1395,7 @@
     };
 
     initTabs();
+    initSubtabs();
     installSearchForTeam('team1', { pendingState, syncInputs });
     installSearchForTeam('team2', { pendingState, syncInputs });
     await initScoreboardControl(pendingState, syncInputs);
@@ -1330,6 +1460,11 @@
             pick2: { ...empty.valorantPickSides.pick2 },
             pick3: { ...empty.valorantPickSides.pick3 }
           };
+          pendingState.valorantGameScore = {
+            pick1: { ...empty.valorantGameScore.pick1 },
+            pick2: { ...empty.valorantGameScore.pick2 },
+            pick3: { ...empty.valorantGameScore.pick3 }
+          };
         }
 
         syncInputs();
@@ -1352,6 +1487,11 @@
         pick1: sanitizeValorantPickSides(next?.valorantPickSides?.pick1),
         pick2: sanitizeValorantPickSides(next?.valorantPickSides?.pick2),
         pick3: sanitizeValorantPickSides(next?.valorantPickSides?.pick3)
+      };
+      pendingState.valorantGameScore = {
+        pick1: sanitizeValorantGameScore(next?.valorantGameScore?.pick1),
+        pick2: sanitizeValorantGameScore(next?.valorantGameScore?.pick2),
+        pick3: sanitizeValorantGameScore(next?.valorantGameScore?.pick3)
       };
       syncInputs();
     });
