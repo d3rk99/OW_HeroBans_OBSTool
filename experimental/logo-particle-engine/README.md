@@ -19,7 +19,7 @@ Then open:
 - Particles form **Team 1 logo**, then after **6 seconds** transition into **Team 2 logo**.
 - The sequence continuously loops.
 - Once particles settle into a logo, they slowly rotate with perspective for a 3D-style look.
-- Team 1 restarts at your selected start angle (0–359°) when it appears; Team 2 continues from the current rotation.
+- Team 1 can either restart at your selected start angle (0–359°) or continue rotation, based on the reset toggle; Team 2 continues from the current rotation.
 - Uploading a new image for either team updates that logo on the fly.
 
 ## Controls
@@ -30,6 +30,7 @@ Then open:
 - **Settle Speed:** controls how quickly particles reform.
 - **Depth Amount:** controls how much front/back depth is applied to the logo shape.
 - **Team 1 Start Angle (°):** sets the reset angle for Team 1 (0–359).
+- **Team 1 Reset Mode:** toggle whether Team 1 resets to the selected angle or keeps continuous rotation.
 - **Start Sequence:** force-restart the timed logo cycle.
 - **Burst + Reform:** explodes particles, then they return to target.
 - **Load Defaults:** restores the built-in default team marks.

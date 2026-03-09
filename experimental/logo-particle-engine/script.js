@@ -8,6 +8,7 @@ const sizeInput = document.getElementById('size');
 const speedInput = document.getElementById('speed');
 const depthInput = document.getElementById('depth');
 const startAngleInput = document.getElementById('startAngle');
+const team1ResetToggle = document.getElementById('team1ResetToggle');
 const startSequenceButton = document.getElementById('startSequence');
 const burstButton = document.getElementById('burst');
 const resetButton = document.getElementById('reset');
@@ -277,7 +278,7 @@ function showLogo(index) {
   const image = logos[index];
   if (!image) return;
 
-  if (index === 0) {
+  if (index === 0 && team1ResetToggle.checked) {
     rotationY = getLogo1StartRotation();
   }
 

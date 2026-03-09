@@ -111,3 +111,23 @@ canvas {
   display: block;
   background: radial-gradient(circle at center, rgba(7, 15, 40, 0.9), rgba(3, 6, 16, 1));
 }
+
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+}
+
+.toggle-row small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.toggle-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
