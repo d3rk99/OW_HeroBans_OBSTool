@@ -972,6 +972,18 @@
     heading.textContent = teamName && teamName.trim() ? `${teamName.trim()} Score` : fallback;
   }
 
+  function updateValorantGameScoreLabels(team1Name, team2Name) {
+    const leftName = (team1Name || '').trim() || 'Team 1';
+    const rightName = (team2Name || '').trim() || 'Team 2';
+
+    ['pick1', 'pick2', 'pick3'].forEach((pickId) => {
+      const team1Label = document.getElementById(`valorant-${pickId}-team1-score-label`);
+      const team2Label = document.getElementById(`valorant-${pickId}-team2-score-label`);
+      if (team1Label) team1Label.textContent = `${leftName} Score`;
+      if (team2Label) team2Label.textContent = `${rightName} Score`;
+    });
+  }
+
   function initValorantMapVetoControl(pendingState, syncInputs) {
     const fields = VETO_FIELD_IDS.reduce((collection, fieldId) => {
       collection[fieldId] = document.getElementById(`valorant-${fieldId}`);
@@ -1359,6 +1371,11 @@
         if (bevelColorInput) bevelColorInput.value = sanitizeBevelColor(pendingState.scoreboard[teamId].bevelColor);
         if (fontInput) fontInput.value = sanitizeNameFont(pendingState.scoreboard[teamId].nameFont);
       });
+
+      updateValorantGameScoreLabels(
+        pendingState.scoreboard.team1.name || '',
+        pendingState.scoreboard.team2.name || ''
+      );
 
       if (typeof refreshValorantMapPoolOptions === 'function') {
         refreshValorantMapPoolOptions();
