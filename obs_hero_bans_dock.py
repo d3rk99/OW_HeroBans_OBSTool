@@ -135,6 +135,20 @@ def _sanitize_valorant_pick_sides(value):
     return {"defenders": defenders, "attackers": attackers}
 
 
+def _sanitize_valorant_winner(value):
+    value = str(value or "").strip()
+    return value if value in ("team1", "team2") else ""
+
+
+def _sanitize_valorant_game_score(value):
+    value = value or {}
+    return {
+        "winner": _sanitize_valorant_winner(value.get("winner", "")),
+        "team1Score": _sanitize_score(value.get("team1Score", 0)),
+        "team2Score": _sanitize_score(value.get("team2Score", 0)),
+    }
+
+
 class _BridgeState(object):
     def __init__(self):
         self._lock = threading.Lock()
@@ -156,6 +170,11 @@ class _BridgeState(object):
                 "pick2": {"defenders": "team1", "attackers": "team2"},
                 "pick3": {"defenders": "team1", "attackers": "team2"},
             },
+            "valorantGameScore": {
+                "pick1": {"winner": "", "team1Score": 0, "team2Score": 0},
+                "pick2": {"winner": "", "team1Score": 0, "team2Score": 0},
+                "pick3": {"winner": "", "team1Score": 0, "team2Score": 0},
+            },
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -169,6 +188,7 @@ class _BridgeState(object):
         sb_team2 = scoreboard.get("team2", {}) or {}
         valorant_map_veto = payload.get("valorantMapVeto", {}) or {}
         valorant_pick_sides = payload.get("valorantPickSides", {}) or {}
+        valorant_game_score = payload.get("valorantGameScore", {}) or {}
         return {
             "team1": {"ban": str(team1.get("ban", "") or "")},
             "team2": {"ban": str(team2.get("ban", "") or "")},
@@ -211,6 +231,11 @@ class _BridgeState(object):
                 "pick1": _sanitize_valorant_pick_sides(valorant_pick_sides.get("pick1", {})),
                 "pick2": _sanitize_valorant_pick_sides(valorant_pick_sides.get("pick2", {})),
                 "pick3": _sanitize_valorant_pick_sides(valorant_pick_sides.get("pick3", {})),
+            },
+            "valorantGameScore": {
+                "pick1": _sanitize_valorant_game_score(valorant_game_score.get("pick1", {})),
+                "pick2": _sanitize_valorant_game_score(valorant_game_score.get("pick2", {})),
+                "pick3": _sanitize_valorant_game_score(valorant_game_score.get("pick3", {})),
             },
             "updatedAt": int(time.time() * 1000),
         }
@@ -271,6 +296,7 @@ class _BridgeState(object):
                 },
                 "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
                 "valorantPickSides": dict(self._state.get("valorantPickSides", {})),
+                "valorantGameScore": dict(self._state.get("valorantGameScore", {})),
                 "updatedAt": self._state["updatedAt"],
             }
 
@@ -309,6 +335,7 @@ class _BridgeState(object):
                 },
                 "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
                 "valorantPickSides": dict(self._state.get("valorantPickSides", {})),
+                "valorantGameScore": dict(self._state.get("valorantGameScore", {})),
                 "updatedAt": self._state["updatedAt"],
             }
 
