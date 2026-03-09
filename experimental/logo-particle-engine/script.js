@@ -7,6 +7,7 @@ const densityInput = document.getElementById('density');
 const sizeInput = document.getElementById('size');
 const speedInput = document.getElementById('speed');
 const depthInput = document.getElementById('depth');
+const startAngleInput = document.getElementById('startAngle');
 const startSequenceButton = document.getElementById('startSequence');
 const burstButton = document.getElementById('burst');
 const resetButton = document.getElementById('reset');
@@ -24,12 +25,21 @@ let sequenceTimer = null;
 let rotationY = 0;
 let rotationX = 0.22;
 let settleBlend = 0;
-const LOGO1_START_ROTATION = (10 * Math.PI) / 180;
+
 
 const CAMERA = {
   focalLength: 760,
   zOffset: 560
 };
+
+function getLogo1StartRotation() {
+  const raw = Number(startAngleInput.value);
+  const normalized = Number.isFinite(raw) ? ((raw % 360) + 360) % 360 : 10;
+  if (String(normalized) !== startAngleInput.value) {
+    startAngleInput.value = String(normalized);
+  }
+  return (normalized * Math.PI) / 180;
+}
 
 class Particle {
   constructor(mx, my, mz) {
@@ -268,7 +278,7 @@ function showLogo(index) {
   if (!image) return;
 
   if (index === 0) {
-    rotationY = LOGO1_START_ROTATION;
+    rotationY = getLogo1StartRotation();
   }
 
   activeLogoIndex = index;
@@ -329,7 +339,7 @@ async function loadDefaultLogos() {
   logos[1] = await loadImageFromUrl(`data:image/svg+xml;charset=utf-8,${fallbackSVG2}`);
 
   activeLogoIndex = 0;
-  rotationY = LOGO1_START_ROTATION;
+  rotationY = getLogo1StartRotation();
   startSequence();
 }
 
@@ -361,6 +371,10 @@ depthInput.addEventListener('input', () => {
   if (logos[activeLogoIndex]) {
     makeTargetsFromImage(logos[activeLogoIndex]);
   }
+});
+
+startAngleInput.addEventListener('input', () => {
+  getLogo1StartRotation();
 });
 
 startSequenceButton.addEventListener('click', startSequence);
