@@ -20,44 +20,97 @@ let logos = [null, null];
 let activeLogoIndex = 0;
 let sequenceTimer = null;
 
+let rotationY = 0;
+let rotationX = 0.22;
+let settleBlend = 0;
+
+const CAMERA = {
+  focalLength: 760,
+  zOffset: 560
+};
+
 class Particle {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    this.vx = (Math.random() - 0.5) * 20;
-    this.vy = (Math.random() - 0.5) * 20;
-    this.size = Number(sizeInput.value);
-    this.targetX = x;
-    this.targetY = y;
+  constructor(mx, my, mz) {
+    this.mx = mx;
+    this.my = my;
+    this.mz = mz;
+
+    this.vx = (Math.random() - 0.5) * 22;
+    this.vy = (Math.random() - 0.5) * 22;
+    this.vz = (Math.random() - 0.5) * 22;
+
+    this.baseSize = Number(sizeInput.value);
+    this.targetX = mx;
+    this.targetY = my;
+    this.targetZ = mz;
     this.color = 'rgba(116, 244, 255, 0.9)';
   }
 
   retarget(target) {
     this.targetX = target.x;
     this.targetY = target.y;
+    this.targetZ = target.z;
     this.color = target.color;
   }
 
   update(dt) {
     const settle = Number(speedInput.value) * dt * 60;
-    const dx = this.targetX - this.x;
-    const dy = this.targetY - this.y;
+    const dx = this.targetX - this.mx;
+    const dy = this.targetY - this.my;
+    const dz = this.targetZ - this.mz;
 
     this.vx += dx * settle * 0.08;
     this.vy += dy * settle * 0.08;
+    this.vz += dz * settle * 0.08;
 
     this.vx *= 0.86;
     this.vy *= 0.86;
+    this.vz *= 0.86;
 
-    this.x += this.vx;
-    this.y += this.vy;
-    this.size = Number(sizeInput.value);
+    this.mx += this.vx;
+    this.my += this.vy;
+    this.mz += this.vz;
+
+    this.baseSize = Number(sizeInput.value);
   }
 
-  draw() {
+  distanceToTarget() {
+    const dx = this.targetX - this.mx;
+    const dy = this.targetY - this.my;
+    const dz = this.targetZ - this.mz;
+    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+  }
+
+  project(rotY, rotX) {
+    const cosY = Math.cos(rotY);
+    const sinY = Math.sin(rotY);
+    const cosX = Math.cos(rotX);
+    const sinX = Math.sin(rotX);
+
+    const xzX = this.mx * cosY + this.mz * sinY;
+    const xzZ = -this.mx * sinY + this.mz * cosY;
+
+    const yzY = this.my * cosX - xzZ * sinX;
+    const yzZ = this.my * sinX + xzZ * cosX;
+
+    const depth = yzZ + CAMERA.zOffset;
+    const perspective = CAMERA.focalLength / Math.max(220, depth);
+
+    return {
+      x: canvas.width / 2 + xzX * perspective,
+      y: canvas.height / 2 + yzY * perspective,
+      depth,
+      perspective
+    };
+  }
+
+  draw(rotY, rotX) {
+    const p = this.project(rotY, rotX);
+    const radius = Math.max(0.5, this.baseSize * p.perspective);
+
     ctx.beginPath();
     ctx.fillStyle = this.color;
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -96,9 +149,16 @@ function makeTargetsFromImage(image) {
         const g = imageData.data[i + 1];
         const b = imageData.data[i + 2];
 
+        const centeredX = x - width / 2;
+        const centeredY = y - height / 2;
+        const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+        const waveDepth = Math.sin(centeredX * 0.016) * 10 + Math.cos(centeredY * 0.018) * 10;
+        const zDepth = (luminance - 0.5) * 70 + waveDepth;
+
         nextTargets.push({
-          x,
-          y,
+          x: centeredX,
+          y: centeredY,
+          z: zDepth,
           color: `rgba(${r}, ${g}, ${b}, ${Math.max(alpha / 255, 0.45)})`
         });
       }
@@ -112,8 +172,9 @@ function makeTargetsFromImage(image) {
 function syncParticlesToTargets() {
   while (particles.length < targets.length) {
     particles.push(new Particle(
-      canvas.width / 2 + (Math.random() - 0.5) * 300,
-      canvas.height / 2 + (Math.random() - 0.5) * 240
+      (Math.random() - 0.5) * 300,
+      (Math.random() - 0.5) * 240,
+      (Math.random() - 0.5) * 220
     ));
   }
 
@@ -127,9 +188,11 @@ function syncParticlesToTargets() {
 }
 
 function burst() {
+  settleBlend = 0;
   particles.forEach((p) => {
-    p.vx += (Math.random() - 0.5) * 80;
-    p.vy += (Math.random() - 0.5) * 80;
+    p.vx += (Math.random() - 0.5) * 90;
+    p.vy += (Math.random() - 0.5) * 90;
+    p.vz += (Math.random() - 0.5) * 90;
   });
 }
 
@@ -161,9 +224,28 @@ function animate(ts) {
 
   drawBackdrop();
 
+  let avgDistance = 0;
   particles.forEach((particle) => {
     particle.update(dt);
-    particle.draw();
+    avgDistance += particle.distanceToTarget();
+  });
+
+  if (particles.length > 0) {
+    avgDistance /= particles.length;
+  }
+
+  const settled = avgDistance < 8;
+  settleBlend += ((settled ? 1 : 0) - settleBlend) * 0.04;
+  rotationY += dt * (0.16 * settleBlend);
+
+  const sorted = [...particles].sort((a, b) => {
+    const da = a.project(rotationY, rotationX).depth;
+    const db = b.project(rotationY, rotationX).depth;
+    return db - da;
+  });
+
+  sorted.forEach((particle) => {
+    particle.draw(rotationY, rotationX);
   });
 
   requestAnimationFrame(animate);
@@ -202,7 +284,7 @@ function startSequence() {
   sequenceTimer = setInterval(() => {
     const nextIndex = nextLoadedLogoIndex(activeLogoIndex);
     showLogo(nextIndex);
-  }, 3000);
+  }, 6000);
 }
 
 async function loadDefaultLogos() {
@@ -240,6 +322,7 @@ async function loadDefaultLogos() {
   logos[1] = await loadImageFromUrl(`data:image/svg+xml;charset=utf-8,${fallbackSVG2}`);
 
   activeLogoIndex = 0;
+  rotationY = 0;
   startSequence();
 }
 

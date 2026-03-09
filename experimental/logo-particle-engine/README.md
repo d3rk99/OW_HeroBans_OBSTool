@@ -16,8 +16,9 @@ Then open:
 
 ## Sequence behavior
 
-- Particles form **Team 1 logo**, then after **3 seconds** transition into **Team 2 logo**.
+- Particles form **Team 1 logo**, then after **6 seconds** transition into **Team 2 logo**.
 - The sequence continuously loops.
+- Once particles settle into a logo, they slowly rotate with perspective for a 3D-style look.
 - Uploading a new image for either team updates that logo on the fly.
 
 ## Controls
