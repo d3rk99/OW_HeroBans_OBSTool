@@ -770,6 +770,11 @@ input[type="number"] {
   gap: 0.85rem;
 }
 
+
+.valorant-recap-actions {
+  margin-top: 0.85rem;
+}
+
 .valorant-veto-grid .team-column {
   min-height: 240px;
 }

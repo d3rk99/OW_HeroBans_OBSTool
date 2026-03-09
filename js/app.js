@@ -992,6 +992,7 @@
       }
     };
     const mapPoolList = document.getElementById('valorant-map-pool-list');
+    const gameScoreApplyButton = document.getElementById('valorant-game-score-apply');
     const gameScoreFields = {
       pick1: {
         winner: document.getElementById('valorant-pick1-winner'),
@@ -1178,6 +1179,13 @@
         writeState(pendingState);
       });
     });
+
+    if (gameScoreApplyButton) {
+      gameScoreApplyButton.addEventListener('click', () => {
+        syncInputs();
+        writeState(pendingState);
+      });
+    }
 
     const clearButton = document.getElementById('valorant-reset');
     if (clearButton) {
