@@ -19,6 +19,7 @@ Then open:
 - Particles form **Team 1 logo**, then after **6 seconds** transition into **Team 2 logo**.
 - The sequence continuously loops.
 - Once particles settle into a logo, they slowly rotate with perspective for a 3D-style look.
+- Team 1 always restarts at a 10° turn when it appears; Team 2 continues from the current rotation.
 - Uploading a new image for either team updates that logo on the fly.
 
 ## Controls
@@ -27,6 +28,7 @@ Then open:
 - **Particle Density:** controls how many points are sampled from the image.
 - **Particle Size:** changes dot radius.
 - **Settle Speed:** controls how quickly particles reform.
+- **Depth Amount:** controls how much front/back depth is applied to the logo shape.
 - **Start Sequence:** force-restart the timed logo cycle.
 - **Burst + Reform:** explodes particles, then they return to target.
 - **Load Defaults:** restores the built-in default team marks.

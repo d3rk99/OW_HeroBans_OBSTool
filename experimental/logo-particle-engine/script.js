@@ -6,6 +6,7 @@ const team2Input = document.getElementById('team2Input');
 const densityInput = document.getElementById('density');
 const sizeInput = document.getElementById('size');
 const speedInput = document.getElementById('speed');
+const depthInput = document.getElementById('depth');
 const startSequenceButton = document.getElementById('startSequence');
 const burstButton = document.getElementById('burst');
 const resetButton = document.getElementById('reset');
@@ -23,6 +24,7 @@ let sequenceTimer = null;
 let rotationY = 0;
 let rotationX = 0.22;
 let settleBlend = 0;
+const LOGO1_START_ROTATION = (10 * Math.PI) / 180;
 
 const CAMERA = {
   focalLength: 760,
@@ -153,7 +155,8 @@ function makeTargetsFromImage(image) {
         const centeredY = y - height / 2;
         const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
         const waveDepth = Math.sin(centeredX * 0.016) * 10 + Math.cos(centeredY * 0.018) * 10;
-        const zDepth = (luminance - 0.5) * 70 + waveDepth;
+        const depthScale = Number(depthInput.value);
+        const zDepth = ((luminance - 0.5) * 70 + waveDepth) * depthScale;
 
         nextTargets.push({
           x: centeredX,
@@ -236,7 +239,7 @@ function animate(ts) {
 
   const settled = avgDistance < 8;
   settleBlend += ((settled ? 1 : 0) - settleBlend) * 0.04;
-  rotationY += dt * (0.16 * settleBlend);
+  rotationY += dt * (0.168 * settleBlend);
 
   const sorted = [...particles].sort((a, b) => {
     const da = a.project(rotationY, rotationX).depth;
@@ -263,6 +266,10 @@ function loadImageFromUrl(url) {
 function showLogo(index) {
   const image = logos[index];
   if (!image) return;
+
+  if (index === 0) {
+    rotationY = LOGO1_START_ROTATION;
+  }
 
   activeLogoIndex = index;
   makeTargetsFromImage(image);
@@ -322,7 +329,7 @@ async function loadDefaultLogos() {
   logos[1] = await loadImageFromUrl(`data:image/svg+xml;charset=utf-8,${fallbackSVG2}`);
 
   activeLogoIndex = 0;
-  rotationY = 0;
+  rotationY = LOGO1_START_ROTATION;
   startSequence();
 }
 
@@ -345,6 +352,12 @@ team1Input.addEventListener('change', (event) => handleUpload(event.target.files
 team2Input.addEventListener('change', (event) => handleUpload(event.target.files[0], 1));
 
 densityInput.addEventListener('input', () => {
+  if (logos[activeLogoIndex]) {
+    makeTargetsFromImage(logos[activeLogoIndex]);
+  }
+});
+
+depthInput.addEventListener('input', () => {
   if (logos[activeLogoIndex]) {
     makeTargetsFromImage(logos[activeLogoIndex]);
   }
