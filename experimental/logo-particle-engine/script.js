@@ -14,6 +14,10 @@ const burstForceInput = document.getElementById('burstForce');
 const startSequenceButton = document.getElementById('startSequence');
 const burstButton = document.getElementById('burst');
 const resetButton = document.getElementById('reset');
+const tabControllerButton = document.getElementById('tabController');
+const tabAlphaButton = document.getElementById('tabAlpha');
+const controllerPanel = document.getElementById('controllerPanel');
+const alphaPanel = document.getElementById('alphaPanel');
 
 const offscreen = document.createElement('canvas');
 const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
@@ -80,6 +84,15 @@ function parseRgba(color) {
 function lerp(a, b, t) {
   return a + (b - a) * t;
 }
+
+function setActiveTab(tab) {
+  const controllerActive = tab === 'controller';
+  tabControllerButton.classList.toggle('is-active', controllerActive);
+  tabAlphaButton.classList.toggle('is-active', !controllerActive);
+  controllerPanel.classList.toggle('is-active', controllerActive);
+  alphaPanel.classList.toggle('is-active', !controllerActive);
+}
+
 
 class Particle {
   constructor(mx, my, mz) {
@@ -475,12 +488,17 @@ speedInput.addEventListener('input', persistControllerState);
 burstForceInput.addEventListener('input', persistControllerState);
 team1ResetToggle.addEventListener('change', persistControllerState);
 
+tabControllerButton.addEventListener('click', () => setActiveTab('controller'));
+tabAlphaButton.addEventListener('click', () => setActiveTab('alpha'));
+
 startSequenceButton.addEventListener('click', startSequence);
 burstButton.addEventListener('click', () => {
   burst();
   persistControllerState();
 });
 resetButton.addEventListener('click', loadDefaultLogos);
+
+setActiveTab('controller');
 
 loadDefaultLogos().then(() => {
   persistControllerState();

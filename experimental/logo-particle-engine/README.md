@@ -12,8 +12,8 @@ python3 -m http.server 4173
 
 Then open:
 
-- `http://localhost:4173/experimental/logo-particle-engine/` (official controller UI)
-- `http://localhost:4173/experimental/logo-particle-engine/alpha-output.html` (transparent particles-only OBS output)
+- `http://localhost:4173/experimental/logo-particle-engine/` (official docked controller with tabs)
+- `http://localhost:4173/experimental/logo-particle-engine/alpha-output.html` (standalone transparent particles-only OBS output)
 
 ## Sequence behavior
 
@@ -41,9 +41,9 @@ Then open:
 
 ## OBS workflow
 
-1. Open the controller page in a normal browser and tune logos/settings.
-2. Use `alpha-output.html` as your OBS Browser Source so only particles render (transparent background).
-3. The alpha-output page syncs settings/logo changes from the controller via localStorage.
+1. Open the controller page and use the **Controller** tab to tune logos/settings.
+2. Use the **OBS Alpha Output** tab in that same page for a docked preview.
+3. In OBS, point Browser Source at `alpha-output.html` so only particles render (transparent background).
 
 ## Notes
 
