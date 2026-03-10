@@ -24,6 +24,9 @@ let glowTick = 0;
 let logos = [null, null];
 let activeLogoIndex = 0;
 let sequenceTimer = null;
+let logoSources = [null, null];
+
+const CONTROLLER_STATE_KEY = 'logoParticleEngineStateV1';
 
 let rotationY = 0;
 let rotationX = 0.22;
@@ -43,6 +46,24 @@ function getLogo1StartRotation() {
   }
   return (normalized * Math.PI) / 180;
 }
+
+function persistControllerState() {
+  const state = {
+    density: Number(densityInput.value),
+    size: Number(sizeInput.value),
+    speed: Number(speedInput.value),
+    depth: Number(depthInput.value),
+    startAngle: Number(startAngleInput.value),
+    team1Reset: Boolean(team1ResetToggle.checked),
+    holdTime: Number(holdTimeInput.value),
+    burstForce: Number(burstForceInput.value),
+    activeLogoIndex,
+    logoSources
+  };
+
+  localStorage.setItem(CONTROLLER_STATE_KEY, JSON.stringify(state));
+}
+
 
 function parseRgba(color) {
   const m = color.match(/rgba?\(([^)]+)\)/);
@@ -328,6 +349,7 @@ function showLogo(index) {
   activeLogoIndex = index;
   makeTargetsFromImage(image);
   burst();
+  persistControllerState();
 }
 
 function nextLoadedLogoIndex(fromIndex) {
@@ -350,6 +372,7 @@ function getHoldTimeMs() {
 function startSequence() {
   if (sequenceTimer) clearInterval(sequenceTimer);
 
+  persistControllerState();
   showLogo(activeLogoIndex);
   sequenceTimer = setInterval(() => {
     const nextIndex = nextLoadedLogoIndex(activeLogoIndex);
@@ -388,8 +411,11 @@ async function loadDefaultLogos() {
     </svg>
   `);
 
-  logos[0] = await loadImageFromUrl(`data:image/svg+xml;charset=utf-8,${fallbackSVG1}`);
-  logos[1] = await loadImageFromUrl(`data:image/svg+xml;charset=utf-8,${fallbackSVG2}`);
+  logoSources[0] = `data:image/svg+xml;charset=utf-8,${fallbackSVG1}`;
+  logoSources[1] = `data:image/svg+xml;charset=utf-8,${fallbackSVG2}`;
+
+  logos[0] = await loadImageFromUrl(logoSources[0]);
+  logos[1] = await loadImageFromUrl(logoSources[1]);
 
   activeLogoIndex = 0;
   rotationY = getLogo1StartRotation();
@@ -399,15 +425,21 @@ async function loadDefaultLogos() {
 async function handleUpload(file, index) {
   if (!file) return;
 
-  const objectUrl = URL.createObjectURL(file);
   try {
-    logos[index] = await loadImageFromUrl(objectUrl);
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    logoSources[index] = dataUrl;
+    logos[index] = await loadImageFromUrl(dataUrl);
     showLogo(index);
     startSequence();
+    persistControllerState();
   } catch {
     alert('Unable to load this image. Try a PNG or JPG file.');
-  } finally {
-    URL.revokeObjectURL(objectUrl);
   }
 }
 
@@ -418,24 +450,39 @@ densityInput.addEventListener('input', () => {
   if (logos[activeLogoIndex]) {
     makeTargetsFromImage(logos[activeLogoIndex]);
   }
+  persistControllerState();
 });
 
 depthInput.addEventListener('input', () => {
   if (logos[activeLogoIndex]) {
     makeTargetsFromImage(logos[activeLogoIndex]);
   }
+  persistControllerState();
 });
 
 startAngleInput.addEventListener('input', () => {
   getLogo1StartRotation();
+  persistControllerState();
 });
 
 holdTimeInput.addEventListener('input', () => {
+  persistControllerState();
   startSequence();
 });
 
+sizeInput.addEventListener('input', persistControllerState);
+speedInput.addEventListener('input', persistControllerState);
+burstForceInput.addEventListener('input', persistControllerState);
+team1ResetToggle.addEventListener('change', persistControllerState);
+
 startSequenceButton.addEventListener('click', startSequence);
-burstButton.addEventListener('click', burst);
+burstButton.addEventListener('click', () => {
+  burst();
+  persistControllerState();
+});
 resetButton.addEventListener('click', loadDefaultLogos);
 
-loadDefaultLogos().then(() => requestAnimationFrame(animate));
+loadDefaultLogos().then(() => {
+  persistControllerState();
+  requestAnimationFrame(animate);
+});
