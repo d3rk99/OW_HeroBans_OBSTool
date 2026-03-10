@@ -41,8 +41,8 @@ Then open:
 
 ## OBS workflow
 
-1. Open the controller page and use the **Controller** tab to tune logos/settings.
-2. Use the **OBS Alpha Output** tab in that same page for a docked preview.
+1. Open the controller page and use **Particle Controls** to tune all particle settings and uploads.
+2. Use **Controller View** for the main animation preview and **OBS Alpha Output** for docked transparent preview.
 3. In OBS, point Browser Source at `alpha-output.html` so only particles render (transparent background).
 
 ## Notes

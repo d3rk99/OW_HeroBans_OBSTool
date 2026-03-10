@@ -16,11 +16,18 @@
     </section>
 
     <section class="tab-bar" aria-label="View mode tabs">
-      <button id="tabController" class="tab is-active" type="button">Controller</button>
+      <button id="tabController" class="tab is-active" type="button">Controller View</button>
+      <button id="tabControls" class="tab" type="button">Particle Controls</button>
       <button id="tabAlpha" class="tab" type="button">OBS Alpha Output</button>
     </section>
 
     <section id="controllerPanel" class="panel is-active">
+      <section class="canvas-wrap">
+        <canvas id="scene" width="1280" height="720" aria-label="Particle logo animation"></canvas>
+      </section>
+    </section>
+
+    <section id="controlsPanel" class="panel">
       <section class="controls" aria-label="Particle engine controls">
         <label class="upload">
           <span>Team 1 Logo</span>
@@ -78,10 +85,6 @@
         <button id="startSequence" type="button">Start Sequence</button>
         <button id="burst" type="button">Burst + Reform</button>
         <button id="reset" type="button">Load Defaults</button>
-      </section>
-
-      <section class="canvas-wrap">
-        <canvas id="scene" width="1280" height="720" aria-label="Particle logo animation"></canvas>
       </section>
     </section>
 

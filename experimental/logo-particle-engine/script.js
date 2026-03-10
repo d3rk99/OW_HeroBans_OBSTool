@@ -15,8 +15,10 @@ const startSequenceButton = document.getElementById('startSequence');
 const burstButton = document.getElementById('burst');
 const resetButton = document.getElementById('reset');
 const tabControllerButton = document.getElementById('tabController');
+const tabControlsButton = document.getElementById('tabControls');
 const tabAlphaButton = document.getElementById('tabAlpha');
 const controllerPanel = document.getElementById('controllerPanel');
+const controlsPanel = document.getElementById('controlsPanel');
 const alphaPanel = document.getElementById('alphaPanel');
 
 const offscreen = document.createElement('canvas');
@@ -87,10 +89,16 @@ function lerp(a, b, t) {
 
 function setActiveTab(tab) {
   const controllerActive = tab === 'controller';
+  const controlsActive = tab === 'controls';
+  const alphaActive = tab === 'alpha';
+
   tabControllerButton.classList.toggle('is-active', controllerActive);
-  tabAlphaButton.classList.toggle('is-active', !controllerActive);
+  tabControlsButton.classList.toggle('is-active', controlsActive);
+  tabAlphaButton.classList.toggle('is-active', alphaActive);
+
   controllerPanel.classList.toggle('is-active', controllerActive);
-  alphaPanel.classList.toggle('is-active', !controllerActive);
+  controlsPanel.classList.toggle('is-active', controlsActive);
+  alphaPanel.classList.toggle('is-active', alphaActive);
 }
 
 
@@ -489,6 +497,7 @@ burstForceInput.addEventListener('input', persistControllerState);
 team1ResetToggle.addEventListener('change', persistControllerState);
 
 tabControllerButton.addEventListener('click', () => setActiveTab('controller'));
+tabControlsButton.addEventListener('click', () => setActiveTab('controls'));
 tabAlphaButton.addEventListener('click', () => setActiveTab('alpha'));
 
 startSequenceButton.addEventListener('click', startSequence);
