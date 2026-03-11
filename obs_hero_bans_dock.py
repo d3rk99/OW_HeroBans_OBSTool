@@ -182,6 +182,7 @@ def _default_logo_particle_state():
         "team1Reset": True,
         "holdTime": 6,
         "burstForce": 1.0,
+        "cameraDistance": 700,
         "activeLogoIndex": 0,
         "logoSources": ["", ""],
         "command": None,
@@ -228,6 +229,7 @@ def _sanitize_logo_particle_state(value):
         "team1Reset": bool(source.get("team1Reset", fallback["team1Reset"])),
         "holdTime": int(round(_clamp_float(source.get("holdTime", fallback["holdTime"]), 2, 15, fallback["holdTime"]))),
         "burstForce": _clamp_float(source.get("burstForce", fallback["burstForce"]), 0, 2, fallback["burstForce"]),
+        "cameraDistance": int(round(_clamp_float(source.get("cameraDistance", fallback["cameraDistance"]), 420, 1100, fallback["cameraDistance"]))),
         "activeLogoIndex": active_logo_index,
         "logoSources": [
             _sanitize_particle_logo_source(logos[0] if len(logos) > 0 else ""),

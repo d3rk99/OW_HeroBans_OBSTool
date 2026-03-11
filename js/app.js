@@ -63,6 +63,7 @@
     team1Reset: true,
     holdTime: 6,
     burstForce: 1,
+    cameraDistance: 700,
     activeLogoIndex: 0,
     logoSources: ['', ''],
     command: null
@@ -86,6 +87,7 @@
       team1Reset: typeof source.team1Reset === 'boolean' ? source.team1Reset : fallback.team1Reset,
       holdTime: Math.round(clampRange(source.holdTime, 2, 15, fallback.holdTime)),
       burstForce: clampRange(source.burstForce, 0, 2, fallback.burstForce),
+      cameraDistance: Math.round(clampRange(source.cameraDistance, 420, 1100, fallback.cameraDistance)),
       activeLogoIndex: clampRange(source.activeLogoIndex, 0, 1, fallback.activeLogoIndex),
       logoSources,
       command: sanitizeParticleCommand(source.command)
@@ -1319,6 +1321,7 @@
       speed: document.getElementById('particle-speed'),
       depth: document.getElementById('particle-depth'),
       burstForce: document.getElementById('particle-burst-force'),
+      cameraDistance: document.getElementById('particle-camera-distance'),
       startAngle: document.getElementById('particle-start-angle'),
       team1Reset: document.getElementById('particle-team1-reset'),
       holdTime: document.getElementById('particle-hold-time'),
@@ -1343,6 +1346,7 @@
       fields.speed.value = String(particle.speed);
       fields.depth.value = String(particle.depth);
       fields.burstForce.value = String(particle.burstForce);
+      fields.cameraDistance.value = String(particle.cameraDistance);
       fields.startAngle.value = String(particle.startAngle);
       fields.team1Reset.checked = Boolean(particle.team1Reset);
       fields.holdTime.value = String(particle.holdTime);
@@ -1358,6 +1362,7 @@
         speed: clampRange(fields.speed.value, 0.03, 0.2, 0.08),
         depth: clampRange(fields.depth.value, 0, 1, 0.55),
         burstForce: clampRange(fields.burstForce.value, 0, 2, 1),
+        cameraDistance: Math.round(clampRange(fields.cameraDistance.value, 420, 1100, 700)),
         startAngle: Math.round(clampRange(fields.startAngle.value, 0, 359, 10)),
         team1Reset: Boolean(fields.team1Reset.checked),
         holdTime: Math.round(clampRange(fields.holdTime.value, 2, 15, 6))
@@ -1379,7 +1384,7 @@
       node.addEventListener('change', () => mutateParticle());
     };
 
-    [fields.density, fields.size, fields.speed, fields.depth, fields.burstForce, fields.startAngle, fields.holdTime].forEach(bindRange);
+    [fields.density, fields.size, fields.speed, fields.depth, fields.burstForce, fields.cameraDistance, fields.startAngle, fields.holdTime].forEach(bindRange);
     fields.team1Reset.addEventListener('change', () => mutateParticle());
 
     fields.startSequence.addEventListener('click', () => mutateParticle('start-sequence'));
@@ -1422,7 +1427,7 @@
     const offscreen = document.createElement('canvas');
     const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
 
-    const CAMERA = { focalLength: 760, zOffset: 560 };
+    const CAMERA = { focalLength: 760 };
     const particles = [];
     let targets = [];
     let logos = [null, null];
@@ -1437,7 +1442,7 @@
 
     const settings = {
       density: 6, size: 2, speed: 0.08, depth: 0.55,
-      startAngle: 10, team1Reset: true, holdTime: 6, burstForce: 1
+      startAngle: 10, team1Reset: true, holdTime: 6, burstForce: 1, cameraDistance: 700
     };
 
     const resizeCanvas = () => {
@@ -1496,7 +1501,7 @@
         const xzZ = -this.mx * sinY + this.mz * cosY;
         const yzY = this.my * cosX - xzZ * sinX;
         const yzZ = this.my * sinX + xzZ * cosX;
-        const depth = yzZ + CAMERA.zOffset;
+        const depth = yzZ + settings.cameraDistance;
         const perspective = CAMERA.focalLength / Math.max(220, depth);
         return { x: canvas.width / 2 + xzX * perspective, y: canvas.height / 2 + yzY * perspective, depth, perspective };
       }
@@ -1604,6 +1609,7 @@
       settings.team1Reset = config.team1Reset;
       settings.holdTime = config.holdTime;
       settings.burstForce = config.burstForce;
+      settings.cameraDistance = config.cameraDistance;
       activeLogoIndex = config.activeLogoIndex;
 
       if (JSON.stringify(config.logoSources) !== JSON.stringify(logoSources)) {
