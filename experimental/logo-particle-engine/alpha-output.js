@@ -13,6 +13,8 @@ let logos = [null, null];
 let logoSources = [null, null];
 let activeLogoIndex = 0;
 let sequenceTimer = null;
+let lastStateSignature = '';
+let lastCommandNonce = -1;
 
 let rotationY = 0;
 const rotationX = 0.22;
@@ -28,8 +30,6 @@ const settings = {
   holdTime: 6,
   burstForce: 1
 };
-
-let lastStateSignature = '';
 
 function clamp(v, min, max, fallback) {
   const n = Number(v);
@@ -227,8 +227,19 @@ async function applyStateObject(state) {
     }
   }
 
-  if (logos[activeLogoIndex]) makeTargetsFromImage(logos[activeLogoIndex]);
-  startSequence();
+  if (logos[activeLogoIndex]) {
+    makeTargetsFromImage(logos[activeLogoIndex]);
+    startSequence();
+  }
+
+  if (state.command && Number.isFinite(state.command.nonce) && state.command.nonce !== lastCommandNonce) {
+    lastCommandNonce = state.command.nonce;
+    if (state.command.type === 'burst') {
+      burst();
+    } else if (state.command.type === 'start-sequence') {
+      startSequence();
+    }
+  }
 }
 
 async function applyControllerState() {
@@ -262,21 +273,9 @@ function animate(ts) {
   requestAnimationFrame(animate);
 }
 
-window.addEventListener('message', async (event) => {
-  if (!event.data || event.data.type !== 'logo-particle-state') return;
-  const state = event.data.payload;
-  if (!state) return;
-
-  const signature = JSON.stringify(state);
-  if (signature === lastStateSignature) return;
-
-  lastStateSignature = signature;
-  await applyStateObject(state);
-});
-
 window.addEventListener('storage', (event) => {
   if (event.key === CONTROLLER_STATE_KEY) applyControllerState();
 });
 
-setInterval(applyControllerState, 1000);
+setInterval(applyControllerState, 250);
 applyControllerState().then(() => requestAnimationFrame(animate));

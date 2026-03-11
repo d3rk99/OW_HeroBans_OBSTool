@@ -3,96 +3,75 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>School Logo Particle Engine Demo</title>
+  <title>Logo Particle Engine Controller</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <main class="app-shell">
     <section class="header">
-      <h1>Game Day Stream Opener • Logo Particle Engine</h1>
+      <h1>Logo Particle Engine • Controller</h1>
       <p>
-        Controller + OBS output tabs in one docked page. Tune settings in Controller, then use OBS Alpha Output for transparent feed.
+        This page only controls the engine. Use <code>alpha-output.html</code> as the separate transparent output page (OBS Browser Source).
       </p>
     </section>
 
-    <section class="tab-bar" aria-label="View mode tabs">
-      <button id="tabController" class="tab is-active" type="button">Controller View</button>
-      <button id="tabControls" class="tab" type="button">Particle Controls</button>
-      <button id="tabAlpha" class="tab" type="button">OBS Alpha Output</button>
-    </section>
+    <section class="controls" aria-label="Particle engine controls">
+      <label class="upload">
+        <span>Team 1 Logo</span>
+        <input id="team1Input" type="file" accept="image/png,image/*" />
+      </label>
 
-    <section id="controllerPanel" class="panel is-active">
-      <section class="canvas-wrap">
-        <canvas id="scene" width="1280" height="720" aria-label="Particle logo animation"></canvas>
-      </section>
-    </section>
+      <label class="upload">
+        <span>Team 2 Logo</span>
+        <input id="team2Input" type="file" accept="image/png,image/*" />
+      </label>
 
-    <section id="controlsPanel" class="panel">
-      <section class="controls" aria-label="Particle engine controls">
-        <label class="upload">
-          <span>Team 1 Logo</span>
-          <input id="team1Input" type="file" accept="image/png,image/*" />
-        </label>
+      <label>
+        <span>Particle Density</span>
+        <input id="density" type="range" min="3" max="12" value="6" />
+      </label>
 
-        <label class="upload">
-          <span>Team 2 Logo</span>
-          <input id="team2Input" type="file" accept="image/png,image/*" />
-        </label>
+      <label>
+        <span>Particle Size</span>
+        <input id="size" type="range" min="1" max="5" value="2" step="0.5" />
+      </label>
 
-        <label>
-          <span>Particle Density</span>
-          <input id="density" type="range" min="3" max="12" value="6" />
-        </label>
+      <label>
+        <span>Settle Speed</span>
+        <input id="speed" type="range" min="0.03" max="0.2" value="0.08" step="0.01" />
+      </label>
 
-        <label>
-          <span>Particle Size</span>
-          <input id="size" type="range" min="1" max="5" value="2" step="0.5" />
-        </label>
+      <label>
+        <span>Depth Amount</span>
+        <input id="depth" type="range" min="0" max="1" value="0.55" step="0.05" />
+      </label>
 
-        <label>
-          <span>Settle Speed</span>
-          <input id="speed" type="range" min="0.03" max="0.2" value="0.08" step="0.01" />
-        </label>
+      <label>
+        <span>Team 1 Start Angle (°)</span>
+        <input id="startAngle" type="number" min="0" max="359" value="10" step="1" />
+      </label>
 
-        <label>
-          <span>Depth Amount</span>
-          <input id="depth" type="range" min="0" max="1" value="0.55" step="0.05" />
-        </label>
+      <label>
+        <span>Team 1 Reset Mode</span>
+        <div class="toggle-row">
+          <input id="team1ResetToggle" type="checkbox" checked />
+          <small>Reset Team 1 to start angle on each cycle</small>
+        </div>
+      </label>
 
-        <label>
-          <span>Team 1 Start Angle (°)</span>
-          <input id="startAngle" type="number" min="0" max="359" value="10" step="1" />
-        </label>
+      <label>
+        <span>Logo Hold Time (seconds)</span>
+        <input id="holdTime" type="range" min="2" max="15" value="6" step="0.5" />
+      </label>
 
-        <label>
-          <span>Team 1 Reset Mode</span>
-          <div class="toggle-row">
-            <input id="team1ResetToggle" type="checkbox" checked />
-            <small>Reset Team 1 to start angle on each cycle</small>
-          </div>
-        </label>
+      <label>
+        <span>Burst Force</span>
+        <input id="burstForce" type="range" min="0" max="2" value="1" step="0.05" />
+      </label>
 
-        <label>
-          <span>Logo Hold Time (seconds)</span>
-          <input id="holdTime" type="range" min="2" max="15" value="6" step="0.5" />
-        </label>
-
-        <label>
-          <span>Burst Force</span>
-          <input id="burstForce" type="range" min="0" max="2" value="1" step="0.05" />
-        </label>
-
-        <button id="startSequence" type="button">Start Sequence</button>
-        <button id="burst" type="button">Burst + Reform</button>
-        <button id="reset" type="button">Load Defaults</button>
-      </section>
-    </section>
-
-    <section id="alphaPanel" class="panel">
-      <div class="alpha-wrap">
-        <p class="alpha-note">Use this exact tab URL in OBS when you want transparent particles-only output.</p>
-        <iframe id="alphaFrame" title="OBS Alpha Output" src="alpha-output.html"></iframe>
-      </div>
+      <button id="startSequence" type="button">Start Sequence</button>
+      <button id="burst" type="button">Burst + Reform</button>
+      <button id="reset" type="button">Load Defaults</button>
     </section>
   </main>
 
