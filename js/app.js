@@ -1676,6 +1676,8 @@
       const nodes = Array.isArray(gltf.nodes) ? gltf.nodes : [];
       const scenes = Array.isArray(gltf.scenes) ? gltf.scenes : [];
       const materials = Array.isArray(gltf.materials) ? gltf.materials : [];
+      const textures = Array.isArray(gltf.textures) ? gltf.textures : [];
+      const images = Array.isArray(gltf.images) ? gltf.images : [];
 
       const componentTypeToBytes = { 5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4 };
       const typeToCount = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
@@ -1785,6 +1787,75 @@
       const rootScene = scenes[sceneIndex] || scenes[0] || {};
       const rootNodes = Array.isArray(rootScene.nodes) ? rootScene.nodes : [];
       const points = [];
+      const imagePixelCache = new Map();
+
+      const loadImagePixels = async (imageIndex) => {
+        if (!Number.isInteger(imageIndex) || imageIndex < 0 || imageIndex >= images.length) return null;
+        if (imagePixelCache.has(imageIndex)) return imagePixelCache.get(imageIndex);
+
+        const imageDef = images[imageIndex] || {};
+        let imageUrl = '';
+
+        if (typeof imageDef.uri === 'string' && imageDef.uri.startsWith('data:')) {
+          imageUrl = imageDef.uri;
+        } else if (Number.isInteger(imageDef.bufferView)) {
+          const viewRef = bufferViews[imageDef.bufferView];
+          if (viewRef) {
+            const raw = bufferData[viewRef.buffer];
+            if (raw) {
+              const start = viewRef.byteOffset || 0;
+              const end = start + (viewRef.byteLength || 0);
+              const mime = String(imageDef.mimeType || 'image/png');
+              const blob = new Blob([raw.slice(start, end)], { type: mime });
+              imageUrl = URL.createObjectURL(blob);
+            }
+          }
+        }
+
+        if (!imageUrl) {
+          imagePixelCache.set(imageIndex, null);
+          return null;
+        }
+
+        const loaded = await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = imageUrl;
+        });
+
+        if (imageUrl.startsWith('blob:')) URL.revokeObjectURL(imageUrl);
+
+        if (!loaded) {
+          imagePixelCache.set(imageIndex, null);
+          return null;
+        }
+
+        const cvs = document.createElement('canvas');
+        cvs.width = loaded.width;
+        cvs.height = loaded.height;
+        const c2d = cvs.getContext('2d', { willReadFrequently: true });
+        c2d.drawImage(loaded, 0, 0);
+        const data = c2d.getImageData(0, 0, cvs.width, cvs.height).data;
+        const pixels = { width: cvs.width, height: cvs.height, data };
+        imagePixelCache.set(imageIndex, pixels);
+        return pixels;
+      };
+
+      const sampleTextureColor = (pixels, uv) => {
+        if (!pixels || !uv) return null;
+        const u = ((Number(uv[0]) || 0) % 1 + 1) % 1;
+        const v = ((Number(uv[1]) || 0) % 1 + 1) % 1;
+        const x = Math.min(pixels.width - 1, Math.max(0, Math.floor(u * (pixels.width - 1))));
+        const y = Math.min(pixels.height - 1, Math.max(0, Math.floor((1 - v) * (pixels.height - 1))));
+        const idx = (y * pixels.width + x) * 4;
+        return {
+          r: pixels.data[idx] / 255,
+          g: pixels.data[idx + 1] / 255,
+          b: pixels.data[idx + 2] / 255,
+          a: pixels.data[idx + 3] / 255
+        };
+      };
 
       const getMaterialColor = (materialIndex) => {
         const material = materials[materialIndex] || {};
@@ -1800,7 +1871,7 @@
         return { r: 200, g: 230, b: 255, a: 0.92 };
       };
 
-      const walkNode = (nodeIndex, parentMatrix) => {
+      const walkNode = async (nodeIndex, parentMatrix) => {
         const node = nodes[nodeIndex];
         if (!node) return;
         const world = multiply(parentMatrix, makeNodeMatrix(node));
@@ -1808,42 +1879,78 @@
         if (Number.isInteger(node.mesh)) {
           const mesh = meshes[node.mesh] || {};
           const primitives = Array.isArray(mesh.primitives) ? mesh.primitives : [];
-          primitives.forEach((primitive) => {
+          for (const primitive of primitives) {
             const positionAccessor = primitive?.attributes?.POSITION;
-            if (!Number.isInteger(positionAccessor)) return;
+            if (!Number.isInteger(positionAccessor)) continue;
             const positions = readAccessor(positionAccessor, 'VEC3');
-            if (!positions.length) return;
+            if (!positions.length) continue;
 
             const colorAccessor = primitive?.attributes?.COLOR_0;
             const colors = Number.isInteger(colorAccessor) ? readAccessor(colorAccessor) : [];
+            const texcoordAccessor = primitive?.attributes?.TEXCOORD_0;
+            const texcoords = Number.isInteger(texcoordAccessor) ? readAccessor(texcoordAccessor, 'VEC2') : [];
             const materialColor = getMaterialColor(primitive?.material);
+
+            let texturePixels = null;
+            const mat = materials[primitive?.material] || {};
+            const textureIndex = mat?.pbrMetallicRoughness?.baseColorTexture?.index;
+            if (Number.isInteger(textureIndex) && textureIndex >= 0 && textureIndex < textures.length) {
+              const imageIndex = textures[textureIndex]?.source;
+              texturePixels = await loadImagePixels(imageIndex);
+            }
 
             const step = Math.max(1, Math.floor(positions.length / 8000));
             for (let i = 0; i < positions.length; i += step) {
               const pos = positions[i];
               const worldPos = transformPoint(world, { x: pos[0] || 0, y: pos[1] || 0, z: pos[2] || 0 });
 
-              let color = materialColor;
+              const base = {
+                r: Math.max(0, Math.min(1, materialColor.r / 255)),
+                g: Math.max(0, Math.min(1, materialColor.g / 255)),
+                b: Math.max(0, Math.min(1, materialColor.b / 255)),
+                a: Math.max(0.3, Math.min(1, materialColor.a))
+              };
+
+              if (texturePixels && texcoords.length > i) {
+                const tex = sampleTextureColor(texturePixels, texcoords[i]);
+                if (tex) {
+                  base.r *= tex.r;
+                  base.g *= tex.g;
+                  base.b *= tex.b;
+                  base.a *= tex.a;
+                }
+              }
+
               if (colors.length > i) {
                 const c = colors[i];
-                const rr = Math.round(Math.max(0, Math.min(1, Number(c[0]) || 0.78)) * 255);
-                const gg = Math.round(Math.max(0, Math.min(1, Number(c[1]) || 0.9)) * 255);
-                const bb = Math.round(Math.max(0, Math.min(1, Number(c[2]) || 1.0)) * 255);
-                const aa = Math.max(0.3, Math.min(1, Number(c[3]) || 1));
-                color = { r: rr, g: gg, b: bb, a: aa };
+                base.r *= Math.max(0, Math.min(1, Number(c[0]) || 1));
+                base.g *= Math.max(0, Math.min(1, Number(c[1]) || 1));
+                base.b *= Math.max(0, Math.min(1, Number(c[2]) || 1));
+                base.a *= Math.max(0.3, Math.min(1, Number(c[3]) || 1));
               }
+
+              const color = {
+                r: Math.round(base.r * 255),
+                g: Math.round(base.g * 255),
+                b: Math.round(base.b * 255),
+                a: Math.max(0.3, Math.min(1, base.a))
+              };
 
               points.push({ x: worldPos.x, y: worldPos.y, z: worldPos.z, color });
             }
-          });
+          }
         }
 
         const children = Array.isArray(node.children) ? node.children : [];
-        children.forEach((childIndex) => walkNode(childIndex, world));
+        for (const childIndex of children) {
+          await walkNode(childIndex, world);
+        }
       };
 
       const identityMatrix = identity();
-      rootNodes.forEach((nodeIndex) => walkNode(nodeIndex, identityMatrix));
+      for (const nodeIndex of rootNodes) {
+        await walkNode(nodeIndex, identityMatrix);
+      }
       if (!points.length) return [];
 
       let minX = Infinity; let minY = Infinity; let minZ = Infinity;
