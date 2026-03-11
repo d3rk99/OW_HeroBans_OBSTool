@@ -266,6 +266,13 @@ button {
   background: transparent;
 }
 
+
+[data-logo-particle-overlay] {
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
 .overlay-stage {
   width: var(--card-width);
 }
@@ -588,6 +595,29 @@ button {
   color: #0e1525;
 }
 
+
+input[type="file"] {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #425171;
+  background: #0e1525;
+  color: var(--text);
+  padding: 0.55rem 0.65rem;
+  font-size: 0.95rem;
+}
+
+.particle-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.muted-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 select,
 input[type="color"] {
   width: 100%;
@@ -715,7 +745,8 @@ input[type="number"] {
 @media (max-width: 900px) {
   .tab-grid,
   .scoreboard-grid,
-  .score-ticker-grid {
+  .score-ticker-grid,
+  .particle-controls-grid {
     grid-template-columns: 1fr;
   }
 }
