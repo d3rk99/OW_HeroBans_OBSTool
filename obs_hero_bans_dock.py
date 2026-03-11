@@ -149,6 +149,114 @@ def _sanitize_valorant_game_score(value):
     }
 
 
+def _clamp_float(value, minimum, maximum, fallback):
+    try:
+        numeric = float(value)
+    except Exception:
+        return fallback
+    if numeric < minimum:
+        return minimum
+    if numeric > maximum:
+        return maximum
+    return numeric
+
+
+def _sanitize_particle_logo_source(value):
+    raw = str(value or "")
+    if not raw:
+        return ""
+    if not raw.startswith("data:image/"):
+        return ""
+    if len(raw) > 4 * 1024 * 1024:
+        return ""
+    return raw
+
+
+def _sanitize_particle_model_source(value):
+    raw = str(value or "")
+    if not raw:
+        return ""
+    if not raw.startswith("data:"):
+        return ""
+    lowered = raw.lower()
+    if "model/gltf-binary" not in lowered and "model/gltf+json" not in lowered and "application/octet-stream" not in lowered:
+        return ""
+    if len(raw) > 16 * 1024 * 1024:
+        return ""
+    return raw
+
+
+def _default_logo_particle_state():
+    return {
+        "density": 6,
+        "size": 2.0,
+        "speed": 0.08,
+        "depth": 0.55,
+        "startAngle": 10,
+        "team1Reset": True,
+        "holdTime": 6,
+        "burstForce": 1.0,
+        "cameraDistance": 700,
+        "useModel": False,
+        "modelSource": "",
+        "activeLogoIndex": 0,
+        "logoSources": ["", ""],
+        "command": None,
+    }
+
+
+def _sanitize_logo_particle_command(value):
+    if not isinstance(value, dict):
+        return None
+    command_type = str(value.get("type", "") or "").strip()
+    if command_type not in ("start-sequence", "burst"):
+        return None
+    try:
+        nonce = int(float(value.get("nonce", 0)))
+    except Exception:
+        nonce = 0
+    try:
+        ts = int(float(value.get("ts", int(time.time() * 1000))))
+    except Exception:
+        ts = int(time.time() * 1000)
+    return {"type": command_type, "nonce": nonce, "ts": ts}
+
+
+def _sanitize_logo_particle_state(value):
+    fallback = _default_logo_particle_state()
+    source = value if isinstance(value, dict) else {}
+    logos = source.get("logoSources") if isinstance(source.get("logoSources"), list) else fallback["logoSources"]
+
+    try:
+        active_logo_index = int(float(source.get("activeLogoIndex", fallback["activeLogoIndex"])))
+    except Exception:
+        active_logo_index = fallback["activeLogoIndex"]
+    if active_logo_index < 0:
+        active_logo_index = 0
+    if active_logo_index > 1:
+        active_logo_index = 1
+
+    return {
+        "density": int(round(_clamp_float(source.get("density", fallback["density"]), 3, 12, fallback["density"]))),
+        "size": _clamp_float(source.get("size", fallback["size"]), 1, 5, fallback["size"]),
+        "speed": _clamp_float(source.get("speed", fallback["speed"]), 0.03, 0.2, fallback["speed"]),
+        "depth": _clamp_float(source.get("depth", fallback["depth"]), 0, 1, fallback["depth"]),
+        "startAngle": int(round(_clamp_float(source.get("startAngle", fallback["startAngle"]), 0, 359, fallback["startAngle"]))),
+        "team1Reset": bool(source.get("team1Reset", fallback["team1Reset"])),
+        "holdTime": int(round(_clamp_float(source.get("holdTime", fallback["holdTime"]), 2, 15, fallback["holdTime"]))),
+        "burstForce": _clamp_float(source.get("burstForce", fallback["burstForce"]), 0, 2, fallback["burstForce"]),
+        "cameraDistance": int(round(_clamp_float(source.get("cameraDistance", fallback["cameraDistance"]), 420, 1100, fallback["cameraDistance"]))),
+        "useModel": bool(source.get("useModel", fallback["useModel"])),
+        "modelSource": _sanitize_particle_model_source(source.get("modelSource", fallback["modelSource"])),
+        "activeLogoIndex": active_logo_index,
+        "logoSources": [
+            _sanitize_particle_logo_source(logos[0] if len(logos) > 0 else ""),
+            _sanitize_particle_logo_source(logos[1] if len(logos) > 1 else ""),
+        ],
+        "command": _sanitize_logo_particle_command(source.get("command")),
+    }
+
+
 class _BridgeState(object):
     def __init__(self):
         self._lock = threading.Lock()
@@ -175,6 +283,7 @@ class _BridgeState(object):
                 "pick2": {"winner": "", "team1Score": 0, "team2Score": 0},
                 "pick3": {"winner": "", "team1Score": 0, "team2Score": 0},
             },
+            "logoParticle": _default_logo_particle_state(),
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -189,6 +298,7 @@ class _BridgeState(object):
         valorant_map_veto = payload.get("valorantMapVeto", {}) or {}
         valorant_pick_sides = payload.get("valorantPickSides", {}) or {}
         valorant_game_score = payload.get("valorantGameScore", {}) or {}
+        logo_particle = payload.get("logoParticle", {}) or {}
         return {
             "team1": {"ban": str(team1.get("ban", "") or "")},
             "team2": {"ban": str(team2.get("ban", "") or "")},
@@ -237,6 +347,7 @@ class _BridgeState(object):
                 "pick2": _sanitize_valorant_game_score(valorant_game_score.get("pick2", {})),
                 "pick3": _sanitize_valorant_game_score(valorant_game_score.get("pick3", {})),
             },
+            "logoParticle": _sanitize_logo_particle_state(logo_particle),
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -297,6 +408,7 @@ class _BridgeState(object):
                 "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
                 "valorantPickSides": dict(self._state.get("valorantPickSides", {})),
                 "valorantGameScore": dict(self._state.get("valorantGameScore", {})),
+                "logoParticle": dict(self._state.get("logoParticle", _default_logo_particle_state())),
                 "updatedAt": self._state["updatedAt"],
             }
 
@@ -336,6 +448,7 @@ class _BridgeState(object):
                 "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
                 "valorantPickSides": dict(self._state.get("valorantPickSides", {})),
                 "valorantGameScore": dict(self._state.get("valorantGameScore", {})),
+                "logoParticle": dict(self._state.get("logoParticle", _default_logo_particle_state())),
                 "updatedAt": self._state["updatedAt"],
             }
 
