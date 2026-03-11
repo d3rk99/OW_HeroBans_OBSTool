@@ -4,10 +4,10 @@ This setup now uses **one controller page** and **one separate alpha output page
 
 ## Run locally
 
-From the repository root:
+From the repository root, start the bundled state-aware server:
 
 ```bash
-python3 -m http.server 4173
+node experimental/logo-particle-engine/state-server.js
 ```
 
 Then open:
@@ -20,7 +20,7 @@ Then open:
 1. Open the controller page (`index.html`) in a normal browser.
 2. Open `alpha-output.html` as a separate page (or directly in OBS Browser Source).
 3. Adjust controls/uploads on the controller page.
-4. The alpha output page reads controller state from `localStorage` key `logoParticleEngineStateV1` and updates live.
+4. The alpha output page updates live using same-origin `localStorage` when available and also polls `/api/state` as a fallback bridge (important for OBS Browser Source cases where storage sync is isolated).
 
 ## Controls
 
@@ -38,4 +38,5 @@ Then open:
 ## Notes
 
 - This folder is intentionally isolated and does not modify the existing OBS tool flow.
-- If opened from local files (`file://`), browser storage sync can be inconsistent. Use the local server command above.
+- If opened from local files (`file://`), sync will be inconsistent. Use the server command above.
+- `python3 -m http.server` will serve files, but it will **not** provide `/api/state`; use `state-server.js` for reliable controller ➜ alpha sync in OBS.

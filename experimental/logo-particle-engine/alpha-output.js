@@ -2,6 +2,7 @@ const canvas = document.getElementById('scene');
 const ctx = canvas.getContext('2d');
 
 const CONTROLLER_STATE_KEY = 'logoParticleEngineStateV1';
+const STATE_API_ENDPOINT = '/api/state';
 
 const offscreen = document.createElement('canvas');
 const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
@@ -242,15 +243,40 @@ async function applyStateObject(state) {
   }
 }
 
+
+async function fetchControllerStateFromServer() {
+  try {
+    const response = await fetch(STATE_API_ENDPOINT, { cache: 'no-store' });
+    if (!response.ok) return null;
+    const state = await response.json();
+    if (!state || typeof state !== 'object') return null;
+    return state;
+  } catch {
+    return null;
+  }
+}
+
 async function applyControllerState() {
   const raw = localStorage.getItem(CONTROLLER_STATE_KEY);
-  if (!raw || raw === lastStateSignature) return;
+  if (raw && raw !== lastStateSignature) {
+    let state;
+    try { state = JSON.parse(raw); } catch { state = null; }
 
-  let state;
-  try { state = JSON.parse(raw); } catch { return; }
+    if (state) {
+      lastStateSignature = raw;
+      await applyStateObject(state);
+      return;
+    }
+  }
 
-  lastStateSignature = raw;
-  await applyStateObject(state);
+  const serverState = await fetchControllerStateFromServer();
+  if (!serverState) return;
+
+  const serverRaw = JSON.stringify(serverState);
+  if (serverRaw === lastStateSignature) return;
+
+  lastStateSignature = serverRaw;
+  await applyStateObject(serverState);
 }
 
 let lastTs = 0;

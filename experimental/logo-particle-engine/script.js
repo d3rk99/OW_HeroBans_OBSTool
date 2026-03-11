@@ -13,6 +13,7 @@ const burstButton = document.getElementById('burst');
 const resetButton = document.getElementById('reset');
 
 const CONTROLLER_STATE_KEY = 'logoParticleEngineStateV1';
+const STATE_API_ENDPOINT = '/api/state';
 
 let logoSources = [null, null];
 let activeLogoIndex = 0;
@@ -53,6 +54,19 @@ function buildControllerState(commandType = null) {
 function persistControllerState(commandType = null) {
   const state = buildControllerState(commandType);
   localStorage.setItem(CONTROLLER_STATE_KEY, JSON.stringify(state));
+  pushStateToServer(state);
+}
+
+async function pushStateToServer(state) {
+  try {
+    await fetch(STATE_API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+  } catch {
+    // LocalStorage sync still works when no API server is running.
+  }
 }
 
 function applyStateToControls(state) {
