@@ -263,7 +263,7 @@ class _BridgeState(object):
                 "pick2": {"winner": "", "team1Score": 0, "team2Score": 0},
                 "pick3": {"winner": "", "team1Score": 0, "team2Score": 0},
             },
-            "logoParticle": _sanitize_logo_particle_state(logo_particle),
+            "logoParticle": _default_logo_particle_state(),
             "updatedAt": int(time.time() * 1000),
         }
 
