@@ -16,12 +16,81 @@
   const VETO_FIELD_IDS = ['ban1', 'ban2', 'pick1', 'pick2', 'ban3', 'ban4', 'pick3'];
   const VALORANT_PICK_IDS = ['pick1', 'pick2', 'pick3'];
 
+  const PARTICLE_LOGO_MAX_LEN = 4 * 1024 * 1024;
+  const PARTICLE_COMMAND_TYPES = new Set(['start-sequence', 'burst']);
+
   let heroList = [];
   let heroesByName = new Map();
   let valorantMaps = [];
   let valorantMapsByUuid = new Map();
   let valorantMapUuidByName = new Map();
   let refreshValorantMapPoolOptions = null;
+  let syncLogoParticleControls = () => {};
+
+  const clampRange = (value, min, max, fallback) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    return Math.max(min, Math.min(max, numeric));
+  };
+
+  const sanitizeParticleLogoSource = (value) => {
+    const raw = String(value || '');
+    if (!raw) return '';
+    if (!raw.startsWith('data:image/')) return '';
+    if (raw.length > PARTICLE_LOGO_MAX_LEN) return '';
+    return raw;
+  };
+
+  const sanitizeParticleCommand = (value) => {
+    if (!value || typeof value !== 'object') return null;
+    const type = String(value.type || '').trim();
+    if (!PARTICLE_COMMAND_TYPES.has(type)) return null;
+    const nonce = Number(value.nonce);
+    const ts = Number(value.ts);
+    return {
+      type,
+      nonce: Number.isFinite(nonce) ? nonce : 0,
+      ts: Number.isFinite(ts) ? ts : Date.now()
+    };
+  };
+
+  const defaultLogoParticleState = () => ({
+    density: 6,
+    size: 2,
+    speed: 0.08,
+    depth: 0.55,
+    startAngle: 10,
+    team1Reset: true,
+    holdTime: 6,
+    burstForce: 1,
+    activeLogoIndex: 0,
+    logoSources: ['', ''],
+    command: null
+  });
+
+  const sanitizeLogoParticleState = (value) => {
+    const fallback = defaultLogoParticleState();
+    const source = value && typeof value === 'object' ? value : {};
+    const rawLogos = Array.isArray(source.logoSources) ? source.logoSources : fallback.logoSources;
+    const logoSources = [
+      sanitizeParticleLogoSource(rawLogos[0]),
+      sanitizeParticleLogoSource(rawLogos[1])
+    ];
+
+    return {
+      density: Math.round(clampRange(source.density, 3, 12, fallback.density)),
+      size: clampRange(source.size, 1, 5, fallback.size),
+      speed: clampRange(source.speed, 0.03, 0.2, fallback.speed),
+      depth: clampRange(source.depth, 0, 1, fallback.depth),
+      startAngle: Math.round(clampRange(source.startAngle, 0, 359, fallback.startAngle)),
+      team1Reset: typeof source.team1Reset === 'boolean' ? source.team1Reset : fallback.team1Reset,
+      holdTime: Math.round(clampRange(source.holdTime, 2, 15, fallback.holdTime)),
+      burstForce: clampRange(source.burstForce, 0, 2, fallback.burstForce),
+      activeLogoIndex: clampRange(source.activeLogoIndex, 0, 1, fallback.activeLogoIndex),
+      logoSources,
+      command: sanitizeParticleCommand(source.command)
+    };
+  };
 
   const defaultState = () => ({
     team1: { ban: '' },
@@ -50,6 +119,7 @@
       pick3: { winner: '', team1Score: 0, team2Score: 0 }
     },
     valorantMapPool: valorantMaps.map((map) => map.uuid),
+    logoParticle: defaultLogoParticleState(),
     updatedAt: Date.now()
   });
 
@@ -289,6 +359,7 @@
         pick2: sanitizeValorantGameScore(payload?.valorantGameScore?.pick2),
         pick3: sanitizeValorantGameScore(payload?.valorantGameScore?.pick3)
       },
+      logoParticle: sanitizeLogoParticleState(payload?.logoParticle),
       updatedAt: Number(payload?.updatedAt) || Date.now()
     };
   }
@@ -417,6 +488,12 @@
     return ['pick1', 'pick2', 'pick3'].some((key) => Object.prototype.hasOwnProperty.call(gameScore, key));
   }
 
+  function bridgeHasLogoParticle(payload) {
+    if (!payload || typeof payload !== 'object') return false;
+    const particle = payload.logoParticle;
+    return Boolean(particle && typeof particle === 'object');
+  }
+
   async function readBridgeState() {
     try {
       const response = await fetch(BRIDGE_STATE_URL, { cache: 'no-store' });
@@ -428,7 +505,8 @@
         hasValorantMapVeto: bridgeHasValorantMapVeto(payload),
         hasValorantMapPool: bridgeHasValorantMapPool(payload),
         hasValorantPickSides: bridgeHasValorantPickSides(payload),
-        hasValorantGameScore: bridgeHasValorantGameScore(payload)
+        hasValorantGameScore: bridgeHasValorantGameScore(payload),
+        hasLogoParticle: bridgeHasLogoParticle(payload)
       };
     } catch {
       return null;
@@ -450,6 +528,7 @@
       valorantMapPool: bridgePayload.hasValorantMapPool ? bridgeState.valorantMapPool : localState.valorantMapPool,
       valorantPickSides: bridgePayload.hasValorantPickSides ? bridgeState.valorantPickSides : localState.valorantPickSides,
       valorantGameScore: bridgePayload.hasValorantGameScore ? bridgeState.valorantGameScore : localState.valorantGameScore,
+      logoParticle: bridgePayload.hasLogoParticle ? bridgeState.logoParticle : localState.logoParticle,
       updatedAt: Math.max(Number(localState.updatedAt) || 0, Number(bridgeState.updatedAt) || 0)
     });
   }
@@ -1231,6 +1310,361 @@
     }
   }
 
+  function initLogoParticleControl(pendingState, syncInputs) {
+    const fields = {
+      team1Logo: document.getElementById('particle-team1-logo'),
+      team2Logo: document.getElementById('particle-team2-logo'),
+      density: document.getElementById('particle-density'),
+      size: document.getElementById('particle-size'),
+      speed: document.getElementById('particle-speed'),
+      depth: document.getElementById('particle-depth'),
+      burstForce: document.getElementById('particle-burst-force'),
+      startAngle: document.getElementById('particle-start-angle'),
+      team1Reset: document.getElementById('particle-team1-reset'),
+      holdTime: document.getElementById('particle-hold-time'),
+      startSequence: document.getElementById('particle-start-sequence'),
+      burst: document.getElementById('particle-burst'),
+      reset: document.getElementById('particle-reset-defaults')
+    };
+
+    if (!fields.density) return;
+
+    const toDataUrl = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const syncLocalControls = () => {
+      const particle = sanitizeLogoParticleState(pendingState.logoParticle);
+      fields.density.value = String(particle.density);
+      fields.size.value = String(particle.size);
+      fields.speed.value = String(particle.speed);
+      fields.depth.value = String(particle.depth);
+      fields.burstForce.value = String(particle.burstForce);
+      fields.startAngle.value = String(particle.startAngle);
+      fields.team1Reset.checked = Boolean(particle.team1Reset);
+      fields.holdTime.value = String(particle.holdTime);
+    };
+
+    syncLogoParticleControls = syncLocalControls;
+
+    const mutateParticle = (commandType = null) => {
+      const next = {
+        ...sanitizeLogoParticleState(pendingState.logoParticle),
+        density: Math.round(clampRange(fields.density.value, 3, 12, 6)),
+        size: clampRange(fields.size.value, 1, 5, 2),
+        speed: clampRange(fields.speed.value, 0.03, 0.2, 0.08),
+        depth: clampRange(fields.depth.value, 0, 1, 0.55),
+        burstForce: clampRange(fields.burstForce.value, 0, 2, 1),
+        startAngle: Math.round(clampRange(fields.startAngle.value, 0, 359, 10)),
+        team1Reset: Boolean(fields.team1Reset.checked),
+        holdTime: Math.round(clampRange(fields.holdTime.value, 2, 15, 6))
+      };
+
+      if (commandType) {
+        const previousNonce = Number(next?.command?.nonce) || 0;
+        next.command = { type: commandType, nonce: previousNonce + 1, ts: Date.now() };
+      }
+
+      pendingState.logoParticle = sanitizeLogoParticleState(next);
+      syncInputs();
+      writeState(pendingState);
+    };
+
+    const bindRange = (node) => {
+      if (!node) return;
+      node.addEventListener('input', () => mutateParticle());
+      node.addEventListener('change', () => mutateParticle());
+    };
+
+    [fields.density, fields.size, fields.speed, fields.depth, fields.burstForce, fields.startAngle, fields.holdTime].forEach(bindRange);
+    fields.team1Reset.addEventListener('change', () => mutateParticle());
+
+    fields.startSequence.addEventListener('click', () => mutateParticle('start-sequence'));
+    fields.burst.addEventListener('click', () => mutateParticle('burst'));
+    fields.reset.addEventListener('click', () => {
+      pendingState.logoParticle = defaultLogoParticleState();
+      syncInputs();
+      writeState(pendingState);
+    });
+
+    const handleUpload = async (file, index) => {
+      if (!file) return;
+      try {
+        const src = sanitizeParticleLogoSource(await toDataUrl(file));
+        const next = sanitizeLogoParticleState(pendingState.logoParticle);
+        const logos = Array.isArray(next.logoSources) ? [...next.logoSources] : ['', ''];
+        logos[index] = src;
+        next.logoSources = logos;
+        next.activeLogoIndex = index;
+        const nonce = Number(next?.command?.nonce) || 0;
+        next.command = { type: 'start-sequence', nonce: nonce + 1, ts: Date.now() };
+        pendingState.logoParticle = sanitizeLogoParticleState(next);
+        syncInputs();
+        writeState(pendingState);
+      } catch {
+        window.alert('Unable to read logo file. Please use PNG/JPG/SVG images.');
+      }
+    };
+
+    fields.team1Logo.addEventListener('change', (event) => handleUpload(event.target.files?.[0], 0));
+    fields.team2Logo.addEventListener('change', (event) => handleUpload(event.target.files?.[0], 1));
+
+    syncLocalControls();
+  }
+
+  function renderLogoParticleOverlay() {
+    const canvas = document.querySelector('[data-logo-particle-overlay]');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const offscreen = document.createElement('canvas');
+    const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
+
+    const CAMERA = { focalLength: 760, zOffset: 560 };
+    const particles = [];
+    let targets = [];
+    let logos = [null, null];
+    let logoSources = ['', ''];
+    let activeLogoIndex = 0;
+    let sequenceTimer = null;
+    let lastSignature = '';
+    let lastCommandNonce = -1;
+    let rotationY = 0;
+    const rotationX = 0.22;
+    let settleBlend = 0;
+
+    const settings = {
+      density: 6, size: 2, speed: 0.08, depth: 0.55,
+      startAngle: 10, team1Reset: true, holdTime: 6, burstForce: 1
+    };
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    class Particle {
+      constructor(mx, my, mz) {
+        this.mx = mx; this.my = my; this.mz = mz;
+        this.vx = (Math.random() - 0.5) * 22;
+        this.vy = (Math.random() - 0.5) * 22;
+        this.vz = (Math.random() - 0.5) * 22;
+        this.baseSize = settings.size;
+        this.targetX = mx; this.targetY = my; this.targetZ = mz;
+        this.color = { r: 116, g: 244, b: 255, a: 0.9 };
+        this.targetColor = { r: 116, g: 244, b: 255, a: 0.9 };
+      }
+
+      retarget(target) {
+        this.targetX = target.x;
+        this.targetY = target.y;
+        this.targetZ = target.z;
+        this.targetColor = target.color;
+      }
+
+      update(dt) {
+        const settle = settings.speed * dt * 60;
+        const dx = this.targetX - this.mx;
+        const dy = this.targetY - this.my;
+        const dz = this.targetZ - this.mz;
+        this.vx += dx * settle * 0.06;
+        this.vy += dy * settle * 0.06;
+        this.vz += dz * settle * 0.06;
+        this.vx *= 0.9; this.vy *= 0.9; this.vz *= 0.9;
+        this.mx += this.vx; this.my += this.vy; this.mz += this.vz;
+        const colorLerp = Math.min(0.18, 0.03 + settle * 0.04);
+        this.color.r += (this.targetColor.r - this.color.r) * colorLerp;
+        this.color.g += (this.targetColor.g - this.color.g) * colorLerp;
+        this.color.b += (this.targetColor.b - this.color.b) * colorLerp;
+        this.color.a += (this.targetColor.a - this.color.a) * colorLerp;
+        this.baseSize = settings.size;
+      }
+
+      distanceToTarget() {
+        const dx = this.targetX - this.mx;
+        const dy = this.targetY - this.my;
+        const dz = this.targetZ - this.mz;
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+      }
+
+      project(rotY, rotX) {
+        const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+        const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+        const xzX = this.mx * cosY + this.mz * sinY;
+        const xzZ = -this.mx * sinY + this.mz * cosY;
+        const yzY = this.my * cosX - xzZ * sinX;
+        const yzZ = this.my * sinX + xzZ * cosX;
+        const depth = yzZ + CAMERA.zOffset;
+        const perspective = CAMERA.focalLength / Math.max(220, depth);
+        return { x: canvas.width / 2 + xzX * perspective, y: canvas.height / 2 + yzY * perspective, depth, perspective };
+      }
+
+      draw(rotY, rotX) {
+        const p = this.project(rotY, rotX);
+        const radius = Math.max(0.5, this.baseSize * p.perspective);
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(${Math.round(this.color.r)}, ${Math.round(this.color.g)}, ${Math.round(this.color.b)}, ${this.color.a.toFixed(3)})`;
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    const parseColor = (r, g, b, a) => ({ r, g, b, a });
+
+    const fitDrawImage = (image) => {
+      offscreen.width = canvas.width;
+      offscreen.height = canvas.height;
+      offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
+      const margin = 120;
+      const maxW = offscreen.width - margin * 2;
+      const maxH = offscreen.height - margin * 2;
+      const scale = Math.min(maxW / image.width, maxH / image.height);
+      const drawW = image.width * scale;
+      const drawH = image.height * scale;
+      offCtx.drawImage(image, (offscreen.width - drawW) / 2, (offscreen.height - drawH) / 2, drawW, drawH);
+    };
+
+    const makeTargetsFromImage = (image) => {
+      fitDrawImage(image);
+      const { width, height } = offscreen;
+      const imageData = offCtx.getImageData(0, 0, width, height);
+      const nextTargets = [];
+      for (let y = 0; y < height; y += settings.density) {
+        for (let x = 0; x < width; x += settings.density) {
+          const i = (y * width + x) * 4;
+          const alpha = imageData.data[i + 3];
+          if (alpha <= 100) continue;
+          const r = imageData.data[i], g = imageData.data[i + 1], b = imageData.data[i + 2];
+          const centeredX = x - width / 2;
+          const centeredY = y - height / 2;
+          const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+          const waveDepth = Math.sin(centeredX * 0.016) * 10 + Math.cos(centeredY * 0.018) * 10;
+          const zDepth = ((luminance - 0.5) * 70 + waveDepth) * settings.depth;
+          nextTargets.push({ x: centeredX, y: centeredY, z: zDepth, color: parseColor(r, g, b, Math.max(alpha / 255, 0.45)) });
+        }
+      }
+      targets = nextTargets;
+      while (particles.length < targets.length) {
+        particles.push(new Particle((Math.random() - 0.5) * 300, (Math.random() - 0.5) * 240, (Math.random() - 0.5) * 220));
+      }
+      if (particles.length > targets.length) particles.length = targets.length;
+      particles.forEach((particle, index) => particle.retarget(targets[index]));
+    };
+
+    const burst = () => {
+      settleBlend = 0;
+      const force = settings.burstForce;
+      particles.forEach((particle) => {
+        const outward = 18 * force;
+        const swirl = 10 * force;
+        particle.vx += particle.targetX * 0.012 * force + (Math.random() - 0.5) * outward + (Math.random() - 0.5) * swirl;
+        particle.vy += particle.targetY * 0.012 * force + (Math.random() - 0.5) * outward + (Math.random() - 0.5) * swirl;
+        particle.vz += (Math.random() - 0.5) * 12 * force;
+      });
+    };
+
+    const showLogo = (index) => {
+      const image = logos[index];
+      if (!image) return;
+      if (index === 0 && settings.team1Reset) {
+        const normalized = ((settings.startAngle % 360) + 360) % 360;
+        rotationY = (normalized * Math.PI) / 180;
+      }
+      activeLogoIndex = index;
+      makeTargetsFromImage(image);
+      burst();
+    };
+
+    const startSequence = () => {
+      if (sequenceTimer) clearInterval(sequenceTimer);
+      showLogo(activeLogoIndex);
+      sequenceTimer = setInterval(() => {
+        activeLogoIndex = (activeLogoIndex + 1) % 2;
+        if (!logos[activeLogoIndex]) activeLogoIndex = (activeLogoIndex + 1) % 2;
+        showLogo(activeLogoIndex);
+      }, settings.holdTime * 1000);
+    };
+
+    const loadImage = (url) => new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = url;
+    });
+
+    const applyParticleState = async (state) => {
+      const config = sanitizeLogoParticleState(state?.logoParticle);
+      settings.density = config.density;
+      settings.size = config.size;
+      settings.speed = config.speed;
+      settings.depth = config.depth;
+      settings.startAngle = config.startAngle;
+      settings.team1Reset = config.team1Reset;
+      settings.holdTime = config.holdTime;
+      settings.burstForce = config.burstForce;
+      activeLogoIndex = config.activeLogoIndex;
+
+      if (JSON.stringify(config.logoSources) !== JSON.stringify(logoSources)) {
+        logoSources = config.logoSources;
+        logos = [null, null];
+        for (let i = 0; i < 2; i += 1) {
+          if (!logoSources[i]) continue;
+          try { logos[i] = await loadImage(logoSources[i]); } catch { logos[i] = null; }
+        }
+      }
+
+      if (logos[activeLogoIndex]) {
+        makeTargetsFromImage(logos[activeLogoIndex]);
+        startSequence();
+      }
+
+      const command = sanitizeParticleCommand(config.command);
+      if (!command) return;
+      if (command.nonce === lastCommandNonce) return;
+      lastCommandNonce = command.nonce;
+      if (command.type === 'burst') burst();
+      if (command.type === 'start-sequence') startSequence();
+    };
+
+    const applyState = async () => {
+      const state = await readSharedState();
+      const signature = JSON.stringify(state?.logoParticle || {});
+      if (!signature || signature === lastSignature) return;
+      lastSignature = signature;
+      await applyParticleState(state);
+    };
+
+    let lastTs = 0;
+    const animate = (ts) => {
+      const dt = Math.min((ts - lastTs) / 1000, 0.032);
+      lastTs = ts;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let avgDistance = 0;
+      particles.forEach((p) => { p.update(dt); avgDistance += p.distanceToTarget(); });
+      if (particles.length > 0) avgDistance /= particles.length;
+      settleBlend += ((avgDistance < 8 ? 1 : 0) - settleBlend) * 0.04;
+      rotationY += dt * (0.168 * settleBlend);
+      const sorted = [...particles].sort((a, b) => b.project(rotationY, rotationX).depth - a.project(rotationY, rotationX).depth);
+      sorted.forEach((p) => p.draw(rotationY, rotationX));
+      requestAnimationFrame(animate);
+    };
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      if (logos[activeLogoIndex]) makeTargetsFromImage(logos[activeLogoIndex]);
+    });
+    window.addEventListener('storage', (event) => {
+      if (event.key === STATE_KEY) applyState();
+    });
+
+    resizeCanvas();
+    applyState();
+    setInterval(applyState, OVERLAY_POLL_MS);
+    requestAnimationFrame(animate);
+  }
+
   function renderValorantMapVetoOverlay() {
     const overlay = document.querySelector('[data-valorant-map-veto-overlay]');
     if (!overlay) return;
@@ -1427,6 +1861,8 @@
           checkbox.checked = selected.has(checkbox.dataset.mapUuid || '');
         });
       }
+
+      syncLogoParticleControls();
     };
 
     initTabs();
@@ -1436,6 +1872,7 @@
     await initScoreboardControl(pendingState, syncInputs);
     initScoreTickerControl(pendingState, syncInputs);
     initValorantMapVetoControl(pendingState, syncInputs);
+    initLogoParticleControl(pendingState, syncInputs);
 
     const swapTeams = document.getElementById('swap-teams');
     if (swapTeams) {
@@ -1487,6 +1924,8 @@
         } else if (activeTabId === 'score-tab') {
           pendingState.scoreboard.team1.score = empty.scoreboard.team1.score;
           pendingState.scoreboard.team2.score = empty.scoreboard.team2.score;
+        } else if (activeTabId === 'logo-particle-tab') {
+          pendingState.logoParticle = defaultLogoParticleState();
         } else if (activeTabId === 'valorant-map-veto-tab') {
           pendingState.valorantMapVeto = { ...empty.valorantMapVeto };
           pendingState.valorantMapPool = [...empty.valorantMapPool];
@@ -1528,6 +1967,7 @@
         pick2: sanitizeValorantGameScore(next?.valorantGameScore?.pick2),
         pick3: sanitizeValorantGameScore(next?.valorantGameScore?.pick3)
       };
+      pendingState.logoParticle = sanitizeLogoParticleState(next?.logoParticle);
       syncInputs();
     });
   }
@@ -1550,6 +1990,10 @@
 
       if (document.querySelector('[data-valorant-map-veto-overlay]')) {
         renderValorantMapVetoOverlay();
+      }
+
+      if (document.querySelector('[data-logo-particle-overlay]')) {
+        renderLogoParticleOverlay();
       }
     }
   }

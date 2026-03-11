@@ -18,6 +18,7 @@
       <button class="tab-btn" type="button" data-tab-target="scoreboard-tab">Scoreboard Teams</button>
       <button class="tab-btn" type="button" data-tab-target="score-tab">Score</button>
       <button class="tab-btn" type="button" data-tab-target="valorant-map-veto-tab">Valorant Map Picks/Bans</button>
+      <button class="tab-btn" type="button" data-tab-target="logo-particle-tab">Logo Particle Engine</button>
     </nav>
 
     <section id="hero-bans-tab" class="tab-panel is-active" aria-label="Overwatch Bans Controller">
@@ -328,6 +329,51 @@
         </div>
       </section>
     </section>
+
+    <section id="logo-particle-tab" class="tab-panel" aria-label="Logo Particle Engine Controller">
+      <div class="particle-controls-grid">
+        <section class="team-column" aria-labelledby="particle-logos-heading">
+          <h2 id="particle-logos-heading">Logo Sources</h2>
+          <label for="particle-team1-logo">Team 1 Logo</label>
+          <input id="particle-team1-logo" type="file" accept="image/*" />
+          <label for="particle-team2-logo">Team 2 Logo</label>
+          <input id="particle-team2-logo" type="file" accept="image/*" />
+          <p class="muted-copy">Use PNG/SVG/JPG logos. The output overlay is <code>logo-particle-alpha.html</code>.</p>
+        </section>
+
+        <section class="team-column" aria-labelledby="particle-motion-heading">
+          <h2 id="particle-motion-heading">Particle Motion</h2>
+          <label for="particle-density">Particle Density</label>
+          <input id="particle-density" type="range" min="3" max="12" step="1" value="6" />
+          <label for="particle-size">Particle Size</label>
+          <input id="particle-size" type="range" min="1" max="5" step="0.1" value="2" />
+          <label for="particle-speed">Settle Speed</label>
+          <input id="particle-speed" type="range" min="0.03" max="0.2" step="0.005" value="0.08" />
+          <label for="particle-depth">Depth Amount</label>
+          <input id="particle-depth" type="range" min="0" max="1" step="0.01" value="0.55" />
+          <label for="particle-burst-force">Burst Force</label>
+          <input id="particle-burst-force" type="range" min="0" max="2" step="0.05" value="1" />
+        </section>
+
+        <section class="team-column" aria-labelledby="particle-sequence-heading">
+          <h2 id="particle-sequence-heading">Sequence</h2>
+          <label for="particle-start-angle">Team 1 Start Angle (°)</label>
+          <input id="particle-start-angle" type="number" min="0" max="359" step="1" value="10" />
+          <label class="inline-toggle" for="particle-team1-reset">
+            <input id="particle-team1-reset" type="checkbox" checked />
+            Reset Team 1 to start angle each cycle
+          </label>
+          <label for="particle-hold-time">Logo Hold Time (seconds)</label>
+          <input id="particle-hold-time" type="range" min="2" max="15" step="1" value="6" />
+
+          <div class="sync-row" aria-label="Logo particle action controls">
+            <button id="particle-start-sequence" class="primary-btn" type="button">Start Sequence</button>
+            <button id="particle-burst" class="secondary-btn" type="button">Burst + Reform</button>
+            <button id="particle-reset-defaults" class="danger-btn" type="button">Load Defaults</button>
+          </div>
+        </section>
+      </div>
+    </section>
   </main>
 
   <footer class="control-footer">
@@ -339,6 +385,7 @@
       <code>scoreboard-team1-score.html</code>, and <code>scoreboard-team2-score.html</code>.
       Valorant map picks/bans overlay uses <code>valorant-map-picks-bans.html</code>.
       Valorant picks-only overlay uses <code>valorant-map-picks.html</code>.
+      Logo particle output uses <code>logo-particle-alpha.html</code>.
     </p>
   </footer>
 
