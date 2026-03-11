@@ -1621,59 +1621,6 @@
         return new TextEncoder().encode(decodeURIComponent(payload));
       };
 
-      const componentTypeToCtor = (componentType) => {
-        switch (componentType) {
-          case 5120: return Int8Array;
-          case 5121: return Uint8Array;
-          case 5122: return Int16Array;
-          case 5123: return Uint16Array;
-          case 5125: return Uint32Array;
-          case 5126: return Float32Array;
-          default: return null;
-        }
-      };
-
-      const typeToCount = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT2: 4, MAT3: 9, MAT4: 16 };
-
-      const identity = () => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-      const multiply = (a, b) => {
-        const out = new Array(16).fill(0);
-        for (let row = 0; row < 4; row += 1) {
-          for (let col = 0; col < 4; col += 1) {
-            for (let k = 0; k < 4; k += 1) {
-              out[row * 4 + col] += a[row * 4 + k] * b[k * 4 + col];
-            }
-          }
-        }
-        return out;
-      };
-
-      const makeNodeMatrix = (node) => {
-        if (Array.isArray(node.matrix) && node.matrix.length === 16) return node.matrix;
-        const t = Array.isArray(node.translation) ? node.translation : [0, 0, 0];
-        const s = Array.isArray(node.scale) ? node.scale : [1, 1, 1];
-        const q = Array.isArray(node.rotation) ? node.rotation : [0, 0, 0, 1];
-        const [x, y, z, w] = q;
-        const xx = x * x; const yy = y * y; const zz = z * z;
-        const xy = x * y; const xz = x * z; const yz = y * z;
-        const wx = w * x; const wy = w * y; const wz = w * z;
-        const rot = [
-          1 - 2 * (yy + zz), 2 * (xy - wz), 2 * (xz + wy), 0,
-          2 * (xy + wz), 1 - 2 * (xx + zz), 2 * (yz - wx), 0,
-          2 * (xz - wy), 2 * (yz + wx), 1 - 2 * (xx + yy), 0,
-          0, 0, 0, 1
-        ];
-        const scale = [s[0], 0, 0, 0, 0, s[1], 0, 0, 0, 0, s[2], 0, 0, 0, 0, 1];
-        const translation = [1, 0, 0, t[0], 0, 1, 0, t[1], 0, 0, 1, t[2], 0, 0, 0, 1];
-        return multiply(translation, multiply(rot, scale));
-      };
-
-      const transformPoint = (m, v) => ({
-        x: m[0] * v.x + m[1] * v.y + m[2] * v.z + m[3],
-        y: m[4] * v.x + m[5] * v.y + m[6] * v.z + m[7],
-        z: m[8] * v.x + m[9] * v.y + m[10] * v.z + m[11]
-      });
-
       const sourceBytes = decodeDataUrl(source);
       let gltf = null;
       let binaryChunk = null;
@@ -1728,37 +1675,131 @@
       const meshes = Array.isArray(gltf.meshes) ? gltf.meshes : [];
       const nodes = Array.isArray(gltf.nodes) ? gltf.nodes : [];
       const scenes = Array.isArray(gltf.scenes) ? gltf.scenes : [];
-      const sceneIndex = Number.isInteger(gltf.scene) ? gltf.scene : 0;
-      const rootScene = scenes[sceneIndex] || scenes[0] || {};
-      const rootNodes = Array.isArray(rootScene.nodes) ? rootScene.nodes : [];
+      const materials = Array.isArray(gltf.materials) ? gltf.materials : [];
 
-      const readAccessorVec3 = (accessorIndex) => {
+      const componentTypeToBytes = { 5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4 };
+      const typeToCount = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
+
+      const readComponent = (view, offset, componentType, normalized) => {
+        let value = 0;
+        switch (componentType) {
+          case 5120: value = view.getInt8(offset); break;
+          case 5121: value = view.getUint8(offset); break;
+          case 5122: value = view.getInt16(offset, true); break;
+          case 5123: value = view.getUint16(offset, true); break;
+          case 5125: value = view.getUint32(offset, true); break;
+          case 5126: value = view.getFloat32(offset, true); break;
+          default: return 0;
+        }
+        if (!normalized || componentType === 5126) return value;
+        if (componentType === 5120) return Math.max(value / 127, -1);
+        if (componentType === 5121) return value / 255;
+        if (componentType === 5122) return Math.max(value / 32767, -1);
+        if (componentType === 5123) return value / 65535;
+        if (componentType === 5125) return value / 4294967295;
+        return value;
+      };
+
+      const readAccessor = (accessorIndex, expectedType = null) => {
         const accessor = accessors[accessorIndex];
         if (!accessor) return [];
-        if (accessor.type !== 'VEC3') return [];
-        const BufferCtor = componentTypeToCtor(accessor.componentType);
-        const comps = typeToCount[accessor.type] || 0;
-        if (!BufferCtor || comps !== 3) return [];
-
+        if (expectedType && accessor.type !== expectedType) return [];
         const viewRef = bufferViews[accessor.bufferView];
         if (!viewRef) return [];
-        const rawBuffer = bufferData[viewRef.buffer];
-        if (!rawBuffer) return [];
+        const raw = bufferData[viewRef.buffer];
+        if (!raw) return [];
 
-        const byteOffset = (viewRef.byteOffset || 0) + (accessor.byteOffset || 0);
-        const count = accessor.count || 0;
-        const byteStride = viewRef.byteStride || (BufferCtor.BYTES_PER_ELEMENT * comps);
+        const componentType = accessor.componentType;
+        const componentBytes = componentTypeToBytes[componentType];
+        const countPerElement = typeToCount[accessor.type] || 0;
+        if (!componentBytes || !countPerElement) return [];
+
+        const view = new DataView(raw.buffer, raw.byteOffset, raw.byteLength);
+        const baseOffset = (viewRef.byteOffset || 0) + (accessor.byteOffset || 0);
+        const stride = viewRef.byteStride || (componentBytes * countPerElement);
+        const elementCount = accessor.count || 0;
+        const normalized = Boolean(accessor.normalized);
+
         const out = [];
-
-        for (let i = 0; i < count; i += 1) {
-          const elementOffset = byteOffset + i * byteStride;
-          const typed = new BufferCtor(rawBuffer.buffer, rawBuffer.byteOffset + elementOffset, comps);
-          out.push({ x: Number(typed[0]) || 0, y: Number(typed[1]) || 0, z: Number(typed[2]) || 0 });
+        for (let i = 0; i < elementCount; i += 1) {
+          const elementOffset = baseOffset + i * stride;
+          const element = [];
+          for (let c = 0; c < countPerElement; c += 1) {
+            const componentOffset = elementOffset + c * componentBytes;
+            element.push(readComponent(view, componentOffset, componentType, normalized));
+          }
+          out.push(element);
         }
         return out;
       };
 
-      const collected = [];
+      const identity = () => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+      const multiply = (a, b) => {
+        const out = new Array(16).fill(0);
+        for (let col = 0; col < 4; col += 1) {
+          for (let row = 0; row < 4; row += 1) {
+            out[col * 4 + row] =
+              a[0 * 4 + row] * b[col * 4 + 0]
+              + a[1 * 4 + row] * b[col * 4 + 1]
+              + a[2 * 4 + row] * b[col * 4 + 2]
+              + a[3 * 4 + row] * b[col * 4 + 3];
+          }
+        }
+        return out;
+      };
+
+      const makeNodeMatrix = (node) => {
+        if (Array.isArray(node.matrix) && node.matrix.length === 16) return node.matrix;
+        const t = Array.isArray(node.translation) ? node.translation : [0, 0, 0];
+        const s = Array.isArray(node.scale) ? node.scale : [1, 1, 1];
+        const q = Array.isArray(node.rotation) ? node.rotation : [0, 0, 0, 1];
+        const [x, y, z, w] = q;
+
+        const rot = [
+          1 - 2 * y * y - 2 * z * z,
+          2 * x * y + 2 * w * z,
+          2 * x * z - 2 * w * y,
+          0,
+          2 * x * y - 2 * w * z,
+          1 - 2 * x * x - 2 * z * z,
+          2 * y * z + 2 * w * x,
+          0,
+          2 * x * z + 2 * w * y,
+          2 * y * z - 2 * w * x,
+          1 - 2 * x * x - 2 * y * y,
+          0,
+          0, 0, 0, 1
+        ];
+        const scale = [s[0], 0, 0, 0, 0, s[1], 0, 0, 0, 0, s[2], 0, 0, 0, 0, 1];
+        const translation = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, t[0], t[1], t[2], 1];
+        return multiply(translation, multiply(rot, scale));
+      };
+
+      const transformPoint = (m, p) => ({
+        x: m[0] * p.x + m[4] * p.y + m[8] * p.z + m[12],
+        y: m[1] * p.x + m[5] * p.y + m[9] * p.z + m[13],
+        z: m[2] * p.x + m[6] * p.y + m[10] * p.z + m[14]
+      });
+
+      const sceneIndex = Number.isInteger(gltf.scene) ? gltf.scene : 0;
+      const rootScene = scenes[sceneIndex] || scenes[0] || {};
+      const rootNodes = Array.isArray(rootScene.nodes) ? rootScene.nodes : [];
+      const points = [];
+
+      const getMaterialColor = (materialIndex) => {
+        const material = materials[materialIndex] || {};
+        const factor = material?.pbrMetallicRoughness?.baseColorFactor;
+        if (Array.isArray(factor) && factor.length >= 3) {
+          return {
+            r: Math.round(Math.max(0, Math.min(1, Number(factor[0]) || 0.78)) * 255),
+            g: Math.round(Math.max(0, Math.min(1, Number(factor[1]) || 0.9)) * 255),
+            b: Math.round(Math.max(0, Math.min(1, Number(factor[2]) || 1.0)) * 255),
+            a: Math.max(0.3, Math.min(1, Number(factor[3]) || 1.0))
+          };
+        }
+        return { r: 200, g: 230, b: 255, a: 0.92 };
+      };
+
       const walkNode = (nodeIndex, parentMatrix) => {
         const node = nodes[nodeIndex];
         if (!node) return;
@@ -1770,10 +1811,29 @@
           primitives.forEach((primitive) => {
             const positionAccessor = primitive?.attributes?.POSITION;
             if (!Number.isInteger(positionAccessor)) return;
-            const points = readAccessorVec3(positionAccessor);
-            const step = Math.max(1, Math.floor(points.length / 6000));
-            for (let i = 0; i < points.length; i += step) {
-              collected.push(transformPoint(world, points[i]));
+            const positions = readAccessor(positionAccessor, 'VEC3');
+            if (!positions.length) return;
+
+            const colorAccessor = primitive?.attributes?.COLOR_0;
+            const colors = Number.isInteger(colorAccessor) ? readAccessor(colorAccessor) : [];
+            const materialColor = getMaterialColor(primitive?.material);
+
+            const step = Math.max(1, Math.floor(positions.length / 8000));
+            for (let i = 0; i < positions.length; i += step) {
+              const pos = positions[i];
+              const worldPos = transformPoint(world, { x: pos[0] || 0, y: pos[1] || 0, z: pos[2] || 0 });
+
+              let color = materialColor;
+              if (colors.length > i) {
+                const c = colors[i];
+                const rr = Math.round(Math.max(0, Math.min(1, Number(c[0]) || 0.78)) * 255);
+                const gg = Math.round(Math.max(0, Math.min(1, Number(c[1]) || 0.9)) * 255);
+                const bb = Math.round(Math.max(0, Math.min(1, Number(c[2]) || 1.0)) * 255);
+                const aa = Math.max(0.3, Math.min(1, Number(c[3]) || 1));
+                color = { r: rr, g: gg, b: bb, a: aa };
+              }
+
+              points.push({ x: worldPos.x, y: worldPos.y, z: worldPos.z, color });
             }
           });
         }
@@ -1784,11 +1844,11 @@
 
       const identityMatrix = identity();
       rootNodes.forEach((nodeIndex) => walkNode(nodeIndex, identityMatrix));
-      if (!collected.length) return [];
+      if (!points.length) return [];
 
       let minX = Infinity; let minY = Infinity; let minZ = Infinity;
       let maxX = -Infinity; let maxY = -Infinity; let maxZ = -Infinity;
-      collected.forEach((p) => {
+      points.forEach((p) => {
         if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y; if (p.z < minZ) minZ = p.z;
         if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y; if (p.z > maxZ) maxZ = p.z;
       });
@@ -1796,18 +1856,20 @@
       const cx = (minX + maxX) / 2;
       const cy = (minY + maxY) / 2;
       const cz = (minZ + maxZ) / 2;
-      const maxDim = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 1);
-      const scale = (Math.min(canvas.width, canvas.height) * 0.48) / maxDim;
+      const sizeX = Math.max(maxX - minX, 1e-6);
+      const sizeY = Math.max(maxY - minY, 1e-6);
+      const sizeZ = Math.max(maxZ - minZ, 1e-6);
+      const base = Math.min(canvas.width, canvas.height) * 0.42;
+      const scaleX = base / sizeX;
+      const scaleY = base / sizeY;
+      const scaleZ = base / sizeZ;
 
-      return collected.map((p, idx) => {
-        const tint = 180 + (idx % 50);
-        return {
-          x: (p.x - cx) * scale,
-          y: (p.y - cy) * scale,
-          z: (p.z - cz) * scale * settings.depth,
-          color: parseColor(tint, 240, 255, 0.94)
-        };
-      });
+      return points.map((p) => ({
+        x: (p.x - cx) * scaleX,
+        y: -(p.y - cy) * scaleY,
+        z: (p.z - cz) * scaleZ * settings.depth,
+        color: parseColor(p.color.r, p.color.g, p.color.b, p.color.a)
+      }));
     };
 
     const burst = () => {
