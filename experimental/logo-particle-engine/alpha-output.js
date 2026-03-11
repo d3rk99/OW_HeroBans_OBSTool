@@ -29,6 +29,8 @@ const settings = {
   burstForce: 1
 };
 
+let lastStateSignature = '';
+
 function clamp(v, min, max, fallback) {
   const n = Number(v);
   if (!Number.isFinite(n)) return fallback;
@@ -202,13 +204,7 @@ function loadImageFromUrl(url) {
   });
 }
 
-async function applyControllerState() {
-  const raw = localStorage.getItem(CONTROLLER_STATE_KEY);
-  if (!raw) return;
-
-  let state;
-  try { state = JSON.parse(raw); } catch { return; }
-
+async function applyStateObject(state) {
   settings.density = Math.round(clamp(state.density, 3, 12, settings.density));
   settings.size = clamp(state.size, 1, 5, settings.size);
   settings.speed = clamp(state.speed, 0.03, 0.2, settings.speed);
@@ -235,6 +231,17 @@ async function applyControllerState() {
   startSequence();
 }
 
+async function applyControllerState() {
+  const raw = localStorage.getItem(CONTROLLER_STATE_KEY);
+  if (!raw || raw === lastStateSignature) return;
+
+  let state;
+  try { state = JSON.parse(raw); } catch { return; }
+
+  lastStateSignature = raw;
+  await applyStateObject(state);
+}
+
 let lastTs = 0;
 function animate(ts) {
   const dt = Math.min((ts - lastTs) / 1000, 0.032);
@@ -254,6 +261,18 @@ function animate(ts) {
 
   requestAnimationFrame(animate);
 }
+
+window.addEventListener('message', async (event) => {
+  if (!event.data || event.data.type !== 'logo-particle-state') return;
+  const state = event.data.payload;
+  if (!state) return;
+
+  const signature = JSON.stringify(state);
+  if (signature === lastStateSignature) return;
+
+  lastStateSignature = signature;
+  await applyStateObject(state);
+});
 
 window.addEventListener('storage', (event) => {
   if (event.key === CONTROLLER_STATE_KEY) applyControllerState();

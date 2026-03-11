@@ -20,6 +20,7 @@ const tabAlphaButton = document.getElementById('tabAlpha');
 const controllerPanel = document.getElementById('controllerPanel');
 const controlsPanel = document.getElementById('controlsPanel');
 const alphaPanel = document.getElementById('alphaPanel');
+const alphaFrame = document.getElementById('alphaFrame');
 
 const offscreen = document.createElement('canvas');
 const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
@@ -53,8 +54,8 @@ function getLogo1StartRotation() {
   return (normalized * Math.PI) / 180;
 }
 
-function persistControllerState() {
-  const state = {
+function buildControllerState() {
+  return {
     density: Number(densityInput.value),
     size: Number(sizeInput.value),
     speed: Number(speedInput.value),
@@ -66,8 +67,20 @@ function persistControllerState() {
     activeLogoIndex,
     logoSources
   };
+}
 
+function postStateToAlphaFrame(state) {
+  if (!alphaFrame || !alphaFrame.contentWindow) return;
+  alphaFrame.contentWindow.postMessage({
+    type: 'logo-particle-state',
+    payload: state
+  }, '*');
+}
+
+function persistControllerState() {
+  const state = buildControllerState();
   localStorage.setItem(CONTROLLER_STATE_KEY, JSON.stringify(state));
+  postStateToAlphaFrame(state);
 }
 
 
@@ -99,6 +112,10 @@ function setActiveTab(tab) {
   controllerPanel.classList.toggle('is-active', controllerActive);
   controlsPanel.classList.toggle('is-active', controlsActive);
   alphaPanel.classList.toggle('is-active', alphaActive);
+
+  if (alphaActive) {
+    postStateToAlphaFrame(buildControllerState());
+  }
 }
 
 

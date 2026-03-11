@@ -43,6 +43,7 @@ Then open:
 
 1. Open the controller page and use **Particle Controls** to tune all particle settings and uploads.
 2. Use **Controller View** for the main animation preview and **OBS Alpha Output** for docked transparent preview.
+   - The docked controller now sends direct state messages to the alpha output view for more reliable live control.
 3. In OBS, point Browser Source at `alpha-output.html` so only particles render (transparent background).
 
 ## Notes
