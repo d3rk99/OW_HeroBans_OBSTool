@@ -1438,7 +1438,6 @@
     let lastCommandNonce = -1;
     let rotationY = 0;
     const rotationX = 0.22;
-    let settleBlend = 0;
 
     const settings = {
       density: 6, size: 2, speed: 0.08, depth: 0.55,
@@ -1559,7 +1558,6 @@
     };
 
     const burst = () => {
-      settleBlend = 0;
       const force = settings.burstForce;
       particles.forEach((particle) => {
         const outward = 18 * force;
@@ -1647,11 +1645,8 @@
       const dt = Math.min((ts - lastTs) / 1000, 0.032);
       lastTs = ts;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      let avgDistance = 0;
-      particles.forEach((p) => { p.update(dt); avgDistance += p.distanceToTarget(); });
-      if (particles.length > 0) avgDistance /= particles.length;
-      settleBlend += ((avgDistance < 8 ? 1 : 0) - settleBlend) * 0.04;
-      rotationY += dt * (0.168 * settleBlend);
+      particles.forEach((p) => { p.update(dt); });
+      rotationY += dt * 0.168;
       const sorted = [...particles].sort((a, b) => b.project(rotationY, rotationX).depth - a.project(rotationY, rotationX).depth);
       sorted.forEach((p) => p.draw(rotationY, rotationX));
       requestAnimationFrame(animate);
