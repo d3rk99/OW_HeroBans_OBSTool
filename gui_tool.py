@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import threading
@@ -42,7 +43,19 @@ else:
     ROOT_DIR = Path(__file__).resolve().parent
 
 HEROES_JSON = ROOT_DIR / "data" / "heroes.json"
-STATE_CACHE_PATH = ROOT_DIR / "data" / "controller_state_cache.json"
+VALORANT_MAPS_JSON = ROOT_DIR / "assets" / "valorant" / "maps.json"
+
+
+def _resolve_state_cache_path() -> Path:
+    if not getattr(sys, "frozen", False):
+        return ROOT_DIR / "data" / "controller_state_cache.json"
+
+    app_data = os.environ.get("LOCALAPPDATA")
+    base_dir = Path(app_data) if app_data else Path.home() / "AppData" / "Local"
+    return base_dir / "OW2HeroBansGUI" / "controller_state_cache.json"
+
+
+STATE_CACHE_PATH = _resolve_state_cache_path()
 FONTS_DIR = ROOT_DIR / "assets" / "Fonts"
 FONT_EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
 VALORANT_MAP_OPTIONS = {"Ascent", "Bind", "Breeze", "Fracture", "Haven", "Icebox", "Lotus", "Pearl", "Split", "Sunset", "Abyss", "Corrode"}
@@ -116,6 +129,31 @@ def _sanitize_valorant_map(value):
     return ""
 
 
+def _default_valorant_map_pool():
+    try:
+        payload = json.loads(VALORANT_MAPS_JSON.read_text(encoding="utf-8"))
+        return [
+            clean
+            for clean in (_sanitize_valorant_map(entry.get("uuid")) for entry in payload.get("maps", []))
+            if clean
+        ]
+    except Exception:
+        return []
+
+
+DEFAULT_VALORANT_MAP_POOL = _default_valorant_map_pool()
+
+
+def _sanitize_valorant_map_pool(value):
+    source = value if isinstance(value, list) else DEFAULT_VALORANT_MAP_POOL
+    result = []
+    for entry in source:
+        clean = _sanitize_valorant_map(entry)
+        if clean and clean not in result:
+            result.append(clean)
+    return result
+
+
 def _sanitize_valorant_pick_team(value):
     return "team2" if str(value or "").strip() == "team2" else "team1"
 
@@ -143,6 +181,91 @@ def _sanitize_valorant_game_score(value):
     }
 
 
+def _clamp_float(value, minimum, maximum, fallback):
+    try:
+        numeric = float(value)
+    except Exception:
+        return fallback
+    return max(minimum, min(maximum, numeric))
+
+
+def _sanitize_particle_logo_source(value):
+    raw = str(value or "")
+    if not raw or not raw.startswith("data:image/") or len(raw) > 4 * 1024 * 1024:
+        return ""
+    return raw
+
+
+def _default_logo_particle_state():
+    return {
+        "density": 6,
+        "size": 2.0,
+        "speed": 0.08,
+        "depth": 0.55,
+        "startAngle": 10,
+        "team1Reset": True,
+        "holdTime": 6,
+        "burstForce": 1.0,
+        "cameraDistance": 700,
+        "activeLogoIndex": 0,
+        "logoSources": ["", ""],
+        "command": None,
+    }
+
+
+def _sanitize_logo_particle_command(value):
+    if not isinstance(value, dict):
+        return None
+    command_type = str(value.get("type", "") or "").strip()
+    if command_type not in ("start-sequence", "burst"):
+        return None
+    try:
+        nonce = int(float(value.get("nonce", 0)))
+    except Exception:
+        nonce = 0
+    try:
+        timestamp = int(float(value.get("ts", int(time.time() * 1000))))
+    except Exception:
+        timestamp = int(time.time() * 1000)
+    return {"type": command_type, "nonce": nonce, "ts": timestamp}
+
+
+def _sanitize_logo_particle_state(value):
+    fallback = _default_logo_particle_state()
+    source = value if isinstance(value, dict) else {}
+    logos = source.get("logoSources") if isinstance(source.get("logoSources"), list) else fallback["logoSources"]
+    active_logo_index = int(round(_clamp_float(source.get("activeLogoIndex", 0), 0, 1, 0)))
+    return {
+        "density": int(round(_clamp_float(source.get("density", fallback["density"]), 3, 12, fallback["density"]))),
+        "size": _clamp_float(source.get("size", fallback["size"]), 1, 5, fallback["size"]),
+        "speed": _clamp_float(source.get("speed", fallback["speed"]), 0.03, 0.2, fallback["speed"]),
+        "depth": _clamp_float(source.get("depth", fallback["depth"]), 0, 1, fallback["depth"]),
+        "startAngle": int(round(_clamp_float(source.get("startAngle", fallback["startAngle"]), 0, 359, fallback["startAngle"]))),
+        "team1Reset": bool(source.get("team1Reset", fallback["team1Reset"])),
+        "holdTime": int(round(_clamp_float(source.get("holdTime", fallback["holdTime"]), 2, 15, fallback["holdTime"]))),
+        "burstForce": _clamp_float(source.get("burstForce", fallback["burstForce"]), 0, 2, fallback["burstForce"]),
+        "cameraDistance": int(round(_clamp_float(source.get("cameraDistance", fallback["cameraDistance"]), 420, 1100, fallback["cameraDistance"]))),
+        "activeLogoIndex": active_logo_index,
+        "logoSources": [
+            _sanitize_particle_logo_source(logos[0] if len(logos) > 0 else ""),
+            _sanitize_particle_logo_source(logos[1] if len(logos) > 1 else ""),
+        ],
+        "command": _sanitize_logo_particle_command(source.get("command")),
+    }
+
+
+def _merge_state(base, patch):
+    result = dict(base) if isinstance(base, dict) else {}
+    if not isinstance(patch, dict):
+        return result
+    for key, value in patch.items():
+        if isinstance(value, dict) and isinstance(result.get(key), dict):
+            result[key] = _merge_state(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
 @dataclass(frozen=True)
 class Hero:
     name: str
@@ -165,6 +288,7 @@ class SharedState:
                 "team2": {"name": "", "nameUsePng": False, "namePng": "", "namePngScale": 0, "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
             },
             "valorantMapVeto": {"ban1": "", "ban2": "", "pick1": "", "pick2": "", "ban3": "", "ban4": "", "pick3": ""},
+            "valorantMapPool": list(DEFAULT_VALORANT_MAP_POOL),
             "valorantPickSides": {
                 "pick1": {"defenders": "team1", "attackers": "team2"},
                 "pick2": {"defenders": "team1", "attackers": "team2"},
@@ -175,6 +299,7 @@ class SharedState:
                 "pick2": {"winner": "", "team1Score": 0, "team2Score": 0},
                 "pick3": {"winner": "", "team1Score": 0, "team2Score": 0},
             },
+            "logoParticle": _default_logo_particle_state(),
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -185,6 +310,7 @@ class SharedState:
         valorant_map_veto = payload.get("valorantMapVeto", {}) or {}
         valorant_pick_sides = payload.get("valorantPickSides", {}) or {}
         valorant_game_score = payload.get("valorantGameScore", {}) or {}
+        logo_particle = payload.get("logoParticle", {}) or {}
         team1_style = scoreboard.get("team1", {}) or {}
         team2_style = scoreboard.get("team2", {}) or {}
         return {
@@ -225,6 +351,7 @@ class SharedState:
                 "ban4": _sanitize_valorant_map(valorant_map_veto.get("ban4", "")),
                 "pick3": _sanitize_valorant_map(valorant_map_veto.get("pick3", "")),
             },
+            "valorantMapPool": _sanitize_valorant_map_pool(payload.get("valorantMapPool")),
             "valorantPickSides": {
                 "pick1": _sanitize_valorant_pick_sides(valorant_pick_sides.get("pick1", {})),
                 "pick2": _sanitize_valorant_pick_sides(valorant_pick_sides.get("pick2", {})),
@@ -235,6 +362,7 @@ class SharedState:
                 "pick2": _sanitize_valorant_game_score(valorant_game_score.get("pick2", {})),
                 "pick3": _sanitize_valorant_game_score(valorant_game_score.get("pick3", {})),
             },
+            "logoParticle": _sanitize_logo_particle_state(logo_particle),
             "updatedAt": int(time.time() * 1000),
         }
 
@@ -261,22 +389,26 @@ class SharedState:
                 "team2": {"ban": self._state["team2"]["ban"]},
                 "scoreboard": self._state["scoreboard"],
                 "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
+                "valorantMapPool": list(self._state.get("valorantMapPool", DEFAULT_VALORANT_MAP_POOL)),
                 "valorantPickSides": dict(self._state.get("valorantPickSides", {})),
                 "valorantGameScore": dict(self._state.get("valorantGameScore", {})),
+                "logoParticle": dict(self._state.get("logoParticle", _default_logo_particle_state())),
                 "updatedAt": self._state["updatedAt"],
             }
 
     def set(self, payload: dict[str, Any] | None) -> dict[str, Any]:
         with self._lock:
-            self._state = self.sanitize(payload)
+            self._state = self.sanitize(_merge_state(self._state, payload or {}))
             self._save_cache()
             return {
                 "team1": {"ban": self._state["team1"]["ban"]},
                 "team2": {"ban": self._state["team2"]["ban"]},
                 "scoreboard": self._state["scoreboard"],
                 "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
+                "valorantMapPool": list(self._state.get("valorantMapPool", DEFAULT_VALORANT_MAP_POOL)),
                 "valorantPickSides": dict(self._state.get("valorantPickSides", {})),
                 "valorantGameScore": dict(self._state.get("valorantGameScore", {})),
+                "logoParticle": dict(self._state.get("logoParticle", _default_logo_particle_state())),
                 "updatedAt": self._state["updatedAt"],
             }
 

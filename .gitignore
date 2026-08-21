@@ -2,3 +2,11 @@
 assets/Fonts/**
 !assets/Fonts/
 !assets/Fonts/*.zip
+
+# Local Python/build output
+/.venv/
+/build/
+/dist/
+/__pycache__/
+/tests/__pycache__/
+/*.spec

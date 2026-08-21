@@ -37,7 +37,8 @@ A static browser-source-friendly tool for Overwatch 2 custom match hero bans.
 ```
 
 - `control.html` writes both hero-ban and scoreboard state updates.
-- Bridge state is cached to `data/controller_state_cache.json` so controller values are restored after restarting OBS/GUI.
+- OBS/script-mode state is cached to `data/controller_state_cache.json` so controller values are restored after restarting OBS.
+- The packaged desktop EXE stores its cache in `%LOCALAPPDATA%\OW2HeroBansGUI\controller_state_cache.json`, outside PyInstaller's temporary extraction directory, so values survive EXE restarts.
 - `team1.html` and `team2.html` read hero-ban state.
 - Scoreboard overlay HTML files read scoreboard state (team names, optional team-name PNGs with size, logos, scores, and team-name style settings).
 - The controller has a dedicated **Score** tab with large +/- controls that automatically publish score updates (no manual update click needed).
@@ -62,6 +63,8 @@ The GUI window replaces `control.html` as your producer control surface while st
 4. Open `View -> Docks` and enable `OW2 Hero Bans` if it is not already visible.
 
 When enabled, the script automatically starts a local headless server at `http://127.0.0.1:8765` for `control.html`, `team1.html`, `team2.html`, `/api/state`, and `/api/fonts`. When OBS unloads the script (or exits), that script-owned server is shut down automatically.
+
+If you configure a different host or port for the dock URL, pages served over HTTP automatically use that same origin for `/api/state` and `/api/fonts`. Local-file browser sources continue to use `http://127.0.0.1:8765`.
 
 If OBS script logs report missing Qt WebEngine modules, install a supported binding into the Python runtime used by OBS scripting, then reload the script.
 
@@ -130,3 +133,11 @@ The updater fetches `https://valorant-api.com/v1/maps` and stores map metadata p
 
 - Runtime overlay rendering uses only the local `imageAsset` file paths (no online image dependency).
 - Add your PNGs under `assets/valorant/maps/` with names like `sunset.png`, `icebox.png`, `split.png`.
+
+## Verification
+
+Run the built-in regression checks from the repository root:
+
+```bash
+python -m unittest discover -s tests -v
+```

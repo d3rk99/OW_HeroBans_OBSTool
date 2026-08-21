@@ -32,6 +32,7 @@ SCRIPT_SETTINGS = {
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 FONTS_DIR = os.path.join(SCRIPT_DIR, "assets", "Fonts")
 STATE_CACHE_PATH = os.path.join(SCRIPT_DIR, "data", "controller_state_cache.json")
+VALORANT_MAPS_JSON = os.path.join(SCRIPT_DIR, "assets", "valorant", "maps.json")
 FONT_EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
 VALORANT_MAP_OPTIONS = {"Ascent", "Bind", "Breeze", "Fracture", "Haven", "Icebox", "Lotus", "Pearl", "Split", "Sunset", "Abyss", "Corrode"}
 VALORANT_MAP_UUID_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
@@ -120,6 +121,32 @@ def _sanitize_valorant_map(value):
     if VALORANT_MAP_ID_RE.match(cleaned.lower()):
         return cleaned.lower()
     return ""
+
+
+def _default_valorant_map_pool():
+    try:
+        with open(VALORANT_MAPS_JSON, "r") as maps_file:
+            payload = json.load(maps_file)
+        return [
+            clean
+            for clean in (_sanitize_valorant_map(entry.get("uuid")) for entry in payload.get("maps", []))
+            if clean
+        ]
+    except Exception:
+        return []
+
+
+DEFAULT_VALORANT_MAP_POOL = _default_valorant_map_pool()
+
+
+def _sanitize_valorant_map_pool(value):
+    source = value if isinstance(value, list) else DEFAULT_VALORANT_MAP_POOL
+    result = []
+    for entry in source:
+        clean = _sanitize_valorant_map(entry)
+        if clean and clean not in result:
+            result.append(clean)
+    return result
 
 
 def _sanitize_valorant_pick_team(value):
@@ -239,6 +266,18 @@ def _sanitize_logo_particle_state(value):
     }
 
 
+def _merge_state(base, patch):
+    result = dict(base) if isinstance(base, dict) else {}
+    if not isinstance(patch, dict):
+        return result
+    for key, value in patch.items():
+        if isinstance(value, dict) and isinstance(result.get(key), dict):
+            result[key] = _merge_state(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
 class _BridgeState(object):
     def __init__(self):
         self._lock = threading.Lock()
@@ -255,6 +294,7 @@ class _BridgeState(object):
                 "team2": {"name": "", "nameUsePng": False, "namePng": "", "namePngScale": 0, "logo": "", "logoScale": 0, "score": 0, "nameColor": "#e9eefc", "bevelColor": "#7dd3fc", "nameFont": "varsity"},
             },
             "valorantMapVeto": {"ban1": "", "ban2": "", "pick1": "", "pick2": "", "ban3": "", "ban4": "", "pick3": ""},
+            "valorantMapPool": list(DEFAULT_VALORANT_MAP_POOL),
             "valorantPickSides": {
                 "pick1": {"defenders": "team1", "attackers": "team2"},
                 "pick2": {"defenders": "team1", "attackers": "team2"},
@@ -319,6 +359,7 @@ class _BridgeState(object):
                 "ban4": _sanitize_valorant_map(valorant_map_veto.get("ban4", "")),
                 "pick3": _sanitize_valorant_map(valorant_map_veto.get("pick3", "")),
             },
+            "valorantMapPool": _sanitize_valorant_map_pool(payload.get("valorantMapPool")),
             "valorantPickSides": {
                 "pick1": _sanitize_valorant_pick_sides(valorant_pick_sides.get("pick1", {})),
                 "pick2": _sanitize_valorant_pick_sides(valorant_pick_sides.get("pick2", {})),
@@ -388,6 +429,7 @@ class _BridgeState(object):
                     },
                 },
                 "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
+                "valorantMapPool": list(self._state.get("valorantMapPool", DEFAULT_VALORANT_MAP_POOL)),
                 "valorantPickSides": dict(self._state.get("valorantPickSides", {})),
                 "valorantGameScore": dict(self._state.get("valorantGameScore", {})),
                 "logoParticle": dict(self._state.get("logoParticle", _default_logo_particle_state())),
@@ -396,7 +438,7 @@ class _BridgeState(object):
 
     def set(self, payload):
         with self._lock:
-            self._state = self.sanitize(payload)
+            self._state = self.sanitize(_merge_state(self._state, payload or {}))
             self._save_cache()
             return {
                 "team1": {"ban": self._state["team1"]["ban"]},
@@ -428,6 +470,7 @@ class _BridgeState(object):
                     },
                 },
                 "valorantMapVeto": dict(self._state.get("valorantMapVeto", {})),
+                "valorantMapPool": list(self._state.get("valorantMapPool", DEFAULT_VALORANT_MAP_POOL)),
                 "valorantPickSides": dict(self._state.get("valorantPickSides", {})),
                 "valorantGameScore": dict(self._state.get("valorantGameScore", {})),
                 "logoParticle": dict(self._state.get("logoParticle", _default_logo_particle_state())),

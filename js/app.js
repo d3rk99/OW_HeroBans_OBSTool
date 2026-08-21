@@ -4,8 +4,11 @@
   const HERO_IMAGE_BASE = './assets/';
   const OVERLAY_POLL_MS = 500;
   const FADE_TRANSITION_MS = 260;
-  const BRIDGE_STATE_URL = 'http://127.0.0.1:8765/api/state';
-  const BRIDGE_FONTS_URL = 'http://127.0.0.1:8765/api/fonts';
+  const BRIDGE_ORIGIN = window.location.protocol === 'http:' || window.location.protocol === 'https:'
+    ? window.location.origin
+    : 'http://127.0.0.1:8765';
+  const BRIDGE_STATE_URL = `${BRIDGE_ORIGIN}/api/state`;
+  const BRIDGE_FONTS_URL = `${BRIDGE_ORIGIN}/api/fonts`;
   const BUILTIN_NAME_FONTS = [
     { value: 'varsity', label: 'Varsity / Jersey' },
     { value: 'block', label: 'Block Bold' },
@@ -674,10 +677,9 @@
         activeIndex = (activeIndex - 1 + visibleItems.length) % visibleItems.length;
       } else if (event.key === 'Enter') {
         event.preventDefault();
-        if (activeIndex >= 0) {
-          setPendingHero(visibleItems[activeIndex].querySelector('.result-name')?.textContent || '');
-          return;
-        }
+        const selectedIndex = activeIndex >= 0 ? activeIndex : 0;
+        setPendingHero(visibleItems[selectedIndex].querySelector('.result-name')?.textContent || '');
+        return;
       } else if (event.key === 'Escape') {
         closeList();
         return;
@@ -712,7 +714,7 @@
     const placeholder = stage.querySelector('[data-hero-placeholder]');
     const name = stage.querySelector('[data-hero-name]');
 
-    let lastSignature = '';
+    let lastSignature = null;
     let fadeTimer = null;
 
     const paintOverlay = (selectedName) => {
@@ -743,8 +745,18 @@
       const queryHero = getQueryHero();
       const state = await readSharedState();
       const selectedName = (queryHero || state?.[teamId]?.ban || '').trim();
-      const signature = `${selectedName}:${state.updatedAt}`;
+      const signature = selectedName;
       if (signature === lastSignature) return;
+
+      // Paint the first frame immediately. OBS can reload browser sources when
+      // they become visible, and fading the placeholder before the real state
+      // arrives creates a visible startup flash.
+      if (lastSignature === null) {
+        lastSignature = signature;
+        paintOverlay(selectedName);
+        return;
+      }
+
       lastSignature = signature;
 
       if (fadeTimer) {
