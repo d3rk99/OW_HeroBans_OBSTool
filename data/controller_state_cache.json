@@ -32,13 +32,51 @@
     }
   },
   "valorantMapVeto": {
-    "ban1": "224b0a95-48b9-f703-1bd8-67faca101b8e",
-    "ban2": "92584fbe-486a-b1b2-5ca7-8f9e7800dc84",
-    "pick1": "7eaecc1b-4337-bbf6-6ab9-04b8f06b3319",
-    "pick2": "2c9d57ec-4431-9c5e-2939-8f9ef6dd5cba",
-    "ban3": "2fe4ed3a-450a-948b-6d6b-e89a78e680a9",
-    "ban4": "b529448b-4d60-346e-e89e-00a4c527a405",
-    "pick3": "e2ad5c54-4114-a870-9641-8ea21279579a"
+    "ban1": "",
+    "ban2": "",
+    "pick1": "",
+    "pick2": "",
+    "ban3": "",
+    "ban4": "",
+    "pick3": ""
   },
-  "updatedAt": 1772235877146
+  "valorantMapPool": [
+    "224b0a95-48b9-f703-1bd8-67faca101b8e",
+    "7eaecc1b-4337-bbf6-6ab9-04b8f06b3319",
+    "2c9d57ec-4431-9c5e-2939-8f9ef6dd5cba",
+    "2fe4ed3a-450a-948b-6d6b-e89a78e680a9",
+    "corrode",
+    "b529448b-4d60-346e-e89e-00a4c527a405",
+    "2bee0dc9-4ffe-519b-1cbd-7fbe763a6047",
+    "e2ad5c54-4114-a870-9641-8ea21279579a",
+    "2fe4ed3a-450a-948b-6d6b-e89a78e680aa",
+    "fd267378-4d1d-484f-ff52-77821ed10dc2",
+    "d960549e-485c-e861-8d71-aa9d1aed12a2",
+    "92584fbe-486a-b1b2-5ca7-8f9e7800dc84"
+  ],
+  "valorantPickSides": {
+    "pick1": { "defenders": "team1", "attackers": "team2" },
+    "pick2": { "defenders": "team1", "attackers": "team2" },
+    "pick3": { "defenders": "team1", "attackers": "team2" }
+  },
+  "valorantGameScore": {
+    "pick1": { "winner": "", "team1Score": 0, "team2Score": 0 },
+    "pick2": { "winner": "", "team1Score": 0, "team2Score": 0 },
+    "pick3": { "winner": "", "team1Score": 0, "team2Score": 0 }
+  },
+  "logoParticle": {
+    "density": 6,
+    "size": 2,
+    "speed": 0.08,
+    "depth": 0.55,
+    "startAngle": 10,
+    "team1Reset": true,
+    "holdTime": 6,
+    "burstForce": 1,
+    "cameraDistance": 700,
+    "activeLogoIndex": 0,
+    "logoSources": ["", ""],
+    "command": null
+  },
+  "updatedAt": 0
 }
