@@ -714,7 +714,7 @@
     const placeholder = stage.querySelector('[data-hero-placeholder]');
     const name = stage.querySelector('[data-hero-name]');
 
-    let lastSignature = '';
+    let lastSignature = null;
     let fadeTimer = null;
 
     const paintOverlay = (selectedName) => {
@@ -745,8 +745,18 @@
       const queryHero = getQueryHero();
       const state = await readSharedState();
       const selectedName = (queryHero || state?.[teamId]?.ban || '').trim();
-      const signature = `${selectedName}:${state.updatedAt}`;
+      const signature = selectedName;
       if (signature === lastSignature) return;
+
+      // Paint the first frame immediately. OBS can reload browser sources when
+      // they become visible, and fading the placeholder before the real state
+      // arrives creates a visible startup flash.
+      if (lastSignature === null) {
+        lastSignature = signature;
+        paintOverlay(selectedName);
+        return;
+      }
+
       lastSignature = signature;
 
       if (fadeTimer) {

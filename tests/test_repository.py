@@ -119,6 +119,17 @@ class StateBridgeTests(unittest.TestCase):
 
 
 class AssetAndBuildTests(unittest.TestCase):
+    def test_hero_overlay_only_fades_when_the_selected_hero_changes(self):
+        source = (REPO_ROOT / "js" / "app.js").read_text(encoding="utf-8")
+        overlay_renderer = source.split("function renderOverlay", 1)[1].split(
+            "function renderScoreboardOverlay", 1
+        )[0]
+
+        self.assertIn("let lastSignature = null;", overlay_renderer)
+        self.assertIn("const signature = selectedName;", overlay_renderer)
+        self.assertIn("if (lastSignature === null)", overlay_renderer)
+        self.assertNotIn("state.updatedAt", overlay_renderer)
+
     def test_valorant_map_assets_match_tracked_filename_case(self):
         payload = json.loads((REPO_ROOT / "assets" / "valorant" / "maps.json").read_text(encoding="utf-8"))
         actual_paths = {
